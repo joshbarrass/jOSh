@@ -6,6 +6,7 @@ long_load.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+	$(STRIP) --strip-unneeded '$@'
 	grub-file --is-x86-multiboot '$@'
 
 %.o: %.c

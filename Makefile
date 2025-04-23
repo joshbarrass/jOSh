@@ -3,6 +3,7 @@ BOOT_EXT=BIN
 
 TARGET_ARCH=i386
 CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
+STRIP=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip
 
 FORCE: ;
 
@@ -31,7 +32,7 @@ os.elf: linker.ld $(OBJS)
 	$(CC) -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
 
 module_loader/loader.elf: FORCE
-	$(MAKE) -C $(@D) "$(notdir $@)" CC=$(abspath $(CC)) TARGET_ARCH=$(TARGET_ARCH)
+	$(MAKE) -C $(@D) "$(notdir $@)" CC=$(abspath $(CC)) STRIP=$(abspath $(STRIP)) TARGET_ARCH=$(TARGET_ARCH)
 
 .PHONY: test
 test: jOSh.iso
