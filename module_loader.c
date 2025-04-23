@@ -31,7 +31,7 @@ void module_loader_main() {
   }
 
   for (size_t i = 0; i < mis->mods_count; ++i) {
-    char *mod = (char*)mis->mods[i].mod_start;
+    const char *mod = (char*)mis->mods[i].mod_start;
     print_string("    * ", 0, yline);
     print_string(mis->mods[i].string, 6, yline);
     ++yline;
@@ -52,5 +52,20 @@ void module_loader_main() {
       print_string("BE", 17, yline);
     }
     ++yline;
+  }
+
+  // load the first module
+  const char *mod = (char*)mis->mods[0].mod_start;
+  if (get_ELF_class(mod) == EI_CLASS_32BIT) {
+    elf32_build_program_image(mod);
+    print_string("[+] ELF Loaded!", 0, yline);
+    ++yline;
+    print_string("[+] Jumping to entrypoint...", 0, yline);
+    ++yline;
+    void (*entry)() = (void (*)())get_elf32_entrypoint(mod);
+    entry();
+  } else {
+    terminal_color.fg = 4;
+    print_string("[E] Unsupported ELF format. Exiting...", 0, yline);
   }
 }

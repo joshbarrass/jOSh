@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 typedef uint32_t Elf32_Addr;
 typedef uint16_t Elf32_Half;
@@ -52,6 +53,7 @@ typedef uint16_t Elf64_Half;
 typedef uint64_t Elf64_Off;
 typedef  int32_t Elf64_Sword;
 typedef uint32_t Elf64_Word;
+typedef uint64_t Elf64_Dword;
 
 typedef struct {
 unsigned char e_ident[EI_NIDENT];
@@ -70,8 +72,33 @@ Elf64_Half e_shnum;
 Elf64_Half e_shstrndx;
 } Elf64_Ehdr;
 
-bool is_ELF(char *addr);
-char get_ELF_class(char *addr);
-char get_ELF_endianness(char *addr);
+typedef struct {
+Elf32_Word p_type;
+Elf32_Off p_offset;
+Elf32_Addr p_vaddr;
+Elf32_Addr p_paddr;
+Elf32_Word p_filesz;
+Elf32_Word p_memsz;
+Elf32_Word p_flags;
+Elf32_Word p_align;
+} Elf32_Phdr;
+
+typedef struct {
+Elf64_Word p_type;
+Elf64_Word p_flags;
+Elf64_Off p_offset;
+Elf64_Addr p_vaddr;
+Elf64_Addr p_paddr;
+Elf64_Off p_filesz;
+Elf64_Off p_memsz;
+Elf64_Dword p_align;
+} Elf64_Phdr;
+
+bool is_ELF(const char * const addr);
+char get_ELF_class(const char * const addr);
+char get_ELF_endianness(const char * const addr);
+void elf32_build_program_image(const char *const elf);
+Elf32_Addr get_elf32_entrypoint(const char *const elf);
+
 
 #endif
