@@ -58,6 +58,8 @@ clean:
 	rm -f ./os.o
 	rm -f ./bootstrap.o
 	rm -f ./os.elf
+	rm -f ./module_loader.o
+	rm -f ./loader.elf
 	rm -rf ./grubiso/
 	rm -f jOSh.iso
 	$(MAKE) -C ./jBoot clean
