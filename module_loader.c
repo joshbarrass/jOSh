@@ -41,7 +41,7 @@ void module_loader_main() {
       ++yline;
       continue;
     }
-    print_string("      ELF XX-bit YY", 0, yline);
+    print_string("      ELF ??-bit ??", 0, yline);
     if (get_ELF_class(mod) == EI_CLASS_32BIT) {
       print_string("32", 10, yline);
     } else if (get_ELF_class(mod) == EI_CLASS_64BIT) {
