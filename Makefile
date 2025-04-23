@@ -4,6 +4,8 @@ BOOT_EXT=BIN
 TARGET_ARCH=i386
 CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
 
+FORCE: ;
+
 jOSh.iso: grubiso/boot/jOShload.elf grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg
 	grub-mkrescue -o jOSh.iso grubiso
 
@@ -19,13 +21,15 @@ grubiso/boot/grub/grub.cfg: grub.cfg
 	mkdir -p grubiso/boot/grub/
 	cp grub.cfg grubiso/boot/grub/grub.cfg
 
-os.o: os.c
-	$(CC) -c os.c -o os.o -ffreestanding -O2 -Wall -std=gnu99
+OBJS=\
+os.o
 
-os.elf: linker.ld os.o
-	$(CC) -T linker.ld -o os.elf -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+%.o: %.c
+	$(CC) -c '$<' -o '$@' -ffreestanding -O2 -Wall -std=gnu99
 
-FORCE: ;
+os.elf: linker.ld $(OBJS)
+	$(CC) -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+
 module_loader/loader.elf: FORCE
 	$(MAKE) -C $(@D) "$(notdir $@)" CC=$(abspath $(CC)) TARGET_ARCH=$(TARGET_ARCH)
 
@@ -35,7 +39,7 @@ test: jOSh.iso
 
 .PHONY: debug
 debug: jOSh.iso
-	qemu-system-i386 -cdrom jOSh.iso -s -S
+	qemu-system-$(TARGET_ARCH) -cdrom '$<' -s -S
 
 # custom bootloader stuff -- currently not usable
 boot.img: ./jBoot/boot.img pmlaunch.bin
@@ -45,7 +49,6 @@ boot.img: ./jBoot/boot.img pmlaunch.bin
 pmlaunch.bin: pmlaunch.nasm ./jBoot/bsect.h ./jBoot/bsect.nasm
 	nasm -f bin -o pmlaunch.bin -l pmlaunch.lst pmlaunch.nasm
 
-FORCE: ;
 jBoot/%: FORCE
 	$(MAKE) -C $(@D) "$(notdir $@)" BOOT_FN=$(BOOT_FN) BOOT_EXT=$(BOOT_EXT)
 
@@ -53,7 +56,7 @@ jBoot/%: FORCE
 clean:
 	rm -f ./boot.img
 	rm -f ./pmlaunch.bin ./pmlaunch.lst
-	rm -f ./os.o
+	rm -f $(OBJS)
 	rm -f ./os.elf
 	rm -rf ./grubiso/
 	rm -f jOSh.iso
