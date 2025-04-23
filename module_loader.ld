@@ -2,7 +2,8 @@
    Accessed: 17 Apr 2025 */
 /* The bootloader will look at this image and start execution at the symbol
    designated as the entry point. */
-ENTRY(kernel_main)
+OUTPUT_FORMAT("elf32-i386")
+ENTRY(_start)
 
 /* Tell where the various sections of the object files will be put in the final
    kernel image. */
@@ -21,8 +22,12 @@ SECTIONS
 	   chosen as a safer option than the traditional 1M. */
 	. = 2M;
 
+	/* First put the multiboot header, as it is required to be put very early
+	   in the image or the bootloader won't recognize the file format.
+	   Next we'll put the .text section. */
 	.text BLOCK(4K) : ALIGN(4K)
 	{
+		*(.multiboot)
 		*(.text)
 	}
 

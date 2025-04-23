@@ -1,14 +1,15 @@
 BOOT_FN=PMLAUNCH
 BOOT_EXT=BIN
 
-CC=i386-elf-gcc-9.4.0/bin/i386-elf-gcc
+TARGET_ARCH=x86_64
+CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
 
 jOSh.iso: grubiso/boot/jOShload.elf grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg
 	grub-mkrescue -o jOSh.iso grubiso
 
-grubiso/boot/jOSh.elf: os.o
+grubiso/boot/jOSh.elf: os.elf
 	mkdir -p grubiso/boot/
-	cp os.o grubiso/boot/jOSh.elf
+	cp os.elf grubiso/boot/jOSh.elf
 
 grubiso/boot/jOShload.elf: loader.elf
 	mkdir -p grubiso/boot/
@@ -21,14 +22,17 @@ grubiso/boot/grub/grub.cfg: grub.cfg
 os.o: os.c
 	$(CC) -c os.c -o os.o -ffreestanding -O2 -Wall -std=gnu99
 
+os.elf: linker.ld os.o
+	$(CC) -T linker.ld -o os.elf -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+
 module_loader.o: module_loader.c
-	$(CC) -c module_loader.c -o module_loader.o -ffreestanding -O2 -Wall -std=gnu99
+	$(CC) -m32 -c module_loader.c -o module_loader.o -ffreestanding -O2 -Wall -std=gnu99
 
 bootstrap.o: bootstrap.nasm
-	nasm -f elf -o bootstrap.o bootstrap.nasm
+	nasm -f elf32 -o bootstrap.o bootstrap.nasm
 
-loader.elf: linker.ld bootstrap.o module_loader.o
-	$(CC) -T linker.ld -o loader.elf -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+loader.elf: module_loader.ld bootstrap.o module_loader.o
+	$(CC) -m32 -Wl,-m,elf_i386 -T module_loader.ld -o loader.elf -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
 	grub-file --is-x86-multiboot loader.elf
 
 .PHONY: test
