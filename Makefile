@@ -25,13 +25,16 @@ os.o: os.c
 os.elf: linker.ld os.o
 	$(CC) -T linker.ld -o os.elf -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
 
-module_loader.o: module_loader.c
+module_loader.o: module_loader.c elf.h
 	$(CC) -m32 -c module_loader.c -o module_loader.o -ffreestanding -O2 -Wall -std=gnu99
+
+elf.o: elf.c elf.h
+	$(CC) -m32 -c elf.c -o elf.o -ffreestanding -O2 -Wall -std=gnu99
 
 bootstrap.o: bootstrap.nasm
 	nasm -f elf32 -o bootstrap.o bootstrap.nasm
 
-loader.elf: module_loader.ld bootstrap.o module_loader.o
+loader.elf: module_loader.ld bootstrap.o module_loader.o elf.o
 	$(CC) -m32 -Wl,-m,elf_i386 -T module_loader.ld -o loader.elf -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
 	grub-file --is-x86-multiboot loader.elf
 

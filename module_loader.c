@@ -9,6 +9,7 @@
 
 #include "multiboot.h"
 #include "tty.h"
+#include "elf.h"
 
 const MIS *mis;
 
@@ -31,7 +32,26 @@ void module_loader_main() {
   }
 
   for (size_t i = 0; i < mis->mods_count; ++i) {
+    char *mod = (char*)mis->mods[i].mod_start;
     print_string("    * ", 0, yline);
     print_string(mis->mods[i].string, 6, yline);
+    ++yline;
+    if (!is_ELF(mod)) {
+      print_string("      Unknown format", 0, yline);
+      ++yline;
+      continue;
+    }
+    print_string("      ELF XX-bit YY", 0, yline);
+    if (get_ELF_class(mod) == EI_CLASS_32BIT) {
+      print_string("32", 10, yline);
+    } else if (get_ELF_class(mod) == EI_CLASS_64BIT) {
+      print_string("64", 10, yline);
+    }
+    if (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) {
+      print_string("LE", 17, yline);
+    } else if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
+      print_string("BE", 17, yline);
+    }
+    ++yline;
   }
 }
