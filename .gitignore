@@ -58,5 +58,5 @@ dkms.conf
 # End of https://www.toptal.com/developers/gitignore/api/c
 build-tools
 grubiso/
-i386-elf-gcc-9.4.0
+*-gcc-*
 jOSh.iso
