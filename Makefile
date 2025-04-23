@@ -1,7 +1,7 @@
 BOOT_FN=PMLAUNCH
 BOOT_EXT=BIN
 
-TARGET_ARCH=x86_64
+TARGET_ARCH=i386
 CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
 
 jOSh.iso: grubiso/boot/jOShload.elf grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg
@@ -40,7 +40,7 @@ loader.elf: module_loader.ld bootstrap.o module_loader.o elf.o
 
 .PHONY: test
 test: jOSh.iso
-	qemu-system-i386 -cdrom jOSh.iso -gdb tcp::9000
+	qemu-system-$(TARGET_ARCH) -cdrom jOSh.iso -gdb tcp::9000
 
 .PHONY: debug
 debug: jOSh.iso
