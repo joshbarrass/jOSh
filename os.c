@@ -7,34 +7,54 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+struct CharColor {
+  unsigned char fg : 4;
+  unsigned char bg : 4;
+};
+
 struct ScreenChar {
-    unsigned char character;
-    unsigned char fg : 4;
-    unsigned char bg : 4;
+  unsigned char character;
+  struct CharColor color;
 };
 volatile struct ScreenChar * const screen = (struct ScreenChar*)0xB8000;
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
+size_t terminal_cursor_x = 0;
+size_t terminal_cursor_y = 0;
+struct CharColor terminal_color = {7, 0};
 
-void clear_screen(const char bg, const char fg) {
-  for (int i = 0; i < VGA_WIDTH * VGA_HEIGHT; ++i) {
+void clear_screen_color(const struct CharColor color) {
+  for (size_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; ++i) {
     screen[i].character = 0;
-    screen[i].fg = fg;
-    screen[i].bg = bg;
+    screen[i].color = color;
   }
 }
 
+void clear_screen_bgfg(const int bg, const int fg) {
+  const struct CharColor color = {fg, bg};
+  clear_screen_color(color);
+}
+
+void clear_screen() {
+  clear_screen_color(terminal_color);
+}
+
 void print_string(const char *s, const int x, const int y) {
-  for (int i = 0; s[i] != 0; ++i) {
-    screen[i+VGA_WIDTH*y+x].character = s[i];
+  const size_t pos = VGA_WIDTH*y+x;
+  for (size_t i = 0; s[i] != 0 && (struct ScreenChar*)(pos+i) < screen+VGA_WIDTH*VGA_HEIGHT; ++i) {
+    screen[pos+i].character = s[i];
   }
 }
 
 static const char *welcomeMessage = "Welcome to jOSh!";
 
 void kernel_main() {
-  clear_screen(0x0, 0x7);
+  clear_screen();
   screen->character = 'P';
   print_string(welcomeMessage, 0, 0);
   
