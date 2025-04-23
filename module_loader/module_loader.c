@@ -11,12 +11,12 @@
 #include "elf.h"
 
 const MIS *mis;
+uint64_t entry;
+unsigned int yline = 0;
 
 void module_loader_main() {
   clear_screen();
   terminal_color.fg = 10;
-
-  unsigned int yline = 0;
   
   print_string("[+] Entered module loader", 0, yline);
   ++yline;
@@ -66,10 +66,12 @@ void module_loader_main() {
     // make the call using inline assembly
     // this way, we can guarantee the calling convention that we
     // expect.
-    const void *entry = (void *)get_elf32_entrypoint(mod);
-    asm ("call %0" : : "m"(entry) : );
+    entry = (size_t)get_elf32_entrypoint(mod);
+    asm ("call *%0" : : "r"(entry) : );
   } else {
-    terminal_color.fg = 4;
-    print_string("[E] Unsupported ELF format. Exiting...", 0, yline);
+    /* terminal_color.fg = 4; */
+    /* print_string("[E] Unsupported ELF format. Exiting...", 0, yline); */
+    entry = (size_t)get_elf32_entrypoint(mod);
+    asm ("call switch_to_long" : : : );
   }
 }
