@@ -24,7 +24,7 @@
         section .bss
         align 16
 stack_bottom:
-        resb 1024               ; we can get away with a much smaller
+        resb 4096               ; we can get away with a much smaller
                                 ; stack for the loader, since the
                                 ; function call depth is very low and
                                 ; we shouldn't need much work space for
