@@ -18,8 +18,6 @@ volatile struct ScreenChar * const screen = (struct ScreenChar*)0xB8000;
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
-static size_t terminal_cursor_x = 0;
-static size_t terminal_cursor_y = 0;
 struct CharColor terminal_color = {7, 0};
 
 void clear_screen_color(const struct CharColor color) {
