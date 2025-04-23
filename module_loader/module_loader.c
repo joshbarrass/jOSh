@@ -62,8 +62,12 @@ void module_loader_main() {
     ++yline;
     print_string("[+] Jumping to entrypoint...", 0, yline);
     ++yline;
-    void (*entry)() = (void (*)())get_elf32_entrypoint(mod);
-    entry();
+
+    // make the call using inline assembly
+    // this way, we can guarantee the calling convention that we
+    // expect.
+    const void *entry = (void *)get_elf32_entrypoint(mod);
+    asm ("call %0" : : "m"(entry) : );
   } else {
     terminal_color.fg = 4;
     print_string("[E] Unsupported ELF format. Exiting...", 0, yline);
