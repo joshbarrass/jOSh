@@ -5,8 +5,6 @@ TARGET_ARCH=i386
 CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
 STRIP=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip
 
-FORCE: ;
-
 jOSh.iso: grubiso/boot/jOShload.elf grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg
 	grub-mkrescue -o jOSh.iso grubiso
 
@@ -25,6 +23,8 @@ grubiso/boot/grub/grub.cfg: grub.cfg
 OBJS=\
 os.o
 
+FORCE: ;
+
 %.o: %.c
 	$(CC) -c '$<' -o '$@' -ffreestanding -O2 -Wall -std=gnu99
 
@@ -36,11 +36,11 @@ module_loader/loader.elf: FORCE
 
 .PHONY: test
 test: jOSh.iso
-	qemu-system-$(TARGET_ARCH) -cdrom jOSh.iso -gdb tcp::9000
+	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -gdb tcp::9000
 
 .PHONY: debug
 debug: jOSh.iso
-	qemu-system-$(TARGET_ARCH) -cdrom '$<' -s -S
+	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
 
 # custom bootloader stuff -- currently not usable
 boot.img: ./jBoot/boot.img pmlaunch.bin
