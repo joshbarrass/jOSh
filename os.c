@@ -73,6 +73,9 @@ void _entry() {
 void kernel_main() {
   clear_screen();
   print_string(welcomeMessage, 0, 0);
+  if (mis != NULL) {
+    print_string(get_mod_string(&get_mods(mis)[0]), 0, 1);
+  }
 
   return;
 }
