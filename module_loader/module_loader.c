@@ -57,7 +57,9 @@ void module_loader_main() {
   if (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) {
     print_string("LE", 17, yline);
   } else if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
+    terminal_color.fg = 4;
     print_string("BE", 17, yline);
+    return;
   }
   ++yline;
 
