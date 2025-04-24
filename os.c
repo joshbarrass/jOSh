@@ -57,7 +57,7 @@ __attribute__((optimize("O0"))) void _entry() {
   // if we were booted by a multiboot, we can save the pointer to the
   // MIS
   if ((uint32_t)rax == (uint32_t)0x2BADB002) {
-    mis = (MIS*)(uint64_t)rbx;
+    mis = (MIS*)rbx;
   }
   kernel_main();
 
