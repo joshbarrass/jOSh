@@ -1,6 +1,3 @@
-BOOT_FN=PMLAUNCH
-BOOT_EXT=BIN
-
 TARGET_ARCH=x86_64
 CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
 STRIP=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip
@@ -42,24 +39,10 @@ test: jOSh.iso
 debug: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
 
-# custom bootloader stuff -- currently not usable
-boot.img: ./jBoot/boot.img pmlaunch.bin
-	cp ./jBoot/boot.img ./boot.img
-	mcopy -i boot.img ./pmlaunch.bin ::PMLAUNCH.BIN
-
-pmlaunch.bin: pmlaunch.nasm ./jBoot/bsect.h ./jBoot/bsect.nasm
-	nasm -f bin -o pmlaunch.bin -l pmlaunch.lst pmlaunch.nasm
-
-jBoot/%: FORCE
-	$(MAKE) -C $(@D) "$(notdir $@)" BOOT_FN=$(BOOT_FN) BOOT_EXT=$(BOOT_EXT)
-
 .PHONY: clean
 clean:
-	rm -f ./boot.img
-	rm -f ./pmlaunch.bin ./pmlaunch.lst
 	rm -f $(OBJS)
 	rm -f ./os.elf
 	rm -rf ./grubiso/
 	rm -f jOSh.iso
-	$(MAKE) -C ./jBoot clean
 	$(MAKE) -C ./module_loader clean
