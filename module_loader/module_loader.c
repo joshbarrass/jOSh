@@ -96,23 +96,25 @@ void module_loader_main() {
    of memory in long mode. This requires four page tables, one PDT,
    one PDPT, and one PML4T. */
 
-uint64_t page_level_4_tab[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_dir_ptr_tab[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_dir[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_zero[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_one[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_two[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_three[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+// define some constants for working with page tables
+#define sz_PT 512
+uint64_t page_level_4_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_dir_ptr_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_dir[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_zero[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_one[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_two[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_three[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
 
 void zero_page_table(uint64_t *table) {
-  for (size_t i = 0; i < 512; ++i) {
+  for (size_t i = 0; i < sz_PT; ++i) {
     table[i] = 0;
   }
 }
 
 void id_table(uint64_t *table, uint64_t pti) {
-  uint64_t start_addr = 0x1000 * 512 * pti;
-  for (uint64_t i = 0; i < 512; ++i) {
+  uint64_t start_addr = 0x1000 * sz_PT * pti;
+  for (uint64_t i = 0; i < sz_PT; ++i) {
     table[i] = start_addr + (uint64_t)((0x1000 * i) | 3); // attributes: supervisor level, read/write, present
   }
 }
