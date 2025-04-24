@@ -151,6 +151,13 @@ long_mode:
         ;; the kernel, but it's nice to do it anyway :)
         mov [0xB8000], word 0x4F4C
 
+        ;; Set up RAX and RBX to pass the multiboot magic number and
+        ;; MIS to the kernel
+        xor rax, rax
+        mov eax, 0x2BADB002
+        xor rbx, rbx
+        extern mis
+        mov ebx, dword [mis]
         ;; Retrieve the full 64-bit entrypoint pointer from the C code
         ;; and call it
         extern entry
