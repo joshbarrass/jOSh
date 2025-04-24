@@ -51,7 +51,29 @@ void elf32_build_program_image(const char *const elf) {
   }
 }
 
+void elf64_build_program_image(const char *const elf) {
+  const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
+  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
+  const Elf64_Phdr * const pheader = (const Elf64_Phdr * const)p;
+
+  for (size_t i = 0; i < header->e_phnum; ++i) {
+    const void *const segment_start = (const void *const)(pheader[i].p_offset + elf);
+    void *const virt_addr = (const void *const)pheader[i].p_vaddr;
+    const size_t fsize = (size_t)pheader[i].p_filesz;
+    const size_t msize = (size_t)pheader[i].p_memsz;
+
+    memmove(virt_addr, segment_start, fsize);
+    for (int i = fsize; i < msize; ++i) {
+      ((char*)virt_addr)[i] = 0;
+    }
+  }
+}
+
 Elf32_Addr get_elf32_entrypoint(const char *const elf) {
   const Elf32_Ehdr * const header = (const Elf32_Ehdr * const)elf;
+  return header->e_entry;
+}
+Elf64_Addr get_elf64_entrypoint(const char *const elf) {
+  const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
   return header->e_entry;
 }

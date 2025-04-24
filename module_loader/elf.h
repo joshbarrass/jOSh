@@ -98,7 +98,8 @@ bool is_ELF(const char * const addr);
 char get_ELF_class(const char * const addr);
 char get_ELF_endianness(const char * const addr);
 void elf32_build_program_image(const char *const elf);
+void elf64_build_program_image(const char *const elf);
 Elf32_Addr get_elf32_entrypoint(const char *const elf);
-
+Elf64_Addr get_elf64_entrypoint(const char *const elf);
 
 #endif
