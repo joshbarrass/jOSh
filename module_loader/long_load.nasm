@@ -1,3 +1,5 @@
+;;; Code very heavily based on:
+;;; https://wiki.osdev.org/Setting_Up_Long_Mode
         BITS 32
 
 %macro call_print_str 3
@@ -11,8 +13,6 @@
         section .text
         global switch_to_long:function
 switch_to_long:
-        ;; Code very heavily based on:
-        ;; https://wiki.osdev.org/Setting_Up_Long_Mode
         extern print_string
         extern clear_screen
         extern yline
