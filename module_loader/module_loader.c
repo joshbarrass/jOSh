@@ -11,13 +11,19 @@
 #include "elf.h"
 
 const MIS *mis;
-uint64_t entry;
+typedef union {
+  uint64_t entry64;
+  uint32_t entry32;
+} Entrypoint;
+Entrypoint entry;
 unsigned int yline = 0;
+
+void setup_page_tables();
 
 void module_loader_main() {
   clear_screen();
   terminal_color.fg = 10;
-  
+
   print_string("[+] Entered module loader", 0, yline);
   ++yline;
 
@@ -66,12 +72,16 @@ void module_loader_main() {
     // make the call using inline assembly
     // this way, we can guarantee the calling convention that we
     // expect.
-    entry = (size_t)get_elf32_entrypoint(mod);
-    asm ("call *%0" : : "r"(entry) : );
+    entry.entry32 = get_elf32_entrypoint(mod);
+    asm ("call *%0" : : "r"(entry.entry32) : );
   } else {
-    /* terminal_color.fg = 4; */
-    /* print_string("[E] Unsupported ELF format. Exiting...", 0, yline); */
-    entry = (size_t)get_elf32_entrypoint(mod);
+    elf64_build_program_image(mod);
+    print_string("[+] ELF Loaded!", 0, yline);
+    ++yline;
+    print_string("[+] Jumping to entrypoint...", 0, yline);
+    ++yline;
+
+    entry.entry64 = get_elf64_entrypoint(mod);
     asm ("call switch_to_long" : : : );
   }
 }
