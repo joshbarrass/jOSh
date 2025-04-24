@@ -73,9 +73,10 @@ void module_loader_main() {
 
     // make the call using inline assembly
     // this way, we can guarantee the calling convention that we
-    // expect.
+    // expect. We can also restore the multiboot loader's inputs at
+    // the same time.
     entry.entry32 = get_elf32_entrypoint(mod);
-    asm ("call *%0" : : "r"(entry.entry32) : );
+    asm ("jmp *%0\r\n" : : "m"(entry.entry32), "a"(0x2BADB002), "b"(mis) :);
   } else {
     elf64_build_program_image(mod);
     print_string("[+] ELF Loaded!", 0, yline);
