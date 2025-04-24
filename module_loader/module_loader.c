@@ -78,10 +78,59 @@ void module_loader_main() {
     elf64_build_program_image(mod);
     print_string("[+] ELF Loaded!", 0, yline);
     ++yline;
+    print_string("[+] Setting up identity pages...", 0, yline);
+    ++yline;
+    setup_page_tables();
     print_string("[+] Jumping to entrypoint...", 0, yline);
     ++yline;
 
     entry.entry64 = get_elf64_entrypoint(mod);
     asm ("call switch_to_long" : : : );
   }
+}
+
+/* We'll define the page tables needed to identity map the first 8MB
+   of memory in long mode. This requires four page tables, one PDT,
+   one PDPT, and one PML4T. */
+
+uint64_t page_level_4_tab[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_dir_ptr_tab[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_dir[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_zero[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_one[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_two[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+uint64_t page_table_three[512] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+
+void zero_page_table(uint64_t *table) {
+  for (size_t i = 0; i < 512; ++i) {
+    table[i] = 0;
+  }
+}
+
+void id_table(uint64_t *table, uint64_t pti) {
+  uint64_t start_addr = 0x1000 * 512 * pti;
+  for (uint64_t i = 0; i < 512; ++i) {
+    table[i] = start_addr + (uint64_t)((0x1000 * i) | 3); // attributes: supervisor level, read/write, present
+  }
+}
+
+void setup_page_tables() {
+  zero_page_table(page_dir);
+  zero_page_table(page_dir_ptr_tab);
+  zero_page_table(page_table_zero);
+  zero_page_table(page_table_one);
+  zero_page_table(page_table_two);
+  zero_page_table(page_table_three);
+
+  id_table(page_table_zero, 0);
+  id_table(page_table_one, 1);
+  id_table(page_table_two, 2);
+  id_table(page_table_three, 3);
+
+  page_dir[0] = (uint64_t)(page_table_zero) | 3;
+  page_dir[1] = (uint64_t)(page_table_one) | 3;
+  page_dir[2] = (uint64_t)(page_table_two) | 3;
+  page_dir[3] = (uint64_t)(page_table_three) | 3;
+  page_dir_ptr_tab[0] = (uint64_t)(page_dir) | 3;
+  page_level_4_tab[0] = (uint64_t)(page_dir_ptr_tab) | 3;
 }
