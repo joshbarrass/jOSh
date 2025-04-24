@@ -18,9 +18,9 @@ typedef struct __attribute__((packed)) {
   char *string;
   uint32_t _reserved;
 } Mod;
-inline void *get_mod_start(Mod *m) { return m->mod_start; }
-inline void *get_mod_end(Mod *m) { return m->mod_end; }
-inline char *get_mod_string(Mod *m) { return m->string; }
+inline const void *get_mod_start(const Mod *m) { return m->mod_start; }
+inline const void *get_mod_end(const Mod *m) { return m->mod_end; }
+inline const char *get_mod_string(const Mod *m) { return m->string; }
 #else
 typedef struct __attribute__((packed)) {
   uint32_t mod_start;
@@ -28,9 +28,9 @@ typedef struct __attribute__((packed)) {
   uint32_t string;
   uint32_t _reserved;
 } Mod;
-inline void *get_mod_start(Mod *m) { return (void*)(m->mod_start); }
-inline void *get_mod_end(Mod *m) { return (void*)(m->mod_end); }
-inline char *get_mod_string(Mod *m) { return (char*)(m->string); }
+inline const void *get_mod_start(const Mod *m) { return (const void*)(m->mod_start); }
+inline const void *get_mod_end(const Mod *m) { return (const void*)(m->mod_end); }
+inline const char *get_mod_string(const Mod *m) { return (const char*)(m->string); }
 #endif
 
 typedef struct __attribute__((packed)) {
@@ -57,11 +57,11 @@ typedef struct __attribute__((packed)) {
   // TODO: rest of the header
 } MIS;
 #ifdef ARCH_32
-inline char *get_cmdline(MIS *m) { return m->cmdline; }
-inline Mod *get_mods(MIS *m) { return m->mods; }
+inline const char *get_cmdline(const MIS *m) { return m->cmdline; }
+inline const Mod *get_mods(const MIS *m) { return m->mods; }
 #else
-inline char *get_cmdline(MIS *m) { return (char*)(m->cmdline); }
-inline Mod *get_mods(MIS *m) { return (Mod*)(m->mods); }
+inline const char *get_cmdline(const MIS *m) { return (const char*)(m->cmdline); }
+inline const Mod *get_mods(const MIS *m) { return (const Mod*)(m->mods); }
 #endif
 
 #endif
