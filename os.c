@@ -30,7 +30,7 @@ const MIS *mis = NULL;
 
 void kernel_main();
 
-void _entry() {
+__attribute__((optimize("O0"))) void _entry() {
   // bind our registers to variable names to ensure they don't get
   // ruined
   register volatile uint32_t rax asm("eax");
