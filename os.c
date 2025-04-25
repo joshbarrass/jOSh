@@ -39,20 +39,12 @@ __attribute__((optimize("O0"))) void _entry() {
   // set up a new stack, since the loader stack may not be sufficient
   // (and if it is, we've probably clobbered it loading the kernel ELF
   // anyway), then call the kernel
-  asm volatile (
-       #ifdef ARCH_64
-       "mov %0, %%rsp\r\n"
-       #elif ARCH_32
-       "mov %0, %%esp\r\n"
-       #endif
-       :
-       : "r"(stack+sizeof(stack)/sizeof(stack[0])-1)
 #ifdef ARCH_64
-       : "rax", "rbx"
+  register volatile char *rsp asm("rsp")
 #elif ARCH_32
-       : "eax", "ebx"
+  register volatile char *rsp asm("esp")
 #endif
-       );
+    = stack + sizeof(stack)/sizeof(stack[0]);
 
   // if we were booted by a multiboot, we can save the pointer to the
   // MIS
