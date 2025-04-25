@@ -70,12 +70,90 @@ __attribute__((optimize("O0"))) void _entry() {
                 );
 }
 
+void print_hex(uint64_t v, const size_t x, const size_t y, char length) {
+  v &= ~0ULL >> (64 - length * 8);
+  char buf[2+2*8+1];
+  for (size_t i = 0; i < sizeof(buf) / sizeof(buf[0]); ++i) {
+    buf[i] = '0';
+  }
+  buf[2+2*length] = 0;
+  buf[1] = 'x';
+  size_t i = 1+2*length;
+  do {
+    uint64_t r = v % 16;
+    v /= 16;
+    if (r < 10) {
+      buf[i] = r + '0';
+    } else if (r >= 10) {
+      buf[i] = (r-10) + 'A';
+    }
+    --i;
+  } while ( v > 0 );
+  print_string(buf, x, y);
+  return;
+}
+
 void kernel_main() {
   clear_screen();
   print_string(welcomeMessage, 0, 0);
-  if (mis != NULL) {
-    print_string(get_mod_string(&get_mods(mis)[0]), 0, 1);
+  if (mis == NULL) {
+    terminal_color.fg = 4;
+    print_string("Missing multiboot information structure", 0, 1);
   }
-
+  print_string("[*] Checking required multiboot flags...", 0, 1);
+  terminal_color.fg = 10;
+  if (mis->FLAGS & MULTIBOOT_FLAG_FULL_MMAP) {
+    print_string("[+] Memory map is available", 0, 2);
+  } else {
+    terminal_color.fg = 4;
+    print_string("[!] Memory map unavailable", 0, 2);
+    return;
+  }
+  // ensure the memory map has not been corrupted
+  // if below 2MB, none of our loaded data could have collided with it
+  if (mis->mmap >= 2 * 1024 * 1024 || mis->mmap + mis->mmap_length >= 2 * 1024 * 1024) { 
+    terminal_color.fg = 4;
+    print_string("[!] Memory map corrupted", 0, 3);
+    return;
+  } else {
+    print_string("[+] Intact mmap found at 0x????????????????", 0, 3);
+    print_hex(mis->mmap, 25, 3, 8);
+  }
+  print_string("    |       start       -         end       |type| raw|", 0, 4);
+  size_t y = 5;
+  terminal_color.fg = 7;
+  size_t adv = 0;
+  mmap *map = get_mmap(mis);
+  for (size_t i = 0; i < mis->mmap_length; i+=adv) {
+    mmap *entry = (mmap*)(&((char*)map)[i]);
+    adv = entry->size+4;
+    print_string("|0x???????????????? - 0x????????????????|    |    |", 4, y);
+    print_hex(entry->base_addr, 5, y, 8);
+    print_hex(entry->base_addr+entry->length-1, 5+18+3, y, 8);
+    switch (entry->type) {
+    case 1:
+      print_string("FREE", 45, y);
+      break;
+    case 2:
+      print_string("RSVD", 45, y);
+      break;
+    case 3:
+      print_string("ACPI", 45, y);
+      break;
+    case 4:
+      print_string("RESH", 45, y);
+      break;
+    case 5:
+      terminal_color.fg = 4;
+      print_string("BAD!", 45, y);
+      terminal_color.fg = 7;
+      break;
+    default:
+      print_string("RSVD", 45, y);
+      print_hex(entry->type, 45+5, y, 1);
+      break;
+    }
+    ++y;
+  }
   return;
 }
