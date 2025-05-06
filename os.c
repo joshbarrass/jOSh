@@ -2,61 +2,80 @@
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
 #endif
 
-/* This tutorial will only work for the 32-bit ix86 targets. */
-#if !defined(__i386__)
-#error "This tutorial needs to be compiled with a ix86-elf compiler"
+#if defined(__x86_64__) || defined(_M_X64)
+#define ARCH_64 1
+#elif defined(i386) || defined(__i386__) || defined(__i386) || defined(_M_IX86)
+#define ARCH_32 1
 #endif
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-struct CharColor {
-  unsigned char fg : 4;
-  unsigned char bg : 4;
-};
+#include "tty.h"
+#include "module_loader/multiboot.h"
 
-struct ScreenChar {
-  unsigned char character;
-  struct CharColor color;
-};
-volatile struct ScreenChar * const screen = (struct ScreenChar*)0xB8000;
+static char *stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
 
-#define VGA_WIDTH 80
-#define VGA_HEIGHT 25
-size_t terminal_cursor_x = 0;
-size_t terminal_cursor_y = 0;
-struct CharColor terminal_color = {7, 0};
+static const char *welcomeMessage = "Welcome to jOSh! "
+#ifdef ARCH_64
+  "(64-bit)";
+#elif ARCH_32
+  "(32-bit)";
+#else
+;
+#endif
 
-void clear_screen_color(const struct CharColor color) {
-  for (size_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; ++i) {
-    screen[i].character = 0;
-    screen[i].color = color;
+const MIS *mis = NULL;
+
+void kernel_main();
+
+__attribute__((optimize("O0"))) void _entry() {
+  // bind our registers to variable names to ensure they don't get
+  // ruined
+  register volatile uint32_t rax asm("eax");
+  register volatile MIS *rbx asm("ebx");
+
+  // set up a new stack, since the loader stack may not be sufficient
+  // (and if it is, we've probably clobbered it loading the kernel ELF
+  // anyway), then call the kernel
+  asm volatile (
+       #ifdef ARCH_64
+       "mov %0, %%rsp\r\n"
+       #elif ARCH_32
+       "mov %0, %%esp\r\n"
+       #endif
+       :
+       : "r"(stack+sizeof(stack)/sizeof(stack[0])-1)
+#ifdef ARCH_64
+       : "rax", "rbx"
+#elif ARCH_32
+       : "eax", "ebx"
+#endif
+       );
+
+  // if we were booted by a multiboot, we can save the pointer to the
+  // MIS
+  if ((uint32_t)rax == (uint32_t)0x2BADB002) {
+    mis = (MIS*)rbx;
   }
-}
+  kernel_main();
 
-void clear_screen_bgfg(const int bg, const int fg) {
-  const struct CharColor color = {fg, bg};
-  clear_screen_color(color);
+  // create a footer to hang if the kernel ever returns here
+  asm volatile (
+                ".hang:\r\n"
+                "cli\r\n"
+                "hlt\r\n"
+                "jmp .hang\r\n"
+                );
 }
-
-void clear_screen() {
-  clear_screen_color(terminal_color);
-}
-
-void print_string(const char *s, const int x, const int y) {
-  const size_t pos = VGA_WIDTH*y+x;
-  for (size_t i = 0; s[i] != 0 && (struct ScreenChar*)(pos+i) < screen+VGA_WIDTH*VGA_HEIGHT; ++i) {
-    screen[pos+i].character = s[i];
-  }
-}
-
-static const char *welcomeMessage = "Welcome to jOSh!";
 
 void kernel_main() {
   clear_screen();
-  screen->character = 'P';
   print_string(welcomeMessage, 0, 0);
-  
+  if (mis != NULL) {
+    print_string(get_mod_string(&get_mods(mis)[0]), 0, 1);
+  }
+
   return;
 }

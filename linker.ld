@@ -2,31 +2,20 @@
    Accessed: 17 Apr 2025 */
 /* The bootloader will look at this image and start execution at the symbol
    designated as the entry point. */
-ENTRY(_start)
+ENTRY(_entry)
 
 /* Tell where the various sections of the object files will be put in the final
    kernel image. */
 SECTIONS
 {
-	/* It used to be universally recommended to use 1M as a start offset,
-	   as it was effectively guaranteed to be available under BIOS systems.
-	   However, UEFI has made things more complicated, and experimental data
-	   strongly suggests that 2M is a safer place to load. In 2016, a new
-	   feature was introduced to the multiboot2 spec to inform bootloaders
-	   that a kernel can be loaded anywhere within a range of addresses and
-	   will be able to relocate itself to run from such a loader-selected
-	   address, in order to give the loader freedom in selecting a span of
-	   memory which is verified to be available by the firmware, in order to
-	   work around this issue. This does not use that feature, so 2M was
-	   chosen as a safer option than the traditional 1M. */
-	. = 2M;
+	/* The module loader is loaded at a 2M offset. However, x86_64
+	generally requires 2MB aligment, so to make sure there is no
+	overlap between the module loader and the kernel, we ensure
+	that the kernel is loaded to an offset of 4M */
+        . = 4M;
 
-	/* First put the multiboot header, as it is required to be put very early
-	   in the image or the bootloader won't recognize the file format.
-	   Next we'll put the .text section. */
 	.text BLOCK(4K) : ALIGN(4K)
 	{
-		*(.multiboot)
 		*(.text)
 	}
 

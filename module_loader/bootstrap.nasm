@@ -1,6 +1,8 @@
         BITS 32
-        MULTIBOOT_FLAGS equ 0
+        MULTIBOOT_FLAG_4K_ALIGN equ (1 << 0)
+        MULTIBOOT_FLAGS equ MULTIBOOT_FLAG_4K_ALIGN
         MULTIBOOT_MAGIC equ 0x1BADB002
+        MULTIBOOT_LOADER_MAGIC equ 0x2BADB002
         MULTIBOOT_CHECKSUM equ -(MULTIBOOT_FLAGS + MULTIBOOT_MAGIC)
 
         section .multiboot
@@ -22,7 +24,12 @@
         section .bss
         align 16
 stack_bottom:
-        resb 16384
+        resb 4096               ; we can get away with a much smaller
+                                ; stack for the loader, since the
+                                ; function call depth is very low and
+                                ; we shouldn't need much work space for
+                                ; variables
+
 stack_top:
 
         section .text
@@ -37,9 +44,18 @@ _start:
         ;; set up stack
         mov esp, stack_top
 
-        ;; start the kernel
-        extern kernel_main
-        call kernel_main
+        ;; check that we were loaded by a multiboot loader
+        cmp eax, MULTIBOOT_LOADER_MAGIC
+        jne .hang
+
+        ;; store the address of the Multiboot Information Struct so
+        ;; that the C code can correctly access it
+        extern mis
+        mov [mis], ebx
+
+        ;; jump to the C loader
+        extern module_loader_main
+        call module_loader_main
 
         ;; if we end up back here, we just need to hang the system
         .hang:
