@@ -102,4 +102,8 @@ void elf64_build_program_image(const char *const elf);
 Elf32_Addr get_elf32_entrypoint(const char *const elf);
 Elf64_Addr get_elf64_entrypoint(const char *const elf);
 
+// helpers
+Elf32_Addr get_elf32_lowest_addr(const char *const elf);
+Elf64_Addr get_elf64_lowest_addr(const char *const elf);
+
 #endif

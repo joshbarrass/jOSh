@@ -2,6 +2,7 @@ OBJS=\
 bootstrap.o \
 module_loader.o \
 elf.o \
+addr_checker.o \
 long_load.o
 
 loader.elf: module_loader.ld $(OBJS)
