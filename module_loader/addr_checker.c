@@ -11,53 +11,76 @@ size_t strlen(const char *c) {
   return len;
 }
 
-// TODO: modify these functions to return the highest address
-// found. This will be useful for the future when we want to use
-// paging to relocate the kernel instead of physically relocating
-// it. This information can be used to help us find free page frames
-// for allocating any "no data" sections (e.g. .bss)
-
-bool check_MIS(const uint64_t load_addr, const MIS *mis) {
-  return load_addr > ((uint64_t)mis + (uint64_t)sizeof(MIS));
+uint64_t check_MIS(const MIS *mis) {
+  return ((uint64_t)mis + (uint64_t)sizeof(MIS));
 }
 
-bool check_cmdline(const uint64_t load_addr, const MIS *mis) {
+uint64_t check_cmdline(const MIS *mis) {
   const char *cmdline = get_cmdline(mis);
   const size_t len = strlen(cmdline);
-  return load_addr > ((uint64_t)cmdline + (uint64_t)len);
+  return ((uint64_t)cmdline + (uint64_t)len);
 }
 
-bool check_mod(const uint64_t load_addr, const Mod *mod) {
+uint64_t check_mod(const Mod *mod) {
+  uint64_t max_addr = 0;
+
   // check the module data
-  if (load_addr <= (uint64_t)(get_mod_end(mod))) {
-    return false;
+  uint64_t mod_end = (uint64_t)(get_mod_end(mod));
+  if (mod_end > max_addr) {
+    max_addr = mod_end;
   }
 
   // check the Mod structure
-  if (load_addr <= ((uint64_t)mod + (uint64_t)sizeof(Mod))) {
-    return false;
+  uint64_t ModS_end = ((uint64_t)mod + (uint64_t)sizeof(Mod));
+  if (ModS_end > max_addr) {
+    max_addr = ModS_end;
   }
 
   // check the Mod string
   const char *s = get_mod_string(mod);
   const size_t len = strlen(s);
-  return load_addr > ((uint64_t)s + (uint64_t)len);
+  uint64_t str_end = ((uint64_t)s + (uint64_t)len);
+  if (str_end > max_addr) {
+    max_addr = str_end;
+  }
+  return max_addr;
 }
 
-bool check_mods(const uint64_t load_addr, const MIS *mis) {
+uint64_t check_mods(const MIS *mis) {
   const Mod *mods = get_mods(mis);
+  uint64_t max_addr = 0;
   for (size_t i = 1; i < mis->mods_count; ++i) {
-    if (!check_mod(load_addr, &mods[i])) {
-      return false;
+    uint64_t mod_max = check_mod(&mods[i]);
+    if (mod_max > max_addr) {
+      max_addr = mod_max;
     }
   }
-  return true;
+  return max_addr;
 }
 
-// check_all runs all of the address checking functions to ensure that
-// the target load address is above all of the structures loaded by
-// GRUB. If this returns true, then the load address is safe and will
-// not clobber any of GRUB's or the module loader's structures.
+// get_MIS_max_addr runs all of the functions for determining the max
+// addresses and returns the greatest of them.
+uint64_t get_MIS_max_addr(const MIS *mis) {
+  uint64_t max_addr = 0;
+  const uint64_t mods = check_mods(mis);
+  if (mods > max_addr) {
+    max_addr = mods;
+  }
+  const uint64_t mis_addr = check_MIS(mis);
+  if (mis_addr > max_addr) {
+    max_addr = mis_addr;
+  }
+  const uint64_t cmdline = check_cmdline(mis);
+  if (cmdline > max_addr) {
+    max_addr = cmdline;
+  }
+  return max_addr;
+}
+
+// gets the maximum address used by the MIS/GRUB and checks whether a
+// given address is greater than it. If this function returns true, it
+// is safe to relocate data to this address, and this will not
+// overwrite any other data loaded by GRUB.
 bool check_all(const uint64_t load_addr, const MIS *mis) {
-  return check_mods(load_addr, mis) && check_MIS(load_addr, mis) && check_cmdline(load_addr, mis);
+  return load_addr > get_MIS_max_addr(mis);
 }
