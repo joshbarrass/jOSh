@@ -73,7 +73,7 @@ void module_loader_main() {
   }
 
   // check that the ELF can be safely loaded to that address
-  if (!check_all(lowest_addr)) {
+  if (!check_all(lowest_addr, mis)) {
     terminal_color.fg = 4;
     print_string("[E] ELF cannot be moved safely!", 0, yline);
     return;
