@@ -11,6 +11,12 @@ size_t strlen(const char *c) {
   return len;
 }
 
+// TODO: modify these functions to return the highest address
+// found. This will be useful for the future when we want to use
+// paging to relocate the kernel instead of physically relocating
+// it. This information can be used to help us find free page frames
+// for allocating any "no data" sections (e.g. .bss)
+
 bool check_MIS(const uint64_t load_addr, const MIS *mis) {
   return load_addr > ((uint64_t)mis + (uint64_t)sizeof(MIS));
 }
@@ -18,7 +24,7 @@ bool check_MIS(const uint64_t load_addr, const MIS *mis) {
 bool check_cmdline(const uint64_t load_addr, const MIS *mis) {
   const char *cmdline = get_cmdline(mis);
   const size_t len = strlen(cmdline);
-  return load_addr > ((uint64_t)cmdline + (uint64_t)len + 1ULL);
+  return load_addr > ((uint64_t)cmdline + (uint64_t)len);
 }
 
 bool check_mod(const uint64_t load_addr, const Mod *mod) {
