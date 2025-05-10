@@ -49,6 +49,9 @@ uint64_t check_mod(const Mod *mod) {
 uint64_t check_mods(const MIS *mis) {
   const Mod *mods = get_mods(mis);
   uint64_t max_addr = 0;
+  // we intentionally check all but the first module. Since we are
+  // relocating things using a safe memmove, it doesn't matter if the
+  // ELF itself overlaps the load address.
   for (size_t i = 1; i < mis->mods_count; ++i) {
     uint64_t mod_max = check_mod(&mods[i]);
     if (mod_max > max_addr) {
