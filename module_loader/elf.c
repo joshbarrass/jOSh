@@ -77,3 +77,33 @@ Elf64_Addr get_elf64_entrypoint(const char *const elf) {
   const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
   return header->e_entry;
 }
+
+Elf32_Addr get_elf32_lowest_addr(const char *const elf) {
+  const Elf32_Ehdr * const header = (const Elf32_Ehdr * const)elf;
+  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
+  const Elf32_Phdr * const pheader = (const Elf32_Phdr * const)p;
+  Elf32_Addr lowest_addr = 0xffffffff;
+
+  for (size_t i = 0; i < header->e_phnum; ++i) {
+    Elf32_Addr virt_addr = pheader[i].p_vaddr;
+    if (virt_addr < lowest_addr) {
+      lowest_addr = virt_addr;
+    }
+  }
+  return lowest_addr;
+}
+
+Elf64_Addr get_elf64_lowest_addr(const char *const elf) {
+  const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
+  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
+  const Elf64_Phdr * const pheader = (const Elf64_Phdr * const)p;
+  Elf64_Addr lowest_addr = 0xffffffffffffffff;
+
+  for (size_t i = 0; i < header->e_phnum; ++i) {
+    Elf64_Addr virt_addr = pheader[i].p_vaddr;
+    if (virt_addr < lowest_addr) {
+      lowest_addr = virt_addr;
+    }
+  }
+  return lowest_addr;
+}

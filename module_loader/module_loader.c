@@ -9,6 +9,7 @@
 #include "multiboot.h"
 #include "tty.h"
 #include "elf.h"
+#include "addr_checker.h"
 
 const MIS *mis;
 typedef union {
@@ -62,6 +63,21 @@ void module_loader_main() {
     return;
   }
   ++yline;
+
+  // determine the lowest virtual address of the ELF
+  uint64_t lowest_addr;
+  if (get_ELF_class(mod) == EI_CLASS_32BIT) {
+    lowest_addr = (uint64_t)get_elf32_lowest_addr(mod);
+  } else {
+    lowest_addr = get_elf64_lowest_addr(mod);
+  }
+
+  // check that the ELF can be safely loaded to that address
+  if (!check_all(lowest_addr, mis)) {
+    terminal_color.fg = 4;
+    print_string("[E] ELF cannot be moved safely!", 0, yline);
+    return;
+  }
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
