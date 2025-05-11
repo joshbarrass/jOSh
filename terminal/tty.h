@@ -36,9 +36,11 @@ typedef struct {
 #define VGA_COLOR_LIGHT_BROWN 14
 #define VGA_COLOR_WHITE 15
 
-void clear_screen_color(const CharColor color);
-void clear_screen_bgfg(const int bg, const int fg);
-void clear_screen();
-void print_string(const char *s, const int x, const int y);
+void term_clear_screen_color(const CharColor color);
+void term_clear_screen_bgfg(const int bg, const int fg);
+void term_clear_screen();
+void term_print_string_at(const char *s, const int x, const int y);
+void term_scroll();
+void term_scroll_n(const unsigned char n);
 
 #endif
