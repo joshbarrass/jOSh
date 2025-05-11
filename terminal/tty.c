@@ -22,13 +22,14 @@ void term_clear_screen() {
 void term_print_string_at(const char *s, const int x, const int y) {
   size_t pos = VGA_WIDTH*y+x;
   for (size_t i = 0; s[i] != 0; ++i) {
-    while (pos + i >= VGA_WIDTH * VGA_HEIGHT) {
+    while (pos >= VGA_WIDTH * VGA_HEIGHT) {
       pos -= VGA_WIDTH;
       term_scroll();
     }
-    screen[pos+i].character = s[i];
-    screen[pos+i].color.fg = terminal_color.fg;
-    screen[pos+i].color.bg = terminal_color.bg;
+    screen[pos].character = s[i];
+    screen[pos].color.fg = terminal_color.fg;
+    screen[pos].color.bg = terminal_color.bg;
+    ++pos;
   }
 }
 
