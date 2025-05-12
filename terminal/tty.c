@@ -1,9 +1,30 @@
 #include "tty.h"
 
 volatile ScreenChar * const screen = (ScreenChar*)VGA_FRAMEBUFFER_ADDR;
-static CharColor terminal_color = {VGA_COLOR_LIGHT_GREY, VGA_COLOR_DARK_GREY};
+static CharColor terminal_color = {VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK};
 static size_t pos_x = 0;
 static size_t pos_y = 0;
+
+size_t term_get_pos_x() {
+  return pos_x;
+}
+
+size_t term_get_pos_y() {
+  return pos_y;
+}
+
+void term_set_color(const unsigned char fg, const unsigned char bg) {
+  terminal_color.fg = fg;
+  terminal_color.bg = bg;
+}
+
+void term_set_fg(const unsigned char fg) {
+  terminal_color.fg = fg;
+}
+
+void term_set_bg(const unsigned char bg) {
+  terminal_color.bg = bg;
+}
 
 void term_clear_screen_color(const CharColor color) {
   for (size_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; ++i) {

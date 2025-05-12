@@ -36,6 +36,11 @@ typedef struct {
 #define VGA_COLOR_LIGHT_BROWN 14
 #define VGA_COLOR_WHITE 15
 
+size_t term_get_pos_x();
+size_t term_get_pos_y();
+void term_set_color(const unsigned char fg, const unsigned char bg);
+void term_set_fg(const unsigned char fg);
+void term_set_bg(const unsigned char bg);
 void term_clear_screen_color(const CharColor color);
 void term_clear_screen_bgfg(const int bg, const int fg);
 void term_clear_screen();
