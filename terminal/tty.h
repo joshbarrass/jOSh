@@ -39,8 +39,11 @@ typedef struct {
 void term_clear_screen_color(const CharColor color);
 void term_clear_screen_bgfg(const int bg, const int fg);
 void term_clear_screen();
-void term_print_string_at(const char *s, const int x, const int y);
+size_t term_print_string_at(const char *s, const int x, const int y);
+void term_print_string(const char *s);
+void term_println(const char *s);
 void term_scroll();
 void term_scroll_n(const unsigned char n);
+void term_new_line();
 
 #endif

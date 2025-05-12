@@ -72,11 +72,23 @@ __attribute__((optimize("O0"))) void _entry() {
 
 void kernel_main() {
   term_clear_screen();
-  term_print_string_at(welcomeMessage, 0, 0);
+  term_println(welcomeMessage);
   if (mis != NULL) {
-    term_print_string_at(get_mod_string(&get_mods(mis)[0]), 0, 1);
+    term_println(get_mod_string(&get_mods(mis)[0]));
+    term_new_line();
   }
-  term_print_string_at("This is a very long string. Hopefully, this string will overflow and cause the terminal to auto-scroll to fit it!", 0, VGA_HEIGHT-1);
-
+  static const char *long_str = "This is a very long string. Hopefully, this string will overflow and cause the terminal to auto-scroll to fit it!";
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println(long_str);
+  term_println("Now force it to scroll.");
   return;
 }
