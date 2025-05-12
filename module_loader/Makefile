@@ -3,7 +3,8 @@ bootstrap.o \
 module_loader.o \
 elf.o \
 addr_checker.o \
-long_load.o
+long_load.o \
+terminal/tty.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)

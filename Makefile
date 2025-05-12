@@ -18,7 +18,8 @@ grubiso/boot/grub/grub.cfg: grub.cfg
 	cp grub.cfg grubiso/boot/grub/grub.cfg
 
 OBJS=\
-os.o
+os.o \
+terminal/tty.o
 
 FORCE: ;
 

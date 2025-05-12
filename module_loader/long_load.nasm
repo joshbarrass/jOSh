@@ -2,50 +2,50 @@
 ;;; https://wiki.osdev.org/Setting_Up_Long_Mode
         BITS 32
 
-%macro call_print_str 3
-        push dword %3
-        push dword %2
+%macro call_print_str 1
         push dword %1
-        call print_string
-        add esp, 4*3
+        call term_println
+        add esp, 4
+%endmacro
+%macro set_fg 1
+        push byte %1
+        call term_set_fg
+        add esp, 1
 %endmacro
 
         section .text
         global switch_to_long:function
 switch_to_long:
-        extern print_string
-        extern clear_screen
+        extern term_println
+        extern term_clear_screen
         extern yline
 
         call detect_cpuid
         jnz .have_cpuid
         call err_color
-        call_print_str STR_NO_CPUID, 0, [yline]
+        call_print_str STR_NO_CPUID
         ret
 
         .have_cpuid:
-        call_print_str STR_CPUID, 0, [yline]
-        inc dword [yline]
+        call_print_str STR_CPUID
 
         call detect_extended_functions
         jnb .ext_available
         call err_color
-        call_print_str STR_NO_EXT, 0, [yline]
+        call_print_str STR_NO_EXT
         ret
 
         .ext_available:
-        call_print_str STR_EXT_AVAILABLE, 0, [yline]
-        inc dword [yline]
+        call_print_str STR_EXT_AVAILABLE
 
         call detect_long_mode
         jnz .long_mode_available
         call err_color
-        call_print_str STR_NO_LONG_MODE, 0, [yline]
+        call_print_str STR_NO_LONG_MODE
         ret
 
         .long_mode_available:
-        call_print_str STR_LONG_MODE_AVAILABLE, 0, [yline]
-        inc dword [yline]
+        call_print_str STR_LONG_MODE_AVAILABLE
 
         ;; if we made it here, long mode is available
         ;; we set up the paging structures in the C code
@@ -58,8 +58,7 @@ switch_to_long:
         ;; have the CR3 register point to the PML4T
         mov eax, page_level_4_tab
         mov cr3, eax
-        call_print_str STR_PAE_ENABLED, 0, [yline]
-        inc dword [yline]
+        call_print_str STR_PAE_ENABLED
         ;; set the long mode bit
         mov ecx, 0xC0000080           ; Set the C-register to 0xC0000080, which is the EFER MSR.
         rdmsr                         ; Read from the model-specific register.
@@ -73,8 +72,7 @@ switch_to_long:
         ;; enabled long mode paging. However, our GDT is still set up
         ;; for protected mode. The CPU is therefore running in 32-bit
         ;; compatibility mode, rather than true long mode.
-        call_print_str STR_ENTERED_COMPAT, 0, [yline]
-        inc dword [yline]
+        call_print_str STR_ENTERED_COMPAT
         ;; To get into true long mode, we need to load a GDT with a
         ;; long mode code segment, then make a far jump to 64-bit code
         lgdt [GDTR]
@@ -122,13 +120,13 @@ detect_long_mode:
         ret
 
 err_color:
-        extern terminal_color
-        mov [terminal_color], byte 4
+        extern term_set_fg
+        set_fg byte 4
         ret
 
 good_color:
-        extern terminal_color
-        mov [terminal_color], byte 10
+        extern term_set_fg
+        set_fg byte 10
         ret
 
         BITS 64
