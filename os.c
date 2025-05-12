@@ -77,18 +77,5 @@ void kernel_main() {
     term_println(get_mod_string(&get_mods(mis)[0]));
     term_new_line();
   }
-  static const char *long_str = "This is a very long string. Hopefully, this string will overflow and cause the terminal to auto-scroll to fit it!";
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println(long_str);
-  term_println("Now force it to scroll.");
   return;
 }
