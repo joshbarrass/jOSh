@@ -19,7 +19,8 @@ grubiso/boot/grub/grub.cfg: grub.cfg
 
 OBJS=\
 os.o \
-terminal/tty.o
+terminal/tty.o \
+panic.o
 
 FORCE: ;
 

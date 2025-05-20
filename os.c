@@ -14,6 +14,7 @@
 
 #include "terminal/tty.h"
 #include "module_loader/multiboot.h"
+#include "panic.h"
 
 static char *stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
 
@@ -77,5 +78,6 @@ void kernel_main() {
     term_println(get_mod_string(&get_mods(mis)[0]));
     term_new_line();
   }
+  kpanic();
   return;
 }

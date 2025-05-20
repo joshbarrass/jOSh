@@ -96,3 +96,13 @@ void term_new_line() {
   /*   --pos_y; */
   /* } */
 }
+
+void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
+                 const size_t w, const size_t h) {
+  for (size_t i = 0; i < h; ++i) {
+    for (size_t j = 0; j < w; ++j) {
+      const size_t pos = VGA_WIDTH*(y+i) + x + j;
+      screen[pos] = bitmap[w*i+j];
+    }
+  }
+}
