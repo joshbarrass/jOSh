@@ -19,7 +19,7 @@ typedef union {
 Entrypoint entry;
 unsigned int yline = 0;
 
-void setup_page_tables();
+static void setup_page_tables();
 
 void module_loader_main() {
   clear_screen();
@@ -115,43 +115,33 @@ void module_loader_main() {
 // define some constants for working with page tables
 #define sz_PT 512
 uint64_t page_level_4_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_dir_ptr_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_dir[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_zero[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_one[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_two[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-uint64_t page_table_three[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+static uint64_t page_dir_ptr_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+static uint64_t page_dir[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
 
-void zero_page_table(uint64_t *table) {
+static void zero_page_table(uint64_t *table) {
   for (size_t i = 0; i < sz_PT; ++i) {
     table[i] = 0;
   }
 }
 
-void id_table(uint64_t *table, uint64_t pti) {
+static void id_table(uint64_t *table, uint64_t pti) {
   uint64_t start_addr = 0x1000 * sz_PT * pti;
   for (uint64_t i = 0; i < sz_PT; ++i) {
     table[i] = start_addr + (uint64_t)((0x1000 * i) | 3); // attributes: supervisor level, read/write, present
   }
 }
 
-void setup_page_tables() {
+static void setup_page_tables() {
   zero_page_table(page_dir);
   zero_page_table(page_dir_ptr_tab);
-  zero_page_table(page_table_zero);
-  zero_page_table(page_table_one);
-  zero_page_table(page_table_two);
-  zero_page_table(page_table_three);
+  zero_page_table(page_level_4_tab);
 
-  id_table(page_table_zero, 0);
-  id_table(page_table_one, 1);
-  id_table(page_table_two, 2);
-  id_table(page_table_three, 3);
-
-  page_dir[0] = (uint64_t)(page_table_zero) | 3;
-  page_dir[1] = (uint64_t)(page_table_one) | 3;
-  page_dir[2] = (uint64_t)(page_table_two) | 3;
-  page_dir[3] = (uint64_t)(page_table_three) | 3;
+  // Identity map the first 8MB
+  // We can use 2MB pages here for ease/efficiency
+  page_dir[0] = (uint64_t)(0) | 3 | 128;
+  page_dir[1] = (uint64_t)(0x200000) | 3 | 128;
+  page_dir[2] = (uint64_t)(0x400000) | 3 | 128;
+  page_dir[3] = (uint64_t)(0x600000) | 3 | 128;
   page_dir_ptr_tab[0] = (uint64_t)(page_dir) | 3;
   page_level_4_tab[0] = (uint64_t)(page_dir_ptr_tab) | 3;
 }
