@@ -60,6 +60,7 @@ static void kpanic_vprintf(const char *fmt, va_list args) {
         break;
       default:
         term_print_char('%');
+      case '%':
         term_print_char(*fmt);
       }
     }
