@@ -1,7 +1,13 @@
 TARGET_ARCH?=x86_64
 ARCH_DIR=kernel/arch/$(TARGET_ARCH)
-CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
-STRIP=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip
+SYSROOT?=sysroot
+CC=$(abspath $(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc)
+STRIP=$(abspath $(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip)
+
+CFLAGS?=-O2 -Wall -std=gnu99
+
+SYSROOT:=$(abspath $(SYSROOT))
+CFLAGS:=$(CFLAGS) --sysroot=$(SYSROOT)
 
 all: jOSh.iso
 
@@ -18,16 +24,10 @@ grubiso/boot/grub/grub.cfg: $(ARCH_DIR)/grub.cfg
 	mkdir -p grubiso/boot/grub/
 	cp $(ARCH_DIR)/grub.cfg grubiso/boot/grub/grub.cfg
 
-OBJS=\
-kernel/kernel.o
-
 FORCE: ;
 
-kernel/%.o: kernel/%.c
-	$(CC) -c '$<' -o '$@' -ffreestanding -O2 -Wall -std=gnu99
-
-kernel/kernel.elf: $(ARCH_DIR)/linker.ld $(OBJS)
-	$(CC) -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+kernel/%: FORCE
+	$(MAKE) -C kernel $* TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
 
 .PHONY: test
 test: jOSh.iso
@@ -39,7 +39,5 @@ debug: jOSh.iso
 
 .PHONY: clean
 clean: arch_clean
-	rm -f $(OBJS)
-	rm -f ./kernel/kernel.elf
-	rm -rf ./grubiso/
 	rm -f jOSh.iso
+	$(MAKE) -C kernel clean TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)"
