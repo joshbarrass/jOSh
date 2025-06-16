@@ -11,20 +11,14 @@
 static void kpanic_print_uint(unsigned int d, const bool negative) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(unsigned int);
   char buf[buflen];
-  for (size_t i = 0; i < buflen; ++i) {
-    buf[i] = 0;
-  }
-  // pre-seed the buffer with zero
-  // we can short-circuit the formatting logic if it's already 0
-  buf[0] = '0';
 
   size_t i = 0;
-  while (d != 0 && i < buflen) {
+  do {
     const char r = d % 10;
     d = d / 10;
     buf[i] = '0'+r;
     ++i;
-  }
+  } while (d != 0 && i < buflen);
   if (negative) {
     term_print_char('-');
   }
