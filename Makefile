@@ -9,6 +9,8 @@ CFLAGS?=-O2 -Wall -std=gnu99
 SYSROOT:=$(abspath $(SYSROOT))
 CFLAGS:=$(CFLAGS) --sysroot=$(SYSROOT)
 
+JOBS?=$(shell nproc || 1)
+
 all: jOSh.iso
 
 include $(ARCH_DIR)/make.config
@@ -35,7 +37,7 @@ kernel/install-headers: FORCE
 	$(MAKE) -C kernel install-headers TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
 
 kernel/%: headers FORCE
-	$(MAKE) -C kernel $* TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
+	$(MAKE) -C kernel -j$(JOBS) $* TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
 
 .PHONY: test
 test: jOSh.iso
