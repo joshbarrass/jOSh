@@ -31,7 +31,7 @@ static void kpanic_print_uint(unsigned int d, const bool negative) {
 }
 
 static void kpanic_print_int(const int d) {
-  kpanic_print_uint((d < 0) ? ~d + 1ULL : d, (d < 0) ? true : false);
+  kpanic_print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false);
 }
 
 static void kpanic_vprintf(const char *fmt, va_list args) {
