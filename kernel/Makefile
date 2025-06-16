@@ -1,6 +1,10 @@
 ARCH_DIR=arch/$(TARGET_ARCH)
+override CFLAGS+=-isystem=/usr/include
 
 include $(ARCH_DIR)/make.config
+
+PREFIX?=$(SYSROOT)/usr
+INCLUDEDIR?=$(PREFIX)/include
 
 OBJS=\
 kernel.o
@@ -24,6 +28,13 @@ debug: jOSh.iso
 .PHONY: clean
 clean: arch_clean
 	rm -f $(OBJS)
-	rm -f ./kernel/kernel.elf
-	rm -rf ./grubiso/
+	rm -f ./kernel.elf
 	rm -f jOSh.iso
+	rm -f .headers_installed
+
+install-headers: .headers_installed
+
+.headers_installed:
+	mkdir -p $(INCLUDEDIR)
+	cp -R --preserve=timestamps include/* $(INCLUDEDIR)/
+	touch .headers_installed

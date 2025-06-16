@@ -26,7 +26,10 @@ grubiso/boot/grub/grub.cfg: $(ARCH_DIR)/grub.cfg
 
 FORCE: ;
 
-kernel/%: FORCE
+kernel/install-headers: FORCE
+	$(MAKE) -C kernel install-headers TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
+
+kernel/%: headers FORCE
 	$(MAKE) -C kernel $* TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
 
 .PHONY: test
@@ -40,4 +43,9 @@ debug: jOSh.iso
 .PHONY: clean
 clean: arch_clean
 	rm -f jOSh.iso
+	rm -rf ./grubiso/
 	$(MAKE) -C kernel clean TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)"
+	rm -rf ./sysroot
+
+.PHONY: headers
+headers: kernel/install-headers

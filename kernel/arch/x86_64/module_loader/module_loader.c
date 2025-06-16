@@ -6,8 +6,8 @@
 #error "The module loader needs to be compiled with a ix86-elf compiler"
 #endif
 
-#include "multiboot.h"
-#include "tty.h"
+#include <multiboot.h>
+#include <tty.h>
 #include "elf.h"
 #include "addr_checker.h"
 

@@ -60,3 +60,5 @@ build-tools
 grubiso/
 *-gcc-*
 jOSh.iso
+sysroot/
+kernel/.headers_installed
