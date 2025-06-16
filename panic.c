@@ -8,8 +8,8 @@
 // denary form
 #define PRINT_INT_BUFFER_SIZE(type) (8*sizeof(type))*30103/100000+5
 
-static void kpanic_print_int(int d) {
-  const size_t buflen = PRINT_INT_BUFFER_SIZE(int);
+static void kpanic_print_uint(unsigned int d, const bool negative) {
+  const size_t buflen = PRINT_INT_BUFFER_SIZE(unsigned int);
   char buf[buflen];
   for (size_t i = 0; i < buflen; ++i) {
     buf[i] = 0;
@@ -17,9 +17,6 @@ static void kpanic_print_int(int d) {
   // pre-seed the buffer with zero
   // we can short-circuit the formatting logic if it's already 0
   buf[0] = '0';
-
-  const bool negative = (d < 0) ? true : false;
-  d = (d < 0) ? -d : d;
 
   size_t i = 0;
   while (d != 0 && i < buflen) {
@@ -34,7 +31,6 @@ static void kpanic_print_int(int d) {
 
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0 but not print buf[0]
-  i = buflen-1;
   while (i != 0) {
     if (buf[i] != 0) {
       term_print_char(buf[i]);
@@ -45,6 +41,10 @@ static void kpanic_print_int(int d) {
   // it will *always* contain a value, because an integer cannot have
   // no length (it will always be at least a '0')
   term_print_char(buf[0]);
+}
+
+static void kpanic_print_int(const int d) {
+  kpanic_print_uint((d < 0) ? ~d + 1ULL : d, (d < 0) ? true : false);
 }
 
 static void kpanic_vprintf(const char *fmt, va_list args) {
@@ -59,12 +59,17 @@ static void kpanic_vprintf(const char *fmt, va_list args) {
       }
     } else if (*fmt == '%') {
       ++fmt;
+      
       switch (*fmt) {
       case 's':
         term_print_string(va_arg(args, char*));
         break;
+      case 'i':
       case 'd':
         kpanic_print_int(va_arg(args, int));
+        break;
+      case 'u':
+        kpanic_print_uint(va_arg(args, unsigned int), false);
         break;
       default:
         term_print_char('%');
