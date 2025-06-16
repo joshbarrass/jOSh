@@ -25,22 +25,15 @@ static void kpanic_print_uint(unsigned int d, const bool negative) {
     buf[i] = '0'+r;
     ++i;
   }
-  if (negative && i < buflen) {
-    buf[i] = '-';
+  if (negative) {
+    term_print_char('-');
   }
 
   // now go through the buffer in reverse to print the chars
-  // this loop will stop at i=0 but not print buf[0]
-  while (i != 0) {
-    if (buf[i] != 0) {
-      term_print_char(buf[i]);
-    }
-    --i;
+  // this loop will stop at i=0, including printing i=0
+  while (i-->0) {
+    term_print_char(buf[i]);
   }
-  // print buf[0] manually
-  // it will *always* contain a value, because an integer cannot have
-  // no length (it will always be at least a '0')
-  term_print_char(buf[0]);
 }
 
 static void kpanic_print_int(const int d) {
