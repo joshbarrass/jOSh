@@ -67,6 +67,15 @@ static void kpanic_vprintf(const char *fmt, va_list args) {
   }
 }
 
+__attribute__((noreturn)) __attribute__((naked)) static void kpanic_halt() {
+  asm volatile (
+                ".hang:\r\n"
+                "cli\r\n"
+                "hlt\r\n"
+                "jmp .hang\r\n"
+                );
+}
+
 void kpanic(const char* fmt, ...){
   term_set_color(VGA_COLOR_WHITE, VGA_COLOR_RED);
   term_clear_screen();
@@ -77,4 +86,6 @@ void kpanic(const char* fmt, ...){
   va_list args;
   va_start(args, fmt);
   kpanic_vprintf(fmt, args);
+
+  kpanic_halt();
 }
