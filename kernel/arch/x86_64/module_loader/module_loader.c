@@ -7,7 +7,7 @@
 #endif
 
 #include <multiboot.h>
-#include <tty.h>
+#include <kernel/tty.h>
 #include "elf.h"
 #include "addr_checker.h"
 

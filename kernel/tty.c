@@ -1,4 +1,4 @@
-#include "tty.h"
+#include <kernel/tty.h>
 
 volatile ScreenChar * const screen = (ScreenChar*)VGA_FRAMEBUFFER_ADDR;
 static CharColor terminal_color = {VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK};

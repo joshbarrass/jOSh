@@ -1,8 +1,8 @@
 #include <stdarg.h>
-#include "panic.h"
-#include "terminal/tty.h"
+#include <kernel/panic.h>
+#include <kernel/tty.h>
 
-#include "panic_image.h"
+#include <kernel/panic_image.h>
 
 // defines a safe buffer size for formatting an integer to a string in
 // denary form

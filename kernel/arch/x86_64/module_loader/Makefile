@@ -4,12 +4,15 @@ module_loader.o \
 elf.o \
 addr_checker.o \
 long_load.o \
-terminal/tty.o
+tty.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)
 	$(STRIP) --strip-unneeded '$@'
 	grub-file --is-x86-multiboot '$@'
+
+tty.o: ../../../tty.c
+	$(CC) -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 %.o: %.c
 	$(CC) -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)

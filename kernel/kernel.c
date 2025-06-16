@@ -13,9 +13,9 @@
 #include <stdint.h>
 #include <limits.h>
 
-#include <tty.h>
+#include <kernel/tty.h>
 #include <multiboot.h>
-#include "panic.h"
+#include <kernel/panic.h>
 
 static char *stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
 

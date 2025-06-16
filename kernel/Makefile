@@ -7,7 +7,9 @@ PREFIX?=$(SYSROOT)/usr
 INCLUDEDIR?=$(PREFIX)/include
 
 OBJS=\
-kernel.o
+kernel.o \
+tty.o \
+panic.o
 
 FORCE: ;
 
