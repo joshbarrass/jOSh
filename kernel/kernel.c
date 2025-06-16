@@ -11,9 +11,11 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include <tty.h>
 #include <multiboot.h>
+#include "panic.h"
 
 static char *stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
 
@@ -71,11 +73,12 @@ __attribute__((optimize("O0"))) void _entry() {
 }
 
 void kernel_main() {
-  clear_screen();
-  print_string(welcomeMessage, 0, 0);
+  term_clear_screen();
+  term_println(welcomeMessage);
   if (mis != NULL) {
-    print_string(get_mod_string(&get_mods(mis)[0]), 0, 1);
+    term_println(get_mod_string(&get_mods(mis)[0]));
+    term_new_line();
   }
-
+  kpanic("This is a debug panic.\nFile: %s:%d\n\nTest1: %dTest2: %d\nTest3: %dTest4: %d\nTest5: %dTest6: %d\nTest7: %uTest8: %d", __FILE__, __LINE__, 123LL, -123, 987654321, -987654321, INT_MAX, INT_MIN, UINT_MAX, 0);
   return;
 }

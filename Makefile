@@ -24,6 +24,11 @@ grubiso/boot/grub/grub.cfg: $(ARCH_DIR)/grub.cfg
 	mkdir -p grubiso/boot/grub/
 	cp $(ARCH_DIR)/grub.cfg grubiso/boot/grub/grub.cfg
 
+OBJS=\
+os.o \
+terminal/tty.o \
+panic.o
+
 FORCE: ;
 
 kernel/install-headers: FORCE
