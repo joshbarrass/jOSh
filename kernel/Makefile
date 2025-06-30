@@ -1,5 +1,5 @@
-ARCH_DIR=arch/$(TARGET_ARCH)
-override CFLAGS+=-isystem=/usr/include
+KERNEL_DIR?=.
+ARCH_DIR=$(KERNEL_DIR)/arch/$(TARGET_ARCH)
 
 include $(ARCH_DIR)/make.config
 
@@ -7,36 +7,27 @@ PREFIX?=$(SYSROOT)/usr
 INCLUDEDIR?=$(PREFIX)/include
 
 OBJS=\
-kernel.o \
-tty.o \
-panic.o
+$(KERNEL_DIR)/kernel.o \
+$(KERNEL_DIR)/tty.o \
+$(KERNEL_DIR)/panic.o
 
-FORCE: ;
+KERNEL_CFLAGS?=-isystem=/usr/include
 
-%.o: %.c
-	$(CC) -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(KERNEL_DIR)/%.o: kernel_install_headers $(KERNEL_DIR)/%.c
+	$(CC) -c '$(filter-out $<,$^)' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
-kernel.elf: $(ARCH_DIR)/linker.ld $(OBJS)
-	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)
+$(KERNEL_DIR)/kernel.elf: $(ARCH_DIR)/linker.ld $(OBJS)
+	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^)
 
-.PHONY: test
-test: jOSh.iso
-	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -gdb tcp::9000
+kernel_install_headers: $(KERNEL_DIR)/.headers_installed
 
-.PHONY: debug
-debug: jOSh.iso
-	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
+$(KERNEL_DIR)/.headers_installed:
+	mkdir -p '$(INCLUDEDIR)'
+	cp -R --preserve=timestamps '$(KERNEL_DIR)/include/'* '$(INCLUDEDIR)/'
+	touch $(KERNEL_DIR)/.headers_installed
 
-.PHONY: clean
-clean: arch_clean
+.PHONY: kernel_clean
+kernel_clean:
+	rm -f '$(KERNEL_DIR)/kernel.elf'
 	rm -f $(OBJS)
-	rm -f ./kernel.elf
-	rm -f jOSh.iso
-	rm -f .headers_installed
-
-install-headers: .headers_installed
-
-.headers_installed:
-	mkdir -p $(INCLUDEDIR)
-	cp -R --preserve=timestamps include/* $(INCLUDEDIR)/
-	touch .headers_installed
+	rm -f '$(KERNEL_DIR)/.headers_installed'

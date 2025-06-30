@@ -1,19 +1,16 @@
+KERNEL_DIR?=kernel
 TARGET_ARCH?=x86_64
-ARCH_DIR=kernel/arch/$(TARGET_ARCH)
 SYSROOT?=sysroot
+SYSROOT:=$(abspath $(SYSROOT))
 CC=$(abspath $(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc)
 STRIP=$(abspath $(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip)
 
 CFLAGS?=-O2 -Wall -std=gnu99
-
-SYSROOT:=$(abspath $(SYSROOT))
 CFLAGS:=$(CFLAGS) --sysroot=$(SYSROOT)
-
-JOBS?=$(shell nproc || 1)
 
 all: jOSh.iso
 
-include $(ARCH_DIR)/make.config
+include $(KERNEL_DIR)/Makefile
 
 jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(ARCH_ISO_DEPENDS)
 	grub-mkrescue -o jOSh.iso grubiso
@@ -26,19 +23,6 @@ grubiso/boot/grub/grub.cfg: $(ARCH_DIR)/grub.cfg
 	mkdir -p grubiso/boot/grub/
 	cp $(ARCH_DIR)/grub.cfg grubiso/boot/grub/grub.cfg
 
-OBJS=\
-os.o \
-terminal/tty.o \
-panic.o
-
-FORCE: ;
-
-kernel/install-headers: FORCE
-	$(MAKE) -C kernel install-headers TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
-
-kernel/%: headers FORCE
-	$(MAKE) -C kernel -j$(JOBS) $* TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)" STRIP="$(STRIP)" CFLAGS="$(CFLAGS)" SYSROOT="$(SYSROOT)"
-
 .PHONY: test
 test: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -gdb tcp::9000
@@ -48,10 +32,9 @@ debug: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
 
 .PHONY: clean
-clean: arch_clean
+clean: arch_clean kernel_clean
 	rm -f jOSh.iso
 	rm -rf ./grubiso/
-	$(MAKE) -C kernel clean TARGET_ARCH="$(TARGET_ARCH)" CC="$(CC)"
 	rm -rf ./sysroot
 
 .PHONY: headers
