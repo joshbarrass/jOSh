@@ -1,0 +1,14 @@
+#!/bin/bash
+
+bwrap \
+  --ro-bind /usr /usr \
+  --ro-bind /bin /bin \
+  --ro-bind /lib /lib \
+  --ro-bind /lib64 /lib64 \
+  --ro-bind /etc/fonts /etc/fonts \
+  --tmpfs /tmp \
+  --bind "$(pwd)" /sandbox \
+  --dev-bind /dev/null /dev/null \
+  --proc /proc \
+  --chdir /sandbox \
+  make $@
