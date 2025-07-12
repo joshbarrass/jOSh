@@ -2,8 +2,9 @@ KERNEL_DIR?=kernel
 TARGET_ARCH?=x86_64
 SYSROOT?=sysroot
 SYSROOT:=$(abspath $(SYSROOT))
-CC=$(abspath $(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc)
-STRIP=$(abspath $(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip)
+CC=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-gcc)
+CXX=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-g++)
+STRIP=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-strip)
 
 CFLAGS?=-O2 -Wall -std=gnu99
 CFLAGS:=$(CFLAGS) --sysroot=$(SYSROOT)
