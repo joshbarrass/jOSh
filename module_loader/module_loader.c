@@ -114,11 +114,11 @@ void module_loader_main() {
 
 // define some constants for working with page tables
 #define sz_PT 512
-uint64_t page_level_4_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-static uint64_t page_dir_ptr_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-static uint64_t page_dir[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+volatile uint64_t page_level_4_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+volatile static uint64_t page_dir_ptr_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
+volatile static uint64_t page_dir[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
 
-static void zero_page_table(uint64_t *table) {
+static void zero_page_table(volatile uint64_t *table) {
   for (size_t i = 0; i < sz_PT; ++i) {
     table[i] = 0;
   }
