@@ -17,7 +17,7 @@
 #include <multiboot.h>
 #include <kernel/panic.h>
 
-static char *stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
+volatile static char stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
 
 static const char *welcomeMessage = "Welcome to jOSh! "
 #ifdef ARCH_64
