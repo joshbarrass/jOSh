@@ -46,7 +46,7 @@ void module_loader_main() {
     return;
   }
   // print the ELF info
-  term_println("      ELF ??-bit ??");
+  term_println("      ELF ?""?-bit ??");
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     term_print_string_at("32", 10, PREV_LINE);
   } else if (get_ELF_class(mod) == EI_CLASS_64BIT) {
