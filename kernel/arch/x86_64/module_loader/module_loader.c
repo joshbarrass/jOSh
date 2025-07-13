@@ -133,6 +133,6 @@ static void setup_page_tables() {
   page_dir[1] = (uint64_t)(0x200000) | 3 | 128;
   page_dir[2] = (uint64_t)(0x400000) | 3 | 128;
   page_dir[3] = (uint64_t)(0x600000) | 3 | 128;
-  page_dir_ptr_tab[0] = (uint64_t)(page_dir) | 3;
-  page_level_4_tab[0] = (uint64_t)(page_dir_ptr_tab) | 3;
+  page_dir_ptr_tab[0] = (uint64_t)(uintptr_t)(page_dir) | 3;
+  page_level_4_tab[0] = (uint64_t)(uintptr_t)(page_dir_ptr_tab) | 3;
 }

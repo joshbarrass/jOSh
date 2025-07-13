@@ -35,12 +35,12 @@ char get_ELF_endianness(const char * const addr) {
 
 void elf32_build_program_image(const char *const elf) {
   const Elf32_Ehdr * const header = (const Elf32_Ehdr * const)elf;
-  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
-  const Elf32_Phdr * const pheader = (const Elf32_Phdr * const)p;
+  const uint64_t p = (uint64_t)(uintptr_t)elf + (uint64_t)(uintptr_t)header->e_phoff;
+  const Elf32_Phdr * const pheader = (const Elf32_Phdr * const)(uintptr_t)p;
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
     const void *const segment_start = (const void *const)(pheader[i].p_offset + elf);
-    void *const virt_addr = (const void *const)pheader[i].p_vaddr;
+    void *const virt_addr = (const void *const)(uintptr_t)pheader[i].p_vaddr;
     const size_t fsize = (size_t)pheader[i].p_filesz;
     const size_t msize = (size_t)pheader[i].p_memsz;
 
@@ -53,12 +53,12 @@ void elf32_build_program_image(const char *const elf) {
 
 void elf64_build_program_image(const char *const elf) {
   const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
-  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
-  const Elf64_Phdr * const pheader = (const Elf64_Phdr * const)p;
+  const uint64_t p = (uint64_t)(uintptr_t)elf + (uint64_t)(uintptr_t)header->e_phoff;
+  const Elf64_Phdr * const pheader = (const Elf64_Phdr * const)(uintptr_t)p;
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
     const void *const segment_start = (const void *const)(pheader[i].p_offset + elf);
-    void *const virt_addr = (const void *const)pheader[i].p_vaddr;
+    void *const virt_addr = (const void *const)(uintptr_t)pheader[i].p_vaddr;
     const size_t fsize = (size_t)pheader[i].p_filesz;
     const size_t msize = (size_t)pheader[i].p_memsz;
 
@@ -80,8 +80,8 @@ Elf64_Addr get_elf64_entrypoint(const char *const elf) {
 
 Elf32_Addr get_elf32_lowest_addr(const char *const elf) {
   const Elf32_Ehdr * const header = (const Elf32_Ehdr * const)elf;
-  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
-  const Elf32_Phdr * const pheader = (const Elf32_Phdr * const)p;
+  const uint64_t p = (uint64_t)(uintptr_t)elf + (uint64_t)(uintptr_t)header->e_phoff;
+  const Elf32_Phdr * const pheader = (const Elf32_Phdr * const)(uintptr_t)p;
   Elf32_Addr lowest_addr = 0xffffffff;
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
@@ -95,8 +95,8 @@ Elf32_Addr get_elf32_lowest_addr(const char *const elf) {
 
 Elf64_Addr get_elf64_lowest_addr(const char *const elf) {
   const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
-  const uint64_t p = (uint64_t)elf + (uint64_t)header->e_phoff;
-  const Elf64_Phdr * const pheader = (const Elf64_Phdr * const)p;
+  const uint64_t p = (uint64_t)(uintptr_t)elf + (uint64_t)(uintptr_t)header->e_phoff;
+  const Elf64_Phdr * const pheader = (const Elf64_Phdr * const)(uintptr_t)p;
   Elf64_Addr lowest_addr = 0xffffffffffffffff;
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
