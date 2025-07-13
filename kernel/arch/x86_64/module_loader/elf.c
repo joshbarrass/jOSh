@@ -40,7 +40,7 @@ void elf32_build_program_image(const char *const elf) {
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
     const void *const segment_start = (const void *const)(pheader[i].p_offset + elf);
-    void *const virt_addr = (const void *const)(uintptr_t)pheader[i].p_vaddr;
+    void *const virt_addr = (void *const)(uintptr_t)pheader[i].p_vaddr;
     const size_t fsize = (size_t)pheader[i].p_filesz;
     const size_t msize = (size_t)pheader[i].p_memsz;
 
@@ -58,7 +58,7 @@ void elf64_build_program_image(const char *const elf) {
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
     const void *const segment_start = (const void *const)(pheader[i].p_offset + elf);
-    void *const virt_addr = (const void *const)(uintptr_t)pheader[i].p_vaddr;
+    void *const virt_addr = (void *const)(uintptr_t)pheader[i].p_vaddr;
     const size_t fsize = (size_t)pheader[i].p_filesz;
     const size_t msize = (size_t)pheader[i].p_memsz;
 
