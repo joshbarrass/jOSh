@@ -7,9 +7,11 @@
 #endif
 
 #include "multiboot.h"
-#include "tty.h"
+#include "terminal/tty.h"
 #include "elf.h"
 #include "addr_checker.h"
+
+#define PREV_LINE term_get_pos_y()-1
 
 const MIS *mis;
 typedef union {
@@ -17,52 +19,46 @@ typedef union {
   uint32_t entry32;
 } Entrypoint;
 Entrypoint entry;
-unsigned int yline = 0;
 
 static void setup_page_tables();
 
 void module_loader_main() {
-  clear_screen();
-  terminal_color.fg = 10;
+  term_clear_screen();
+  term_set_fg(10);
 
-  print_string("[+] Entered module loader", 0, yline);
-  ++yline;
+  term_println("[+] Entered module loader");
 
   if (mis->FLAGS & (1 << 3) && mis->mods_count > 0) {
-    print_string("[+] Modules are available. Testing module 0...", 0, yline);
-    ++yline;
+    term_println("[+] Modules are available. Testing module 0...");
   } else {
-    terminal_color.fg = 4;
-    print_string("[E] Modules are unavailable. Exiting...", 0, yline);
+    term_set_fg(4);
+    term_println("[E] Modules are unavailable. Exiting...");
     return;
   }
 
   // verify that the first module in the list is an ELF file
   const char *mod = (char*)mis->mods[0].mod_start;
-  print_string("    * ", 0, yline);
-  print_string(mis->mods[0].string, 6, yline);
-  ++yline;
+  term_println("    * ");
+  term_print_string_at(mis->mods[0].string, 6, PREV_LINE);
   if (!is_ELF(mod)) {
-    terminal_color.fg = 4;
-    print_string("      Unknown format", 0, yline);
-    ++yline;
+    term_set_fg(4);
+    term_println("      Unknown format");
     return;
   }
   // print the ELF info
-  print_string("      ELF ??-bit ??", 0, yline);
+  term_println("      ELF ??-bit ??");
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
-    print_string("32", 10, yline);
+    term_print_string_at("32", 10, PREV_LINE);
   } else if (get_ELF_class(mod) == EI_CLASS_64BIT) {
-    print_string("64", 10, yline);
+    term_print_string_at("64", 10, PREV_LINE);
   }
   if (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) {
-    print_string("LE", 17, yline);
+    term_print_string_at("LE", 17, PREV_LINE);
   } else if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
-    terminal_color.fg = 4;
-    print_string("BE", 17, yline);
+    term_set_fg(4);
+    term_print_string_at("BE", 17, PREV_LINE);
     return;
   }
-  ++yline;
 
   // determine the lowest virtual address of the ELF
   uint64_t lowest_addr;
@@ -74,18 +70,16 @@ void module_loader_main() {
 
   // check that the ELF can be safely loaded to that address
   if (!check_all(lowest_addr, mis)) {
-    terminal_color.fg = 4;
-    print_string("[E] ELF cannot be moved safely!", 0, yline);
+    term_set_fg(4);
+    term_println("[E] ELF cannot be moved safely!");
     return;
   }
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     elf32_build_program_image(mod);
-    print_string("[+] ELF Loaded!", 0, yline);
-    ++yline;
-    print_string("[+] Jumping to entrypoint...", 0, yline);
-    ++yline;
+    term_println("[+] ELF Loaded!");
+    term_println("[+] Jumping to entrypoint...");
 
     // make the call using inline assembly
     // this way, we can guarantee the calling convention that we
@@ -95,13 +89,10 @@ void module_loader_main() {
     asm ("jmp *%0\r\n" : : "m"(entry.entry32), "a"(0x2BADB002), "b"(mis) :);
   } else {
     elf64_build_program_image(mod);
-    print_string("[+] ELF Loaded!", 0, yline);
-    ++yline;
-    print_string("[+] Setting up identity pages...", 0, yline);
-    ++yline;
+    term_println("[+] ELF Loaded!");
+    term_println("[+] Setting up identity pages...");
     setup_page_tables();
-    print_string("[+] Jumping to entrypoint...", 0, yline);
-    ++yline;
+    term_println("[+] Jumping to entrypoint...");
 
     entry.entry64 = get_elf64_entrypoint(mod);
     asm ("call switch_to_long" : : : );
