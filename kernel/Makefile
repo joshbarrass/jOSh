@@ -18,7 +18,7 @@ KERNEL_CFLAGS?=-isystem=/usr/include
 $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
-$(KERNEL_DIR)/kernel.elf: $(KERNEL_ARCH_DIR)/linker.ld $(KERNEL_OBJS) $(LIBC_DIR)/libk.a
+$(KERNEL_DIR)/kernel.elf: $(KERNEL_ARCH_DIR)/linker.ld $(KERNEL_OBJS) $(KERNEL_ARCH_OBJS) $(LIBC_DIR)/libk.a
 	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^)
 
 .PHONY: kernel_clean
