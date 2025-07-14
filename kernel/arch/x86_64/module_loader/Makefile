@@ -4,18 +4,21 @@ module_loader.o \
 elf.o \
 addr_checker.o \
 long_load.o \
-terminal/tty.o
+tty.o
 
 loader.elf: module_loader.ld $(OBJS)
-	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
+	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)
 	$(STRIP) --strip-unneeded '$@'
 	grub-file --is-x86-multiboot '$@'
 
+tty.o: ../../../tty.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+
 %.o: %.c
-	$(CC) -m32 -c '$<' -o '$@' -ffreestanding -O2 -Wall -std=gnu99
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 %.o: %.nasm
-	nasm -f elf32 -o '$@' '$<'
+	nasm -MD '$*.d' -f elf32 -o '$@' '$<'
 
 FORCE: ;
 jBoot/%: FORCE
@@ -24,4 +27,7 @@ jBoot/%: FORCE
 .PHONY: clean
 clean:
 	rm -f $(OBJS)
+	rm -f $(OBJS:.o=.d)
 	rm -f ./loader.elf
+
+-include $(OBJS:.o=.d)

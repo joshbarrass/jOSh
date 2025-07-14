@@ -11,11 +11,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <limits.h>
 
-#include "terminal/tty.h"
-#include "module_loader/multiboot.h"
+#include <kernel/tty.h>
+#include <multiboot.h>
+#include <kernel/panic.h>
 
-static char *stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
+volatile static char stack[16*1024] __attribute__((section(".bss"))); // 16-bit stack
 
 static const char *welcomeMessage = "Welcome to jOSh! "
 #ifdef ARCH_64
@@ -77,5 +79,6 @@ void kernel_main() {
     term_println(get_mod_string(&get_mods(mis)[0]));
     term_new_line();
   }
+  kpanic("This is a debug panic.\nFile: %s:%d\n\nTest1: %dTest2: %d\nTest3: %dTest4: %d\nTest5: %dTest6: %d\nTest7: %uTest8: %dTest 9: %x\nTest 10: %X", __FILE__, __LINE__, 123LL, -123, 987654321, -987654321, INT_MAX, INT_MIN, UINT_MAX, 0, 0xDEADBEEF, 0xFEDC1234);
   return;
 }

@@ -1,7 +1,11 @@
-#include "tty.h"
+#include <kernel/tty.h>
 
 volatile ScreenChar * const screen = (ScreenChar*)VGA_FRAMEBUFFER_ADDR;
 static CharColor terminal_color = {VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK};
+// TODO: optimise this out to just a single index
+//       realistically, we don't need to track x and y separately, and
+//       this would optimise other functions later down the line,
+//       e.g. the print char function
 static size_t pos_x = 0;
 static size_t pos_y = 0;
 
@@ -42,6 +46,20 @@ void term_clear_screen_bgfg(const int bg, const int fg) {
 
 void term_clear_screen() {
   term_clear_screen_color(terminal_color);
+}
+
+size_t term_print_char_at(const char c, const int x, const int y) {
+  const size_t pos = VGA_WIDTH*y+x;
+  screen[pos].character = c;
+  screen[pos].color.fg = terminal_color.fg;
+  screen[pos].color.bg = terminal_color.bg;
+  return pos+1;
+}
+
+void term_print_char(const char c) {
+  const size_t new_pos = term_print_char_at(c, pos_x, pos_y);
+  pos_y = new_pos / VGA_WIDTH;
+  pos_x = new_pos % VGA_WIDTH;
 }
 
 size_t term_print_string_at(const char *s, const int x, const int y) {
@@ -95,4 +113,14 @@ void term_new_line() {
   /*   term_scroll(); */
   /*   --pos_y; */
   /* } */
+}
+
+void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
+                 const size_t w, const size_t h) {
+  for (size_t i = 0; i < h; ++i) {
+    for (size_t j = 0; j < w; ++j) {
+      const size_t pos = VGA_WIDTH*(y+i) + x + j;
+      screen[pos] = bitmap[w*i+j];
+    }
+  }
 }

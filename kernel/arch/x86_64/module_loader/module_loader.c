@@ -6,8 +6,8 @@
 #error "The module loader needs to be compiled with a ix86-elf compiler"
 #endif
 
-#include "multiboot.h"
-#include "terminal/tty.h"
+#include <multiboot.h>
+#include <kernel/tty.h>
 #include "elf.h"
 #include "addr_checker.h"
 
@@ -46,7 +46,7 @@ void module_loader_main() {
     return;
   }
   // print the ELF info
-  term_println("      ELF ??-bit ??");
+  term_println("      ELF ?""?-bit ??");
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     term_print_string_at("32", 10, PREV_LINE);
   } else if (get_ELF_class(mod) == EI_CLASS_64BIT) {
@@ -133,6 +133,6 @@ static void setup_page_tables() {
   page_dir[1] = (uint64_t)(0x200000) | 3 | 128;
   page_dir[2] = (uint64_t)(0x400000) | 3 | 128;
   page_dir[3] = (uint64_t)(0x600000) | 3 | 128;
-  page_dir_ptr_tab[0] = (uint64_t)(page_dir) | 3;
-  page_level_4_tab[0] = (uint64_t)(page_dir_ptr_tab) | 3;
+  page_dir_ptr_tab[0] = (uint64_t)(uintptr_t)(page_dir) | 3;
+  page_level_4_tab[0] = (uint64_t)(uintptr_t)(page_dir_ptr_tab) | 3;
 }

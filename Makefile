@@ -1,36 +1,34 @@
-TARGET_ARCH=x86_64
-CC=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-gcc
-STRIP=$(TARGET_ARCH)-elf-gcc-9.4.0/bin/$(TARGET_ARCH)-elf-strip
+KERNEL_DIR?=kernel
+LIBC_DIR?=libc
+TARGET_ARCH?=x86_64
+SYSROOT?=sysroot
+SYSROOT:=$(abspath $(SYSROOT))
+CC=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-gcc)
+CXX=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-g++)
+STRIP=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-strip)
+AR=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-ar)
 
-jOSh.iso: grubiso/boot/jOShload.elf grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg
+CFLAGS?=-O2 -Wall -std=gnu99
+CFLAGS:=$(CFLAGS) --sysroot=$(SYSROOT)
+
+all: jOSh.iso
+
+include $(KERNEL_DIR)/Makefile
+include $(LIBC_DIR)/Makefile
+
+jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS)
 	grub-mkrescue -o jOSh.iso grubiso
 
-grubiso/boot/jOSh.elf: os.elf
+grubiso/boot/jOSh.elf: kernel/kernel.elf
 	mkdir -p grubiso/boot/
-	cp os.elf grubiso/boot/jOSh.elf
+	cp kernel/kernel.elf grubiso/boot/jOSh.elf
 
-grubiso/boot/jOShload.elf: module_loader/loader.elf
-	mkdir -p grubiso/boot/
-	cp module_loader/loader.elf grubiso/boot/jOShload.elf
-
-grubiso/boot/grub/grub.cfg: grub.cfg
+grubiso/boot/grub/grub.cfg: $(KERNEL_ARCH_DIR)/grub.cfg
 	mkdir -p grubiso/boot/grub/
-	cp grub.cfg grubiso/boot/grub/grub.cfg
+	cp $(KERNEL_ARCH_DIR)/grub.cfg grubiso/boot/grub/grub.cfg
 
-OBJS=\
-os.o \
-terminal/tty.o
-
-FORCE: ;
-
-%.o: %.c
-	$(CC) -c '$<' -o '$@' -ffreestanding -O2 -Wall -std=gnu99
-
-os.elf: linker.ld $(OBJS)
-	$(CC) -T '$<' -o '$@' -ffreestanding -O2 -nostdlib $(filter-out $<,$^)
-
-module_loader/loader.elf: FORCE
-	$(MAKE) -C $(@D) "$(notdir $@)" CC=$(abspath $(CC)) STRIP=$(abspath $(STRIP)) TARGET_ARCH=$(TARGET_ARCH)
+.PHONY: install-headers
+install-headers: kernel_install-headers libc_install-headers
 
 .PHONY: test
 test: jOSh.iso
@@ -41,9 +39,8 @@ debug: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
 
 .PHONY: clean
-clean:
-	rm -f $(OBJS)
-	rm -f ./os.elf
-	rm -rf ./grubiso/
+clean: kernel_arch_clean kernel_clean libc_clean
 	rm -f jOSh.iso
-	$(MAKE) -C ./module_loader clean
+	rm -rf ./grubiso/
+	rm -rf ./sysroot
+

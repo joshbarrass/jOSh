@@ -12,26 +12,26 @@ size_t strlen(const char *c) {
 }
 
 uint64_t check_MIS(const MIS *mis) {
-  return ((uint64_t)mis + (uint64_t)sizeof(MIS));
+  return ((uint64_t)(uintptr_t)mis + (uint64_t)sizeof(MIS));
 }
 
 uint64_t check_cmdline(const MIS *mis) {
   const char *cmdline = get_cmdline(mis);
   const size_t len = strlen(cmdline);
-  return ((uint64_t)cmdline + (uint64_t)len);
+  return ((uint64_t)(uintptr_t)cmdline + (uint64_t)len);
 }
 
 uint64_t check_mod(const Mod *mod) {
   uint64_t max_addr = 0;
 
   // check the module data
-  uint64_t mod_end = (uint64_t)(get_mod_end(mod));
+  uint64_t mod_end = (uint64_t)(uintptr_t)(get_mod_end(mod));
   if (mod_end > max_addr) {
     max_addr = mod_end;
   }
 
   // check the Mod structure
-  uint64_t ModS_end = ((uint64_t)mod + (uint64_t)sizeof(Mod));
+  uint64_t ModS_end = ((uint64_t)(uintptr_t)mod + (uint64_t)sizeof(Mod));
   if (ModS_end > max_addr) {
     max_addr = ModS_end;
   }
@@ -39,7 +39,7 @@ uint64_t check_mod(const Mod *mod) {
   // check the Mod string
   const char *s = get_mod_string(mod);
   const size_t len = strlen(s);
-  uint64_t str_end = ((uint64_t)s + (uint64_t)len);
+  uint64_t str_end = ((uint64_t)(uintptr_t)s + (uint64_t)len);
   if (str_end > max_addr) {
     max_addr = str_end;
   }
