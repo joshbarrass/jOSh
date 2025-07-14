@@ -3,7 +3,9 @@ LIBC_DIR?=.
 LIBC_PREFIX?=$(SYSROOT)/usr
 LIBC_INCLUDEDIR?=$(LIBC_PREFIX)/include
 
-_LIBC_OBJ_NAMES=string/memmove
+_LIBC_OBJ_NAMES=\
+string/memmove \
+stdio/printf
 
 _LIBK_OBJS=$(addsuffix .libk.o, $(_LIBC_OBJ_NAMES))
 _LIBC_OBJS=$(addsuffix .o, $(_LIBC_OBJ_NAMES))
