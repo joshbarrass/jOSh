@@ -16,6 +16,7 @@
 #include <kernel/tty.h>
 #include <multiboot.h>
 #include <kernel/panic.h>
+#include <archdef.h>
 
 static const char *welcomeMessage = "Welcome to jOSh! "
 #ifdef ARCH_64
