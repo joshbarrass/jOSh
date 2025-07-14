@@ -24,6 +24,9 @@ grubiso/boot/grub/grub.cfg: $(ARCH_DIR)/grub.cfg
 	mkdir -p grubiso/boot/grub/
 	cp $(ARCH_DIR)/grub.cfg grubiso/boot/grub/grub.cfg
 
+.PHONY: install-headers
+install-headers: kernel_install-headers
+
 .PHONY: test
 test: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -gdb tcp::9000

@@ -15,18 +15,11 @@ KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR
 
 KERNEL_CFLAGS?=-isystem=/usr/include
 
-KERNEL_HEADERS_INSTALLED=$(KERNEL_DIR)/.headers_installed
-
-$(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c $(KERNEL_HEADERS_INSTALLED)
+$(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
 $(KERNEL_DIR)/kernel.elf: $(ARCH_DIR)/linker.ld $(OBJS)
 	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^)
-
-$(KERNEL_DIR)/.headers_installed: $(KERNEL_INCLUDES)
-	mkdir -p '$(INCLUDEDIR)'
-	cp -R --preserve=timestamps '$(KERNEL_DIR)/include/'* '$(INCLUDEDIR)/'
-	touch $(KERNEL_DIR)/.headers_installed
 
 .PHONY: kernel_clean
 kernel_clean:
@@ -34,5 +27,10 @@ kernel_clean:
 	rm -f $(OBJS)
 	rm -f $(OBJS:.o=.d)
 	rm -f '$(KERNEL_DIR)/.headers_installed'
+
+.PHONY: kernel_install-headers
+kernel_install-headers: arch_install-headers
+	mkdir -p '$(INCLUDEDIR)'
+	cp -R --preserve=timestamps '$(KERNEL_DIR)/include/'* '$(INCLUDEDIR)/'
 
 -include $(OBJS:.o=.d)
