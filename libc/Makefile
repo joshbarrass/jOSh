@@ -3,8 +3,11 @@ LIBC_DIR?=.
 LIBC_PREFIX?=$(SYSROOT)/usr
 LIBC_INCLUDEDIR?=$(LIBC_PREFIX)/include
 
-LIBK_OBJS=
-LIBC_OBJS=
+_LIBK_OBJS=string.libk.o
+_LIBC_OBJS=string.o
+
+LIBK_OBJS=$(addprefix $(LIBC_DIR)/, $(_LIBK_OBJS))
+LIBC_OBJS=$(addprefix $(LIBC_DIR)/, $(_LIBC_OBJS))
 
 LIBK_CFLAGS?=-D__is_libk -isystem=/usr/include
 LIBC_CFLAGS?=-D__is_libc -isystem=/usr/include

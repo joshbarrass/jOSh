@@ -28,7 +28,7 @@ grubiso/boot/grub/grub.cfg: $(KERNEL_ARCH_DIR)/grub.cfg
 	cp $(KERNEL_ARCH_DIR)/grub.cfg grubiso/boot/grub/grub.cfg
 
 .PHONY: install-headers
-install-headers: kernel_install-headers
+install-headers: kernel_install-headers libc_install-headers
 
 .PHONY: test
 test: jOSh.iso
