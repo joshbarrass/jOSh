@@ -12,13 +12,13 @@ loader.elf: module_loader.ld $(OBJS)
 	grub-file --is-x86-multiboot '$@'
 
 tty.o: ../../../tty.c
-	$(CC) -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 %.o: %.c
-	$(CC) -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 %.o: %.nasm
-	nasm -f elf32 -o '$@' '$<'
+	nasm -MD '$*.d' -f elf32 -o '$@' '$<'
 
 FORCE: ;
 jBoot/%: FORCE
@@ -27,4 +27,7 @@ jBoot/%: FORCE
 .PHONY: clean
 clean:
 	rm -f $(OBJS)
+	rm -f $(OBJS:.o=.d)
 	rm -f ./loader.elf
+
+-include $(OBJS:.o=.d)

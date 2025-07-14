@@ -38,5 +38,3 @@ clean: arch_clean kernel_clean
 	rm -rf ./grubiso/
 	rm -rf ./sysroot
 
-.PHONY: headers
-headers: kernel/install-headers
