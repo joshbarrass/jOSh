@@ -62,3 +62,5 @@ grubiso/
 jOSh.iso
 sysroot/
 kernel/.headers_installed
+bx_enh_dbg.ini
+Makefile.local
