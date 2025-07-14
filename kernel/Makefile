@@ -1,12 +1,12 @@
 KERNEL_DIR?=.
-ARCH_DIR=$(KERNEL_DIR)/arch/$(TARGET_ARCH)
+KERNEL_ARCH_DIR=$(KERNEL_DIR)/arch/$(TARGET_ARCH)
 
-include $(ARCH_DIR)/make.config
+include $(KERNEL_ARCH_DIR)/make.config
 
-PREFIX?=$(SYSROOT)/usr
-INCLUDEDIR?=$(PREFIX)/include
+KERNEL_PREFIX?=$(SYSROOT)/usr
+KERNEL_INCLUDEDIR?=$(KERNEL_PREFIX)/include
 
-OBJS=\
+KERNEL_OBJS=\
 $(KERNEL_DIR)/kernel.o \
 $(KERNEL_DIR)/tty.o \
 $(KERNEL_DIR)/panic.o
@@ -18,19 +18,19 @@ KERNEL_CFLAGS?=-isystem=/usr/include
 $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
-$(KERNEL_DIR)/kernel.elf: $(ARCH_DIR)/linker.ld $(OBJS)
+$(KERNEL_DIR)/kernel.elf: $(KERNEL_ARCH_DIR)/linker.ld $(KERNEL_OBJS)
 	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^)
 
 .PHONY: kernel_clean
 kernel_clean:
 	rm -f '$(KERNEL_DIR)/kernel.elf'
-	rm -f $(OBJS)
-	rm -f $(OBJS:.o=.d)
+	rm -f $(KERNEL_OBJS)
+	rm -f $(KERNEL_OBJS:.o=.d)
 	rm -f '$(KERNEL_DIR)/.headers_installed'
 
 .PHONY: kernel_install-headers
-kernel_install-headers: arch_install-headers
-	mkdir -p '$(INCLUDEDIR)'
-	cp -R --preserve=timestamps '$(KERNEL_DIR)/include/'* '$(INCLUDEDIR)/'
+kernel_install-headers: kernel_arch_install-headers
+	mkdir -p '$(KERNEL_INCLUDEDIR)'
+	cp -R --preserve=timestamps '$(KERNEL_DIR)/include/'* '$(KERNEL_INCLUDEDIR)/'
 
--include $(OBJS:.o=.d)
+-include $(KERNEL_OBJS:.o=.d)
