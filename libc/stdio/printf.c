@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
 
@@ -11,8 +12,8 @@
 // form. This is much simpler, since each hex digit is 4 bits
 #define PRINT_HEX_BUFFER_SIZE(type) (2*sizeof(type) + 1)
 
-static int print_uint(unsigned int d, const bool negative) {
-  const size_t buflen = PRINT_INT_BUFFER_SIZE(unsigned int);
+static int print_uint(uintmax_t d, const bool negative) {
+  const size_t buflen = PRINT_INT_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
   size_t i = 0;
@@ -37,12 +38,12 @@ static int print_uint(unsigned int d, const bool negative) {
   return written;
 }
 
-static int print_int(const int d) {
+static int print_int(const intmax_t d) {
   return print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false);
 }
 
-static int print_hex_uint(unsigned int v, const bool uppercase) {
-  const size_t buflen = PRINT_HEX_BUFFER_SIZE(int);
+static int print_hex_uint(uintmax_t v, const bool uppercase) {
+  const size_t buflen = PRINT_HEX_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
   size_t i = 0;
