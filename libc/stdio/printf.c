@@ -11,9 +11,6 @@
 // form. This is much simpler, since each hex digit is 4 bits
 #define PRINT_HEX_BUFFER_SIZE(type) (2*sizeof(type) + 1)
 
-#ifdef __is_libk
-#include <kernel/tty.h>
-
 static void print_uint(unsigned int d, const bool negative) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(unsigned int);
   char buf[buflen];
@@ -26,13 +23,13 @@ static void print_uint(unsigned int d, const bool negative) {
     ++i;
   } while (d != 0 && i < buflen);
   if (negative) {
-    term_print_char('-');
+    putchar('-');
   }
 
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
   while (i-->0) {
-    term_print_char(buf[i]);
+    putchar(buf[i]);
   }
 }
 
@@ -55,26 +52,20 @@ static void print_hex_uint(unsigned int v, const bool uppercase) {
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
   while (i-->0) {
-    term_print_char(buf[i]);
+    putchar(buf[i]);
   }
 }
 
 int vprintf(const char *fmt, va_list args) {
   for (; *fmt != 0; ++fmt) {
     if (*fmt != '%') {
-      switch (*fmt) {
-      case '\n':
-        term_new_line();
-        break;
-      default:
-        term_print_char(*fmt);
-      }
+      putchar(*fmt);
     } else if (*fmt == '%') {
       ++fmt;
       
       switch (*fmt) {
       case 's':
-        term_print_string(va_arg(args, char*));
+        puts(va_arg(args, char*));
         break;
       case 'i':
       case 'd':
@@ -90,13 +81,11 @@ int vprintf(const char *fmt, va_list args) {
         print_hex_uint(va_arg(args, unsigned int), true);
         break;
       default:
-        term_print_char('%');
+        putchar('%');
       case '%':
-        term_print_char(*fmt);
+        putchar(*fmt);
       }
     }
   }
   return 0; // TODO:
 }
-
-#endif
