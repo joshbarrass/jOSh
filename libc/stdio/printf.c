@@ -25,6 +25,27 @@ typedef enum {
   LEN_BIG_L
 } int_length_t;
 
+// macros for the horrible ternary operator mess used for generating
+// the correct va_arg
+#define INT_LEN_ARG(length, args) \
+  ((length) == LEN_HH ? va_arg(args, signed char) : \
+   (length) == LEN_H ? va_arg(args, short int) : \
+   (length) == LEN_L ? va_arg(args, long int) : \
+   (length) == LEN_LL ? va_arg(args, long long int) : \
+   (length) == LEN_J ? va_arg(args, intmax_t) : \
+   (length) == LEN_Z ? va_arg(args, size_t) : \
+   (length) == LEN_T ? va_arg(args, ptrdiff_t) : \
+   va_arg(args, int))
+#define UINT_LEN_ARG(length, args) \
+  ((length) == LEN_HH ? va_arg(args, unsigned char) : \
+   (length) == LEN_H ? va_arg(args, unsigned short int) : \
+   (length) == LEN_L ? va_arg(args, unsigned long int) : \
+   (length) == LEN_LL ? va_arg(args, unsigned long long int) : \
+   (length) == LEN_J ? va_arg(args, uintmax_t) : \
+   (length) == LEN_Z ? va_arg(args, size_t) : \
+   (length) == LEN_T ? va_arg(args, ptrdiff_t) : \
+   va_arg(args, unsigned int))
+
 static int print_uint(uintmax_t d, const bool negative) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
