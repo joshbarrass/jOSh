@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
 
@@ -11,8 +12,42 @@
 // form. This is much simpler, since each hex digit is 4 bits
 #define PRINT_HEX_BUFFER_SIZE(type) (2*sizeof(type) + 1)
 
-static int print_uint(unsigned int d, const bool negative) {
-  const size_t buflen = PRINT_INT_BUFFER_SIZE(unsigned int);
+// emum type for the length formatter codes
+typedef enum {
+  LEN_NONE,
+  LEN_HH,
+  LEN_H,
+  LEN_L,
+  LEN_LL,
+  LEN_J,
+  LEN_Z,
+  LEN_T,
+  LEN_BIG_L
+} int_length_t;
+
+// macros for the horrible ternary operator mess used for generating
+// the correct va_arg
+#define INT_LEN_ARG(length, args) \
+  ((length) == LEN_HH ? (signed char)va_arg(args, int) :        \
+   (length) == LEN_H ? (short int)va_arg(args, int) :     \
+   (length) == LEN_L ? va_arg(args, long int) : \
+   (length) == LEN_LL ? va_arg(args, long long int) : \
+   (length) == LEN_J ? va_arg(args, intmax_t) : \
+   (length) == LEN_Z ? va_arg(args, ptrdiff_t) : \
+   (length) == LEN_T ? va_arg(args, ptrdiff_t) : \
+   va_arg(args, int))
+#define UINT_LEN_ARG(length, args) \
+  ((length) == LEN_HH ? (unsigned char)va_arg(args, unsigned int) :    \
+   (length) == LEN_H ? (unsigned short int)va_arg(args, unsigned int) : \
+   (length) == LEN_L ? va_arg(args, unsigned long int) : \
+   (length) == LEN_LL ? va_arg(args, unsigned long long int) : \
+   (length) == LEN_J ? va_arg(args, uintmax_t) : \
+   (length) == LEN_Z ? va_arg(args, size_t) : \
+   (length) == LEN_T ? va_arg(args, size_t) :     \
+   va_arg(args, unsigned int))
+
+static int print_uint(uintmax_t d, const bool negative) {
+  const size_t buflen = PRINT_INT_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
   size_t i = 0;
@@ -37,12 +72,12 @@ static int print_uint(unsigned int d, const bool negative) {
   return written;
 }
 
-static int print_int(const int d) {
+static int print_int(const intmax_t d) {
   return print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false);
 }
 
-static int print_hex_uint(unsigned int v, const bool uppercase) {
-  const size_t buflen = PRINT_HEX_BUFFER_SIZE(int);
+static int print_hex_uint(uintmax_t v, const bool uppercase) {
+  const size_t buflen = PRINT_HEX_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
   size_t i = 0;
@@ -72,7 +107,49 @@ int vprintf(const char *fmt, va_list args) {
       ++written;
     } else if (*fmt == '%') {
       ++fmt;
-      
+
+      // find length specifier, if it exists
+      int_length_t length_specifier;
+      switch (*fmt) {
+        // easy cases first: single characters
+      case 'j':
+        length_specifier = LEN_J;
+        break;
+      case 'z':
+        length_specifier = LEN_Z;
+        break;
+      case 't':
+        length_specifier = LEN_T;
+        break;
+      /* // L is only relevant for floats
+      case 'L':
+        length_specifier = LEN_BIG_L;
+        break;
+      */
+      // cases potentially with multiple characters
+      case 'h':
+        if (*(fmt + 1) == 'h') {
+          length_specifier = LEN_HH;
+          ++fmt;
+        } else {
+          length_specifier = LEN_H;
+        }
+        break;
+      case 'l':
+        if (*(fmt + 1) == 'l') {
+          length_specifier = LEN_LL;
+          ++fmt;
+        } else {
+          length_specifier = LEN_L;
+        }
+        break;
+      default:
+        --fmt;
+        length_specifier = LEN_NONE;
+        break;
+      }
+
+      ++fmt;
       switch (*fmt) {
       case 'n':
         written += print_int(written);
@@ -82,16 +159,16 @@ int vprintf(const char *fmt, va_list args) {
         break;
       case 'i':
       case 'd':
-        written += print_int(va_arg(args, int));
+        written += print_int(INT_LEN_ARG(length_specifier, args));
         break;
       case 'u':
-        written += print_uint(va_arg(args, unsigned int), false);
+        written += print_uint(UINT_LEN_ARG(length_specifier, args), false);
         break;
       case 'x':
-        written += print_hex_uint(va_arg(args, unsigned int), false);
+        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), false);
         break;
       case 'X':
-        written += print_hex_uint(va_arg(args, unsigned int), true);
+        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), true);
         break;
       default:
         putchar('%');
