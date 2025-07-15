@@ -12,6 +12,19 @@
 // form. This is much simpler, since each hex digit is 4 bits
 #define PRINT_HEX_BUFFER_SIZE(type) (2*sizeof(type) + 1)
 
+// emum type for the length formatter codes
+typedef enum {
+  LEN_NONE,
+  LEN_HH,
+  LEN_H,
+  LEN_L,
+  LEN_LL,
+  LEN_J,
+  LEN_Z,
+  LEN_T,
+  LEN_BIG_L
+} int_length_t;
+
 static int print_uint(uintmax_t d, const bool negative) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
@@ -73,7 +86,49 @@ int vprintf(const char *fmt, va_list args) {
       ++written;
     } else if (*fmt == '%') {
       ++fmt;
-      
+
+      // find length specifier, if it exists
+      int_length_t length_specifier;
+      switch (*fmt) {
+        // easy cases first: single characters
+      case 'j':
+        length_specifier = LEN_J;
+        break;
+      case 'z':
+        length_specifier = LEN_Z;
+        break;
+      case 't':
+        length_specifier = LEN_T;
+        break;
+      /* // L is only relevant for floats
+      case 'L':
+        length_specifier = LEN_BIG_L;
+        break;
+      */
+      // cases potentially with multiple characters
+      case 'h':
+        if (*(fmt + 1) == 'h') {
+          length_specifier = LEN_HH;
+          ++fmt;
+        } else {
+          length_specifier = LEN_H;
+        }
+        break;
+      case 'l':
+        if (*(fmt + 1) == 'l') {
+          length_specifier = LEN_LL;
+          ++fmt;
+        } else {
+          length_specifier = LEN_L;
+        }
+        break;
+      default:
+        --fmt;
+        length_specifier = LEN_NONE;
+        break;
+      }
+
+      ++fmt;
       switch (*fmt) {
       case 'n':
         written += print_int(written);
