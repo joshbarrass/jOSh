@@ -11,7 +11,7 @@
 // form. This is much simpler, since each hex digit is 4 bits
 #define PRINT_HEX_BUFFER_SIZE(type) (2*sizeof(type) + 1)
 
-static void print_uint(unsigned int d, const bool negative) {
+static int print_uint(unsigned int d, const bool negative) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(unsigned int);
   char buf[buflen];
 
@@ -22,22 +22,26 @@ static void print_uint(unsigned int d, const bool negative) {
     buf[i] = '0'+r;
     ++i;
   } while (d != 0 && i < buflen);
+  int written = 0;
   if (negative) {
     putchar('-');
+    ++written;
   }
 
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
   while (i-->0) {
     putchar(buf[i]);
+    ++written;
   }
+  return written;
 }
 
-static void print_int(const int d) {
-  print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false);
+static int print_int(const int d) {
+  return print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false);
 }
 
-static void print_hex_uint(unsigned int v, const bool uppercase) {
+static int print_hex_uint(unsigned int v, const bool uppercase) {
   const size_t buflen = PRINT_HEX_BUFFER_SIZE(int);
   char buf[buflen];
 
@@ -51,41 +55,55 @@ static void print_hex_uint(unsigned int v, const bool uppercase) {
 
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
+  int written = 0;
   while (i-->0) {
     putchar(buf[i]);
+    ++written;
   }
+  return written;
 }
 
 int vprintf(const char *fmt, va_list args) {
+  int written = 0;
+  
   for (; *fmt != 0; ++fmt) {
     if (*fmt != '%') {
       putchar(*fmt);
+      ++written;
     } else if (*fmt == '%') {
       ++fmt;
       
       switch (*fmt) {
       case 's':
-        puts(va_arg(args, char*));
+        written += puts(va_arg(args, char*));
         break;
       case 'i':
       case 'd':
-        print_int(va_arg(args, int));
+        written += print_int(va_arg(args, int));
         break;
       case 'u':
-        print_uint(va_arg(args, unsigned int), false);
+        written += print_uint(va_arg(args, unsigned int), false);
         break;
       case 'x':
-        print_hex_uint(va_arg(args, unsigned int), false);
+        written += print_hex_uint(va_arg(args, unsigned int), false);
         break;
       case 'X':
-        print_hex_uint(va_arg(args, unsigned int), true);
+        written += print_hex_uint(va_arg(args, unsigned int), true);
         break;
       default:
         putchar('%');
+        ++written;
       case '%':
         putchar(*fmt);
+        ++written;
       }
     }
   }
-  return 0; // TODO:
+  return written;
+}
+
+int printf(const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  return vprintf(fmt, args);
 }
