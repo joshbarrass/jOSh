@@ -74,6 +74,9 @@ int vprintf(const char *fmt, va_list args) {
       ++fmt;
       
       switch (*fmt) {
+      case 'n':
+        written += print_int(written);
+        break;
       case 's':
         written += puts(va_arg(args, char*));
         break;
