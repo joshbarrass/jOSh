@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <limits.h>
+#include <stdio.h>
 
 #include <kernel/tty.h>
 #include <kernel/vga.h>
@@ -19,24 +20,26 @@
 #include <kernel/panic.h>
 #include <archdef.h>
 
-static const char *welcomeMessage = "Welcome to jOSh! "
-#ifdef ARCH_64
-  "(64-bit)";
-#elif ARCH_32
-  "(32-bit)";
-#else
-;
-#endif
-
 const MIS *mis = NULL;
+
+static void print_welcome_message() {
+  printf("Welcome to jOSh! (%s)\n",
+#ifdef ARCH_64
+         "64-bit"
+#elif ARCH_32
+         "32-bit"
+#else
+         "unknown arch"
+#endif
+         );
+}
 
 void kernel_main() {
   VGA_set_blink(false);
   term_clear_screen();
-  term_println(welcomeMessage);
+  print_welcome_message();
   if (mis != NULL) {
-    term_println(get_mod_string(&get_mods(mis)[0]));
-    term_new_line();
+    printf("%s\n\n", get_mod_string(&get_mods(mis)[0]));
   }
   return;
 }
