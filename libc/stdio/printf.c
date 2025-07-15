@@ -159,16 +159,16 @@ int vprintf(const char *fmt, va_list args) {
         break;
       case 'i':
       case 'd':
-        written += print_int(va_arg(args, int));
+        written += print_int(INT_LEN_ARG(length_specifier, args));
         break;
       case 'u':
-        written += print_uint(va_arg(args, unsigned int), false);
+        written += print_uint(UINT_LEN_ARG(length_specifier, args), false);
         break;
       case 'x':
-        written += print_hex_uint(va_arg(args, unsigned int), false);
+        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), false);
         break;
       case 'X':
-        written += print_hex_uint(va_arg(args, unsigned int), true);
+        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), true);
         break;
       default:
         putchar('%');
