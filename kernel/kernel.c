@@ -14,6 +14,7 @@
 #include <limits.h>
 
 #include <kernel/tty.h>
+#include <kernel/vga.h>
 #include <multiboot.h>
 #include <kernel/panic.h>
 #include <archdef.h>
@@ -30,6 +31,7 @@ static const char *welcomeMessage = "Welcome to jOSh! "
 const MIS *mis = NULL;
 
 void kernel_main() {
+  VGA_set_blink(false);
   term_clear_screen();
   term_println(welcomeMessage);
   if (mis != NULL) {
