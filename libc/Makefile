@@ -5,7 +5,9 @@ LIBC_INCLUDEDIR?=$(LIBC_PREFIX)/include
 
 _LIBC_OBJ_NAMES=\
 string/memmove \
-stdio/printf
+stdio/printf \
+stdio/puts \
+stdio/putchar
 
 _LIBK_OBJS=$(addsuffix .libk.o, $(_LIBC_OBJ_NAMES))
 _LIBC_OBJS=$(addsuffix .o, $(_LIBC_OBJ_NAMES))
