@@ -22,13 +22,14 @@ static int print_uint(unsigned int d, const bool negative) {
     buf[i] = '0'+r;
     ++i;
   } while (d != 0 && i < buflen);
+  int written = 0;
   if (negative) {
     putchar('-');
+    ++written;
   }
 
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
-  int written = 0;
   while (i-->0) {
     putchar(buf[i]);
     ++written;
@@ -59,6 +60,7 @@ static int print_hex_uint(unsigned int v, const bool uppercase) {
     putchar(buf[i]);
     ++written;
   }
+  return written;
 }
 
 int vprintf(const char *fmt, va_list args) {
