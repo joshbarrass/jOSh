@@ -112,24 +112,26 @@ int vprintf(const char *fmt, va_list args) {
       bool flag_space = false;
       bool flag_hash = false;
       bool flag_zero = false;
-    flag_parse_loop:
-      ++fmt;
-      switch (*fmt) {
-      case '-':
-        flag_left = true;
-        goto flag_parse_loop;
-      case '+':
-        flag_force_sign = true;
-        goto flag_parse_loop;
-      case ' ':
-        flag_space = true;
-        goto flag_parse_loop;
-      case '#':
-        flag_hash = true;
-        goto flag_parse_loop;
-      case '0':
-        flag_zero = true;
-        goto flag_parse_loop;
+      while (true) {
+        ++fmt;
+        switch (*fmt) {
+        case '-':
+          flag_left = true;
+          continue;
+        case '+':
+          flag_force_sign = true;
+          continue;
+        case ' ':
+          flag_space = true;
+          continue;
+        case '#':
+          flag_hash = true;
+          continue;
+        case '0':
+          flag_zero = true;
+          continue;
+        }
+        break;
       }
 
       // find length specifier, if it exists
