@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <kernel/vgadef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
   unsigned char fg : 4;
   unsigned char bg : 4;
@@ -33,5 +37,9 @@ void term_scroll();
 void term_scroll_n(const unsigned char n);
 void term_new_line();
 void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y, const size_t w, const size_t h);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint16_t io_port_num;
 typedef uint8_t io_byte;
 typedef uint16_t io_word;
@@ -14,5 +18,9 @@ io_word inw(const io_port_num port);
 void outw(const io_port_num port, const io_word val);
 io_dword inl(const io_port_num port);
 void outl(const io_port_num port, const io_dword val);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
