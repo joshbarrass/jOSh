@@ -25,6 +25,20 @@ typedef enum {
   LEN_BIG_L
 } int_length_t;
 
+// struct for encoding the flags
+typedef struct {
+  bool left; // currently useless without width
+  bool force_sign;
+  bool space;
+  bool hash;
+  bool zero; // currently useless without width
+} flags_t;
+
+static inline flags_t make_unset_flags() {
+  flags_t to_return = {false, false, false, false, false};
+  return to_return;
+}
+
 // macros for the horrible ternary operator mess used for generating
 // the correct va_arg
 #define INT_LEN_ARG(length, args) \
@@ -46,7 +60,7 @@ typedef enum {
    (length) == LEN_T ? va_arg(args, size_t) :     \
    va_arg(args, unsigned int))
 
-static int print_uint(uintmax_t d, const bool negative) {
+static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
@@ -61,6 +75,12 @@ static int print_uint(uintmax_t d, const bool negative) {
   if (negative) {
     putchar('-');
     ++written;
+  } else if (flags.force_sign) {
+    putchar('+');
+    ++written;
+  } else if (flags.space) {
+    putchar(' ');
+    ++written;
   }
 
   // now go through the buffer in reverse to print the chars
@@ -72,11 +92,11 @@ static int print_uint(uintmax_t d, const bool negative) {
   return written;
 }
 
-static int print_int(const intmax_t d) {
-  return print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false);
+static int print_int(const intmax_t d, const flags_t flags) {
+  return print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false, flags);
 }
 
-static int print_hex_uint(uintmax_t v, const bool uppercase) {
+static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags) {
   const size_t buflen = PRINT_HEX_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
@@ -88,9 +108,15 @@ static int print_hex_uint(uintmax_t v, const bool uppercase) {
     ++i;
   } while (v != 0 && i < buflen);
 
+  int written = 0;
+  if (flags.hash) {
+    putchar('0');
+    putchar(uppercase ? 'X' : 'x');
+    written += 2;
+  }
+
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
-  int written = 0;
   while (i-->0) {
     putchar(buf[i]);
     ++written;
@@ -106,7 +132,29 @@ int vprintf(const char *fmt, va_list args) {
       putchar(*fmt);
       ++written;
     } else if (*fmt == '%') {
-      ++fmt;
+      // parse flags if they exist
+      flags_t flags = make_unset_flags();
+      while (true) {
+        ++fmt;
+        switch (*fmt) {
+        case '-':
+          flags.left = true;
+          continue;
+        case '+':
+          flags.force_sign = true;
+          continue;
+        case ' ':
+          flags.space = true;
+          continue;
+        case '#':
+          flags.hash = true;
+          continue;
+        case '0':
+          flags.zero = true;
+          continue;
+        }
+        break;
+      }
 
       // find length specifier, if it exists
       int_length_t length_specifier;
@@ -152,23 +200,23 @@ int vprintf(const char *fmt, va_list args) {
       ++fmt;
       switch (*fmt) {
       case 'n':
-        written += print_int(written);
+        written += print_int(written, flags);
         break;
       case 's':
         written += puts(va_arg(args, char*));
         break;
       case 'i':
       case 'd':
-        written += print_int(INT_LEN_ARG(length_specifier, args));
+        written += print_int(INT_LEN_ARG(length_specifier, args), flags);
         break;
       case 'u':
-        written += print_uint(UINT_LEN_ARG(length_specifier, args), false);
+        written += print_uint(UINT_LEN_ARG(length_specifier, args), false, flags);
         break;
       case 'x':
-        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), false);
+        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), false, flags);
         break;
       case 'X':
-        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), true);
+        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), true, flags);
         break;
       default:
         putchar('%');
