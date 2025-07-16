@@ -8,7 +8,8 @@ string/memmove \
 stdio/printf \
 stdio/puts \
 stdio/putchar \
-stdlib/atoi
+stdlib/atoi \
+ctype/isspace
 
 _LIBK_OBJS=$(addsuffix .libk.o, $(_LIBC_OBJ_NAMES))
 _LIBC_OBJS=$(addsuffix .o, $(_LIBC_OBJ_NAMES))
