@@ -6,6 +6,7 @@
 #error "The module loader needs to be compiled with a ix86-elf compiler"
 #endif
 
+#include <stdio.h>
 #include <multiboot.h>
 #include <kernel/tty.h>
 #include "elf.h"
@@ -26,35 +27,27 @@ void module_loader_main() {
   term_clear_screen();
   term_set_fg(10);
 
-  term_println("[+] Entered module loader");
+  printf("[+] Entered module loader\n");
 
   if (mis->FLAGS & (1 << 3) && mis->mods_count > 0) {
-    term_println("[+] Modules are available. Testing module 0...");
+    printf("[+] Modules are available. Testing module 0...\n");
   } else {
     term_set_fg(4);
-    term_println("[E] Modules are unavailable. Exiting...");
+    printf("[E] Modules are unavailable. Exiting...\n");
     return;
   }
 
   // verify that the first module in the list is an ELF file
   const char *mod = (char*)mis->mods[0].mod_start;
-  term_println("    * ");
-  term_print_string_at(mis->mods[0].string, 6, PREV_LINE);
+  printf("    * %s\n", mis->mods[0].string);
   if (!is_ELF(mod)) {
     term_set_fg(4);
-    term_println("      Unknown format");
+    printf("      Unknown format\n");
     return;
   }
   // print the ELF info
-  term_println("      ELF ?""?-bit ??");
-  if (get_ELF_class(mod) == EI_CLASS_32BIT) {
-    term_print_string_at("32", 10, PREV_LINE);
-  } else if (get_ELF_class(mod) == EI_CLASS_64BIT) {
-    term_print_string_at("64", 10, PREV_LINE);
-  }
-  if (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) {
-    term_print_string_at("LE", 17, PREV_LINE);
-  } else if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
+  printf("      ELF %s-bit %s\n", (get_ELF_class(mod) == EI_CLASS_32BIT) ? "32" : (get_ELF_class(mod) == EI_CLASS_64BIT ? "64" : "?""?"), (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) ? "LE" : (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG ? "BE" : "?""?"));
+  if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
     term_set_fg(4);
     term_print_string_at("BE", 17, PREV_LINE);
     return;
@@ -71,15 +64,15 @@ void module_loader_main() {
   // check that the ELF can be safely loaded to that address
   if (!check_all(lowest_addr, mis)) {
     term_set_fg(4);
-    term_println("[E] ELF cannot be moved safely!");
+    printf("[E] ELF cannot be moved safely!\n");
     return;
   }
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     elf32_build_program_image(mod);
-    term_println("[+] ELF Loaded!");
-    term_println("[+] Jumping to entrypoint...");
+    printf("[+] ELF Loaded!\n");
+    printf("[+] Jumping to entrypoint...\n");
 
     // make the call using inline assembly
     // this way, we can guarantee the calling convention that we
@@ -89,10 +82,10 @@ void module_loader_main() {
     asm ("jmp *%0\r\n" : : "m"(entry.entry32), "a"(0x2BADB002), "b"(mis) :);
   } else {
     elf64_build_program_image(mod);
-    term_println("[+] ELF Loaded!");
-    term_println("[+] Setting up identity pages...");
+    printf("[+] ELF Loaded!\n");
+    printf("[+] Setting up identity pages...\n");
     setup_page_tables();
-    term_println("[+] Jumping to entrypoint...");
+    printf("[+] Jumping to entrypoint...\n");
 
     entry.entry64 = get_elf64_entrypoint(mod);
     asm ("call switch_to_long" : : : );

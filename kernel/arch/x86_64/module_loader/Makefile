@@ -4,7 +4,10 @@ module_loader.o \
 elf.o \
 addr_checker.o \
 long_load.o \
-tty.o
+tty.o \
+printf.o \
+putchar.o \
+puts.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)
@@ -13,6 +16,9 @@ loader.elf: module_loader.ld $(OBJS)
 
 tty.o: ../../../tty.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+
+%.o: ../../../../libc/stdio/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
 
 %.o: %.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
