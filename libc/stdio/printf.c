@@ -106,7 +106,31 @@ int vprintf(const char *fmt, va_list args) {
       putchar(*fmt);
       ++written;
     } else if (*fmt == '%') {
+      // parse flags if they exist
+      bool flag_left = false;
+      bool flag_force_sign = false;
+      bool flag_space = false;
+      bool flag_hash = false;
+      bool flag_zero = false;
+    flag_parse_loop:
       ++fmt;
+      switch (*fmt) {
+      case '-':
+        flag_left = true;
+        goto flag_parse_loop;
+      case '+':
+        flag_force_sign = true;
+        goto flag_parse_loop;
+      case ' ':
+        flag_space = true;
+        goto flag_parse_loop;
+      case '#':
+        flag_hash = true;
+        goto flag_parse_loop;
+      case '0':
+        flag_zero = true;
+        goto flag_parse_loop;
+      }
 
       // find length specifier, if it exists
       int_length_t length_specifier;
