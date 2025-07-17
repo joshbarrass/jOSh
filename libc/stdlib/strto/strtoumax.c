@@ -20,6 +20,12 @@ uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
     ++s;
   }
 
+  if (!negative && is_signed) {
+    // the maximum positive value we can store is one less than the
+    // maximum absolute value for a signed type
+    --max_val;
+  }
+
   // short circuit now if the string contains no numerical chars
   if (*s < '0' || *s > '9') {
     return 0;
@@ -45,20 +51,7 @@ uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
   *endptr = s;
   if (overflowed) {
     errno = ERANGE;
-    if (!negative && is_signed) {
-      // if the type is signed and a positive value overflowed, return
-      // max_val-1, which is equal to the max signed value for the
-      // type in two's complement
-      return max_val-1;
-    } else {
-      // otherwise either:
-      //   1) the type is signed and the value is negative, in which
-      //   case we return max_val = TYPE_MIN
-      // OR
-      //   2) the type is not signed, in which case we should return
-      //   max_val = TYPE_MAX
-      return max_val;
-    }
+    return max_val;
   }
   // we didn't overflow, so follow the C standard regarding applying
   // the sign
