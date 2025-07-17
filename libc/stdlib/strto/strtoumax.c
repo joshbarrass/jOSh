@@ -32,21 +32,25 @@ uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
   }
 
   uintmax_t n = 0;
-  uintmax_t n_prev = 0;
   bool overflowed = false;
   while (*s >= '0' && *s <= '9') {
     // C99 standard says sign is applied to the parsed value at the
     // end, rather than applying it now, so the issue around
     // INT_MAX/INT_MIN should be an expected edge case as part of the
     // standard
-    n = 10*n + (*s - '0');
 
-    // detect overflow
-    if (n > max_val || n < n_prev) {
-      overflowed = true;
+    // we can skip doing any actual work if we've already overflowed;
+    // it doesn't make a difference
+    if (!overflowed) {
+      uintmax_t digit = (*s - '0');
+      // n = 10*n + digit
+      // use compiler built-ins to efficiently detect overflow
+      if (__builtin_mul_overflow(n, 10, &n) ||
+          __builtin_add_overflow(n, digit, &n) || n > max_val) {
+        overflowed = true;
+      }
     }
     ++s;
-    n_prev = n;
   }
 
   *endptr = s;
