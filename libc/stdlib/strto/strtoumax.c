@@ -46,6 +46,7 @@ uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
       overflowed = true;
     }
     ++s;
+    n_prev = n;
   }
 
   *endptr = s;
