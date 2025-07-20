@@ -5,7 +5,7 @@
 
 static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
                    uintmax_t max_val, bool is_signed) {
-  *endptr = s;
+  *endptr = (char *restrict)s;
   // skip leading whitespace
   while (isspace(*s)) {
     ++s;
@@ -53,7 +53,7 @@ static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int ba
     ++s;
   }
 
-  *endptr = s;
+  *endptr = (char *restrict)s;
   if (overflowed) {
     errno = ERANGE;
     return max_val;
