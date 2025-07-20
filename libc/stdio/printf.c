@@ -29,15 +29,16 @@ typedef enum {
 
 // struct for encoding the flags
 typedef struct {
-  bool left; // currently useless without width
+  bool left;
   bool force_sign;
   bool space;
   bool hash;
-  bool zero; // currently useless without width
+  bool zero;
+  long width;
 } flags_t;
 
 static inline flags_t make_unset_flags() {
-  flags_t to_return = {false, false, false, false, false};
+  flags_t to_return = {false, false, false, false, false, 0};
   return to_return;
 }
 
@@ -74,6 +75,22 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
     ++i;
   } while (d != 0 && i < buflen);
   int written = 0;
+  const bool needs_sign = negative || flags.force_sign || flags.space;
+
+  // pad the width
+  const char padchar = flags.zero ? '0' : ' ';
+  if (!flags.left) {
+    int to_pad = flags.width - i;
+    if (needs_sign) {
+      --to_pad;
+    }
+    
+    for (int j = 0; j < to_pad; ++j) {
+      putchar(padchar);
+      ++written;
+    }
+  }
+  
   if (negative) {
     putchar('-');
     ++written;
@@ -91,6 +108,14 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
     putchar(buf[i]);
     ++written;
   }
+
+  if (flags.left) {
+    while (written < flags.width) {
+      putchar(' ');
+      ++written;
+    }
+  }
+
   return written;
 }
 
@@ -161,7 +186,7 @@ int vprintf(const char *fmt, va_list args) {
       // parse width, if it exists
       int old_errno = errno; // save and restore errno -- printf shouldn't modify it
       const char *width_end = fmt;
-      const long width = strtol(fmt, (char **)&width_end, 10);
+      flags.width = strtol(fmt, (char **)&width_end, 10);
       errno = old_errno;
       fmt = width_end;
 
