@@ -93,7 +93,7 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
 }
 
 static int print_int(const intmax_t d, const flags_t flags) {
-  return print_uint((d < 0) ? (unsigned int)(~d) + 1u : d, (d < 0) ? true : false, flags);
+  return print_uint((d < 0) ? (uintmax_t)(~d) + 1u : d, (d < 0) ? true : false, flags);
 }
 
 static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags) {
