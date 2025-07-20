@@ -35,6 +35,21 @@ static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int ba
     --max_val;
   }
 
+  // determine the base automatically if necessary
+  if (base == 0) {
+    if (s[0] == '0') {
+      if (s[1] == 'x' || s[1] == 'X') {
+        base = 16;
+        s += 2;
+      } else {
+        base = 8;
+        s += 1;
+      }
+    } else {
+      base = 10;
+    }
+  }
+
   // short circuit now if the string contains no numerical chars
   if (*s < '0' || *s > '9') {
     return 0;
