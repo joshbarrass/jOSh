@@ -101,6 +101,7 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
     ++written;
   }
 
+  // pad after for zeros
   if (!flags.left && flags.zero) {
     for (int j = 0; j < to_pad; ++j) {
       putchar(padchar);
@@ -142,10 +143,31 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   } while (v != 0 && i < buflen);
 
   int written = 0;
+  const char padchar = flags.zero ? '0' : ' ';
+  int to_pad = flags.width - i;
+  if (flags.hash) {
+    to_pad -= 2;
+  }
+  // pad before 0x if padding with spaces
+  if (!flags.left && !flags.zero) {
+    while (to_pad-->0) {
+      putchar(padchar);
+      ++written;
+    }
+  }
+
   if (flags.hash) {
     putchar('0');
     putchar(uppercase ? 'X' : 'x');
     written += 2;
+  }
+
+  // pad after for zeros
+  if (!flags.left && flags.zero) {
+    while (to_pad-->0) {
+      putchar(padchar);
+      ++written;
+    }
   }
 
   // now go through the buffer in reverse to print the chars
@@ -154,6 +176,15 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
     putchar(buf[i]);
     ++written;
   }
+
+  // write extra spaces if left-aligned
+  if (flags.left) {
+    while (written < flags.width) {
+      putchar(' ');
+      ++written;
+    }
+  }
+
   return written;
 }
 
