@@ -77,15 +77,14 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   int written = 0;
   const bool needs_sign = negative || flags.force_sign || flags.space;
 
-  const char padchar = flags.zero ? '0' : ' ';
-  // pad the width before the sign for spaces
   int to_pad = flags.width - i;
   if (needs_sign) {
     --to_pad;
   }
+  // pad the width before the sign for spaces
   if (!flags.left && !flags.zero) {
     for (int j = 0; j < to_pad; ++j) {
-      putchar(padchar);
+      putchar(' ');
       ++written;
     }
   }
@@ -104,7 +103,7 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   // pad after for zeros
   if (!flags.left && flags.zero) {
     for (int j = 0; j < to_pad; ++j) {
-      putchar(padchar);
+      putchar('0');
       ++written;
     }
   }
@@ -143,7 +142,6 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   } while (v != 0 && i < buflen);
 
   int written = 0;
-  const char padchar = flags.zero ? '0' : ' ';
   int to_pad = flags.width - i;
   if (flags.hash) {
     to_pad -= 2;
@@ -151,7 +149,7 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   // pad before 0x if padding with spaces
   if (!flags.left && !flags.zero) {
     while (to_pad-->0) {
-      putchar(padchar);
+      putchar(' ');
       ++written;
     }
   }
@@ -165,7 +163,7 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   // pad after for zeros
   if (!flags.left && flags.zero) {
     while (to_pad-->0) {
-      putchar(padchar);
+      putchar('0');
       ++written;
     }
   }
