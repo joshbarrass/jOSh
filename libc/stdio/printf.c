@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <errno.h>
 
 // defines a safe buffer size for formatting an integer to a string in
 // denary form
@@ -155,6 +157,13 @@ int vprintf(const char *fmt, va_list args) {
         }
         break;
       }
+
+      // parse width, if it exists
+      int old_errno = errno; // save and restore errno -- printf shouldn't modify it
+      const char *width_end = fmt;
+      const long width = strtol(fmt, (char **)&width_end, 10);
+      errno = old_errno;
+      fmt = width_end;
 
       // find length specifier, if it exists
       int_length_t length_specifier;
