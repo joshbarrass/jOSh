@@ -3,6 +3,15 @@
 #include <ctype.h>
 #include <errno.h>
 
+static inline bool check_digit(const char c, const int base) {
+  const bool numeric = (c >= '0' && c <= (base >= 10 ? '9' : '0' + base - 1));
+  if (base <= 10) {
+    return numeric;
+  }
+  const int base_shift = base-11;
+  return numeric || (c >= 'A' && c <= ('A'+base_shift)) || (c >= 'a' && c <= 'a'+base_shift);
+}
+
 static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
                    uintmax_t max_val, bool is_signed) {
   *endptr = (char *restrict)s;
@@ -33,7 +42,7 @@ static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int ba
 
   uintmax_t n = 0;
   bool overflowed = false;
-  while (*s >= '0' && *s <= '9') {
+  while (check_digit(*s, base)) {
     // C99 standard says sign is applied to the parsed value at the
     // end, rather than applying it now, so the issue around
     // INT_MAX/INT_MIN should be an expected edge case as part of the
