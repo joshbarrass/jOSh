@@ -4,12 +4,17 @@
 #include <errno.h>
 #include <limits.h>
 
-static inline bool check_digit(const char c, const int base) {
+static inline bool check_digit(const char c, int base) {
+  if (base > 36) {
+    base = 36;
+  } else if (base < 2) {
+    base = 2;
+  }
   const bool numeric = (c >= '0' && c <= (base >= 10 ? '9' : '0' + base - 1));
   if (base <= 10) {
     return numeric;
   }
-  const int base_shift = base > 36 ? 25 : base-11;
+  const int base_shift = base-11;
   return numeric || (c >= 'A' && c <= ('A'+base_shift)) || (c >= 'a' && c <= 'a'+base_shift);
 }
 
