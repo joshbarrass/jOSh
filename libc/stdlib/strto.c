@@ -3,7 +3,7 @@
 #include <ctype.h>
 #include <errno.h>
 
-uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
+static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
                    uintmax_t max_val, bool is_signed) {
   *endptr = s;
   // skip leading whitespace
