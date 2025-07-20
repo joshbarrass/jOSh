@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 
 static inline bool check_digit(const char c, const int base) {
   const bool numeric = (c >= '0' && c <= (base >= 10 ? '9' : '0' + base - 1));
@@ -97,3 +98,20 @@ uintmax_t strtoumax(const char *restrict s, char **restrict endptr, int base) {
 intmax_t strtoimax(const char *restrict s, char **restrict endptr, int base) {
   return strtoany(s, endptr, base, INTMAX_MIN, true);
 }
+
+unsigned long long int strtoull(const char *restrict s, char **restrict endptr, int base) {
+  return strtoany(s, endptr, base, ULLONG_MAX, false);
+}
+
+long long int strtoll(const char *restrict s, char **restrict endptr, int base) {
+  return strtoany(s, endptr, base, LLONG_MIN, true);
+}
+
+unsigned long int strtoul(const char *restrict s, char **restrict endptr, int base) {
+  return strtoany(s, endptr, base, ULONG_MAX, false);
+}
+
+long int strtol(const char *restrict s, char **restrict endptr, int base) {
+  return strtoany(s, endptr, base, LONG_MIN, true);
+}
+

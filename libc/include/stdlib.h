@@ -9,5 +9,9 @@ long long int atoll(const char *s);
 
 uintmax_t strtoumax(const char * restrict s, char ** restrict endptr, int base);
 intmax_t strtoimax(const char * restrict s, char ** restrict endptr, int base);
+unsigned long long int strtoull(const char *restrict s, char **restrict endptr, int base);
+long long int strtoll(const char *restrict s, char **restrict endptr, int base);
+unsigned long int strtoul(const char *restrict s, char **restrict endptr, int base);
+long int strtol(const char *restrict s, char **restrict endptr, int base);
 
 #endif
