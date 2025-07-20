@@ -8,7 +8,7 @@ static inline bool check_digit(const char c, const int base) {
   if (base <= 10) {
     return numeric;
   }
-  const int base_shift = base-11;
+  const int base_shift = base > 36 ? 25 : base-11;
   return numeric || (c >= 'A' && c <= ('A'+base_shift)) || (c >= 'a' && c <= 'a'+base_shift);
 }
 
