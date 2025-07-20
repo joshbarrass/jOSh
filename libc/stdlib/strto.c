@@ -18,6 +18,14 @@ static inline bool check_digit(const char c, int base) {
   return numeric || (c >= 'A' && c <= ('A'+base_shift)) || (c >= 'a' && c <= 'a'+base_shift);
 }
 
+// we can use char return type because the digit will always be in the range 0-35
+static int parse_digit(const char c) {
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'A' && c <= 'Z') return c - 'A' + 10;
+  if (c >= 'a' && c <= 'z') return c - 'a' + 10;
+  return -1;
+}
+
 static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
                    uintmax_t max_val, bool is_signed) {
   *endptr = (char *restrict)s;
@@ -57,7 +65,7 @@ static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int ba
   }
 
   // short circuit now if the string contains no numerical chars
-  if (*s < '0' || *s > '9') {
+  if (!check_digit(*s, base)) {
     return 0;
   }
 
@@ -72,10 +80,10 @@ static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int ba
     // we can skip doing any actual work if we've already overflowed;
     // it doesn't make a difference
     if (!overflowed) {
-      uintmax_t digit = (*s - '0');
-      // n = 10*n + digit
+      uintmax_t digit = parse_digit(*s);
+      // n = base*n + digit
       // use compiler built-ins to efficiently detect overflow
-      if (__builtin_mul_overflow(n, 10, &n) ||
+      if (__builtin_mul_overflow(n, base, &n) ||
           __builtin_add_overflow(n, digit, &n) || n > max_val) {
         overflowed = true;
       }
