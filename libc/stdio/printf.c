@@ -77,14 +77,13 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   int written = 0;
   const bool needs_sign = negative || flags.force_sign || flags.space;
 
-  // pad the width
   const char padchar = flags.zero ? '0' : ' ';
-  if (!flags.left) {
-    int to_pad = flags.width - i;
-    if (needs_sign) {
-      --to_pad;
-    }
-    
+  // pad the width before the sign for spaces
+  int to_pad = flags.width - i;
+  if (needs_sign) {
+    --to_pad;
+  }
+  if (!flags.left && !flags.zero) {
     for (int j = 0; j < to_pad; ++j) {
       putchar(padchar);
       ++written;
@@ -100,6 +99,13 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   } else if (flags.space) {
     putchar(' ');
     ++written;
+  }
+
+  if (!flags.left && flags.zero) {
+    for (int j = 0; j < to_pad; ++j) {
+      putchar(padchar);
+      ++written;
+    }
   }
 
   // now go through the buffer in reverse to print the chars
