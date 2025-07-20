@@ -29,6 +29,13 @@ static int parse_digit(const char c) {
 static uintmax_t strtoany(const char *restrict s, char **restrict endptr, int base,
                    uintmax_t max_val, bool is_signed) {
   *endptr = (char *restrict)s;
+
+  // check base is valid
+  if (base != 0 && (base < 2 || base > 36)) {
+    errno = EINVAL;
+    return 0;
+  }
+
   // skip leading whitespace
   while (isspace(*s)) {
     ++s;
