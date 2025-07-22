@@ -95,4 +95,10 @@ inline const mmap *get_mmap(const MIS *m) { return (const mmap *)(m->mmap); }
 #define MULTIBOOT_FLAG_FRAMEBUFFER (1 << 12)
 #define MULTIBOOT_FLAG_CUSTOM_LOAD (1 << 16)
 
+#define MULTIBOOT_MMAP_TYPE_FREE 1
+#define MULTIBOOT_MMAP_TYPE_RESERVED 2
+#define MULTIBOOT_MMAP_TYPE_ACPI 3
+#define MULTIBOOT_MMAP_TYPE_HIBERNATION 4
+#define MULTIBOOT_MMAP_TYPE_BAD 5
+
 #endif
