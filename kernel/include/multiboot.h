@@ -59,4 +59,19 @@ static inline const char *get_cmdline(const MIS *m) { return (const char*)(m->cm
 static inline const Mod *get_mods(const MIS *m) { return (const Mod*)(m->mods); }
 #endif
 
+#define MULTIBOOT_FLAG_4K_ALIGN (1 << 0)
+#define MULTIBOOT_FLAG_BASIC_MEM_INFO (1 << 1)
+#define MULTIBOOT_FLAG_VIDEO_INFO (1 << 2)
+#define MULTIBOOT_FLAG_MODS (1 << 3)
+#define MULTIBOOT_FLAG_A_OUT_SYMS (1 << 4)
+#define MULTIBOOT_FLAG_ELF_SYMS (1 << 5)
+#define MULTIBOOT_FLAG_FULL_MMAP (1 << 6)
+#define MULTIBOOT_FLAG_DRIVES (1 << 7)
+#define MULTIBOOT_FLAG_CONFIG_TBL (1 << 8)
+#define MULTIBOOT_FLAG_BOOTLOADER_NAME (1 << 9)
+#define MULTIBOOT_FLAG_APM (1 << 10)
+#define MULTIBOOT_FLAG_VBE (1 << 11)
+#define MULTIBOOT_FLAG_FRAMEBUFFER (1 << 12)
+#define MULTIBOOT_FLAG_CUSTOM_LOAD (1 << 16)
+
 #endif
