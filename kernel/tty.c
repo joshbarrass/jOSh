@@ -109,10 +109,10 @@ void term_scroll_n(const unsigned char n) {
 void term_new_line() {
   pos_x = 0;
   ++pos_y;
-  /* if (pos_y == VGA_HEIGHT) { */
-  /*   term_scroll(); */
-  /*   --pos_y; */
-  /* } */
+  if (pos_y == VGA_HEIGHT) {
+    term_scroll();
+    --pos_y;
+  }
 }
 
 void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
