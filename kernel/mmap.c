@@ -23,3 +23,15 @@ const char *const get_mmap_type_string(uint32_t type) {
     return MMAP_STRING_RSVD;
   }
 }
+
+mmap_iterator new_mmap_iterator(const void *mmap, const uint32_t length) {
+  mmap_iterator iter = { mmap, length, 0 };
+  return iter;
+}
+
+mmap *mmap_iterator_next(mmap_iterator *iter) {
+  if (iter->offset >= iter->length) return 0;
+  mmap *entry = (mmap*)(iter->mmap + iter->offset);
+  iter->offset += entry->size + sizeof(entry->size);
+  return entry;
+}

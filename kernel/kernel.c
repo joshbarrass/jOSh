@@ -89,11 +89,8 @@ void kernel_main() {
 
   // print the memory map
   printf("    |       start       -         end       |type| raw|\n");
-  size_t adv = 0;
-  char *map = (char*)get_mmap(mis);
-  for (size_t i = 0; i < mis->mmap_length; i += adv) {
-    mmap *entry = (mmap*)(map+i);
-    adv = entry->size+sizeof(entry->size);
+  mmap_iterator iter = new_mmap_iterator(get_mmap(mis), mis->mmap_length);
+  for (mmap *entry = mmap_iterator_next(&iter); entry != NULL ; entry = mmap_iterator_next(&iter)) {
     printf("    |0x%016zX - 0x%016zX|%s|0x%02x|\n", entry->base_addr, entry->base_addr+entry->length-1, get_mmap_type_string(entry->type), entry->type);
   }
 
