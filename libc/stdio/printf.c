@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
+#include <stdlib.h>
+#include <errno.h>
 
 // defines a safe buffer size for formatting an integer to a string in
 // denary form
@@ -27,15 +29,16 @@ typedef enum {
 
 // struct for encoding the flags
 typedef struct {
-  bool left; // currently useless without width
+  bool left;
   bool force_sign;
   bool space;
   bool hash;
-  bool zero; // currently useless without width
+  bool zero;
+  long width;
 } flags_t;
 
 static inline flags_t make_unset_flags() {
-  flags_t to_return = {false, false, false, false, false};
+  flags_t to_return = {false, false, false, false, false, 0};
   return to_return;
 }
 
@@ -72,6 +75,20 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
     ++i;
   } while (d != 0 && i < buflen);
   int written = 0;
+  const bool needs_sign = negative || flags.force_sign || flags.space;
+
+  int to_pad = flags.width - i;
+  if (needs_sign) {
+    --to_pad;
+  }
+  // pad the width before the sign for spaces
+  if (!flags.left && !flags.zero) {
+    for (int j = 0; j < to_pad; ++j) {
+      putchar(' ');
+      ++written;
+    }
+  }
+  
   if (negative) {
     putchar('-');
     ++written;
@@ -83,12 +100,28 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
     ++written;
   }
 
+  // pad after for zeros
+  if (!flags.left && flags.zero) {
+    for (int j = 0; j < to_pad; ++j) {
+      putchar('0');
+      ++written;
+    }
+  }
+
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
   while (i-->0) {
     putchar(buf[i]);
     ++written;
   }
+
+  if (flags.left) {
+    while (written < flags.width) {
+      putchar(' ');
+      ++written;
+    }
+  }
+
   return written;
 }
 
@@ -109,10 +142,30 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   } while (v != 0 && i < buflen);
 
   int written = 0;
+  int to_pad = flags.width - i;
+  if (flags.hash) {
+    to_pad -= 2;
+  }
+  // pad before 0x if padding with spaces
+  if (!flags.left && !flags.zero) {
+    while (to_pad-->0) {
+      putchar(' ');
+      ++written;
+    }
+  }
+
   if (flags.hash) {
     putchar('0');
     putchar(uppercase ? 'X' : 'x');
     written += 2;
+  }
+
+  // pad after for zeros
+  if (!flags.left && flags.zero) {
+    while (to_pad-->0) {
+      putchar('0');
+      ++written;
+    }
   }
 
   // now go through the buffer in reverse to print the chars
@@ -121,6 +174,15 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
     putchar(buf[i]);
     ++written;
   }
+
+  // write extra spaces if left-aligned
+  if (flags.left) {
+    while (written < flags.width) {
+      putchar(' ');
+      ++written;
+    }
+  }
+
   return written;
 }
 
@@ -155,6 +217,13 @@ int vprintf(const char *fmt, va_list args) {
         }
         break;
       }
+
+      // parse width, if it exists
+      int old_errno = errno; // save and restore errno -- printf shouldn't modify it
+      const char *width_end = fmt;
+      flags.width = strtol(fmt, (char **)&width_end, 10);
+      errno = old_errno;
+      fmt = width_end;
 
       // find length specifier, if it exists
       int_length_t length_specifier;
