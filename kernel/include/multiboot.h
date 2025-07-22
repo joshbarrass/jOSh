@@ -73,11 +73,11 @@ typedef struct __attribute__((packed)) {
 #ifdef ARCH_32
 static inline const char *get_cmdline(const MIS *m) { return m->cmdline; }
 static inline const Mod *get_mods(const MIS *m) { return m->mods; }
-inline const mmap *get_mmap(const MIS *m) { return m->mmap; }
+static inline const mmap *get_mmap(const MIS *m) { return m->mmap; }
 #else
 static inline const char *get_cmdline(const MIS *m) { return (const char*)(m->cmdline); }
 static inline const Mod *get_mods(const MIS *m) { return (const Mod*)(m->mods); }
-inline const mmap *get_mmap(const MIS *m) { return (const mmap *)(m->mmap); }
+static inline const mmap *get_mmap(const MIS *m) { return (const mmap *)(m->mmap); }
 #endif
 
 #define MULTIBOOT_FLAG_4K_ALIGN (1 << 0)
