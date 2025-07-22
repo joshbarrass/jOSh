@@ -29,6 +29,13 @@ static inline const char *get_mod_string(const Mod *m) { return (const char*)(m-
 #endif
 
 typedef struct __attribute__((packed)) {
+  uint32_t size;
+  uint64_t base_addr;
+  uint64_t length;
+  uint32_t type;
+} mmap;
+
+typedef struct __attribute__((packed)) {
   uint32_t FLAGS;
 
   uint32_t mem_lower;
@@ -48,15 +55,29 @@ typedef struct __attribute__((packed)) {
   #else
   uint32_t mods;
   #endif
+
+  uint32_t syms_0;
+  uint32_t syms_1;
+  uint32_t syms_2;
+  uint32_t syms_3;
+
+  uint32_t mmap_length;
+  #ifdef ARCH_32
+  mmap *mmap;
+  #else
+  uint32_t mmap;
+  #endif
   
   // TODO: rest of the header
 } MIS;
 #ifdef ARCH_32
 static inline const char *get_cmdline(const MIS *m) { return m->cmdline; }
 static inline const Mod *get_mods(const MIS *m) { return m->mods; }
+inline const mmap *get_mmap(const MIS *m) { return m->mmap; }
 #else
 static inline const char *get_cmdline(const MIS *m) { return (const char*)(m->cmdline); }
 static inline const Mod *get_mods(const MIS *m) { return (const Mod*)(m->mods); }
+inline const mmap *get_mmap(const MIS *m) { return (const mmap *)(m->mmap); }
 #endif
 
 #define MULTIBOOT_FLAG_4K_ALIGN (1 << 0)
