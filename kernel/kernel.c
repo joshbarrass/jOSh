@@ -77,7 +77,7 @@ void kernel_main() {
     return;
   } else {
     term_good_color();
-    printf("[+] Intact mmap found at %#018zx\n", mis->mmap);
+    printf("[+] Intact mmap found at %#018zx\n", (size_t)mis->mmap);
     term_info_color();
   }
 
