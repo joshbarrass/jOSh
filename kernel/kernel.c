@@ -81,6 +81,12 @@ void kernel_main() {
     term_info_color();
   }
 
+  // print total available memory
+  const size_t total_memory = mis->mem_lower + mis->mem_upper; // KiB
+  printf("[*] Total available memory: %zuKiB\n", total_memory);
+  printf("    * Low memory:  %zuKiB\n", (size_t)mis->mem_lower);
+  printf("    * High memory: %zuKiB\n", (size_t)mis->mem_upper);
+
   // print the memory map
   printf("    |       start       -         end       |type| raw|\n");
   size_t adv = 0;
