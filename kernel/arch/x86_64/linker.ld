@@ -8,7 +8,7 @@ ENTRY(_entry)
    kernel image. */
 SECTIONS
 {
-        . = 2M;
+        . = 4M;
         __kernel_start = .;
 
 	.text BLOCK(4K) : ALIGN(4K)
