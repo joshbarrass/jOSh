@@ -53,23 +53,6 @@ void module_loader_main() {
     return;
   }
 
-  // determine the lowest virtual address of the ELF
-  uint64_t lowest_addr;
-  if (get_ELF_class(mod) == EI_CLASS_32BIT) {
-    lowest_addr = (uint64_t)get_elf32_lowest_addr(mod);
-  } else {
-    printf("[+] Getting lowest... ");
-    lowest_addr = get_elf64_lowest_addr(mod);
-    printf("Done!\n");
-  }
-
-  // check that the ELF can be safely loaded to that address
-  if (!check_all(lowest_addr, mis)) {
-    term_set_fg(4);
-    printf("[E] ELF cannot be moved safely!\n");
-    return;
-  }
-
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     printf("[+] Loading ELF... ");
