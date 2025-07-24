@@ -17,7 +17,7 @@ include $(KERNEL_DIR)/Makefile
 include $(LIBC_DIR)/Makefile
 
 jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS)
-	grub-mkrescue -o jOSh.iso grubiso
+	grub-mkrescue -d /usr/lib/grub/i386-pc -o jOSh.iso grubiso
 
 grubiso/boot/jOSh.elf: kernel/kernel.elf
 	mkdir -p grubiso/boot/
