@@ -55,17 +55,9 @@ void module_loader_main() {
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
-    printf("[+] Loading ELF... ");
-    elf32_build_program_image(mod);
-    printf("Done!\n");
-    printf("[+] Jumping to entrypoint...\n");
-
-    // make the call using inline assembly
-    // this way, we can guarantee the calling convention that we
-    // expect. We can also restore the multiboot loader's inputs at
-    // the same time.
-    entry.entry32 = get_elf32_entrypoint(mod);
-    asm ("jmp *%0\r\n" : : "m"(entry.entry32), "a"(0x2BADB002), "b"(mis) :);
+    term_set_fg(4);
+    printf("[E] Module loader does not support 32-bit ELFs\n");
+    return;
   } else {
     printf("[+] Loading ELF... ");
     elf64_build_program_image(mod);
