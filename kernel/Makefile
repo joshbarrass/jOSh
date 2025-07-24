@@ -10,7 +10,8 @@ KERNEL_OBJS=\
 $(KERNEL_DIR)/kernel.o \
 $(KERNEL_DIR)/tty.o \
 $(KERNEL_DIR)/panic.o \
-$(KERNEL_DIR)/vga.o
+$(KERNEL_DIR)/vga.o \
+$(KERNEL_DIR)/mmap.o
 
 KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR)/include/*.h)
 
