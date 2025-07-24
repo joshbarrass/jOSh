@@ -58,7 +58,9 @@ void module_loader_main() {
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     lowest_addr = (uint64_t)get_elf32_lowest_addr(mod);
   } else {
+    printf("[+] Getting lowest... ");
     lowest_addr = get_elf64_lowest_addr(mod);
+    printf("Done!\n");
   }
 
   // check that the ELF can be safely loaded to that address
@@ -70,8 +72,9 @@ void module_loader_main() {
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
+    printf("[+] Loading ELF... ");
     elf32_build_program_image(mod);
-    printf("[+] ELF Loaded!\n");
+    printf("Done!\n");
     printf("[+] Jumping to entrypoint...\n");
 
     // make the call using inline assembly
@@ -81,8 +84,9 @@ void module_loader_main() {
     entry.entry32 = get_elf32_entrypoint(mod);
     asm ("jmp *%0\r\n" : : "m"(entry.entry32), "a"(0x2BADB002), "b"(mis) :);
   } else {
+    printf("[+] Loading ELF... ");
     elf64_build_program_image(mod);
-    printf("[+] ELF Loaded!\n");
+    printf("Done!\n");
     printf("[+] Setting up identity pages...\n");
     setup_page_tables();
     printf("[+] Jumping to entrypoint...\n");
