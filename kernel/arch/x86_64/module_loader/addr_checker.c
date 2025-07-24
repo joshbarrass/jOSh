@@ -58,6 +58,14 @@ uint64_t check_mods(const MIS *mis) {
   return max_addr;
 }
 
+uint64_t check_mmap(const MIS *mis) {
+  const char *mmap = (const char*)get_mmap(mis);
+  for (size_t i = 0; i < mis->mmap_length; ++i) {
+    mmap += (uint32_t)(*mmap);
+  }
+  return (uint64_t)((uintptr_t)mmap);
+}
+
 // get_MIS_max_addr runs all of the functions for determining the max
 // addresses and returns the greatest of them.
 uint64_t get_MIS_max_addr(const MIS *mis) {
@@ -73,6 +81,10 @@ uint64_t get_MIS_max_addr(const MIS *mis) {
   const uint64_t cmdline = check_cmdline(mis);
   if (cmdline > max_addr) {
     max_addr = cmdline;
+  }
+  const uint64_t mmap = check_mmap(mis);
+  if (mmap > max_addr) {
+    max_addr = mmap;
   }
   return max_addr;
 }
