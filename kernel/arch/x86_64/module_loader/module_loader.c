@@ -62,8 +62,9 @@ void module_loader_main() {
     printf("[+] Loading ELF... ");
     elf64_build_program_image(mod);
     printf("Done!\n");
-    printf("[+] Setting up identity pages...\n");
+    printf("[+] Setting up identity pages... ");
     setup_page_tables();
+    printf("Done!\n");
     printf("[+] Jumping to entrypoint...\n");
 
     entry.entry64 = get_elf64_entrypoint(mod);
