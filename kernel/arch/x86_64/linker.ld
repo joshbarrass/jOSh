@@ -8,27 +8,43 @@ ENTRY(_entry)
    kernel image. */
 SECTIONS
 {
-	/* The module loader is loaded at a 2M offset. However, x86_64
-	generally requires 2MB aligment, so to make sure there is no
-	overlap between the module loader and the kernel, we ensure
-	that the kernel is loaded to an offset of 4M */
-        . = 4M;
+        . = 2M;
+        __kernel_start = .;
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text)
+                /* Pad out the section to the next page boundary */
+                FILL(0x00);
+                . = ALIGN(4K) - 1;
+                BYTE(0x00);
 	}
 
 	/* Read-only data. */
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata)
+                FILL(0x00);
+                . = ALIGN(4K) - 1;
+                BYTE(0x00);
 	}
+
+        .eh_frame BLOCK(8) : ALIGN(8)
+        {
+                *(.eh_frame)
+                FILL(0x00);
+                . = ALIGN(4K) - 1;
+                BYTE(0x00);
+        }
 
 	/* Read-write data (initialized) */
 	.data BLOCK(4K) : ALIGN(4K)
 	{
 		*(.data)
+                /* Pad out the section to the next page boundary */
+                FILL(0x00);
+                . = ALIGN(4K) - 1;
+                BYTE(0x00);
 	}
 
 	/* Read-write data (uninitialized) and stack */
@@ -36,7 +52,11 @@ SECTIONS
 	{
 		*(COMMON)
 		*(.bss)
+                FILL(0x00);
+                . = ALIGN(4K);
 	}
+
+        __kernel_end = .;
 
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
