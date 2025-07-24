@@ -14,10 +14,6 @@ SECTIONS
 	.text BLOCK(4K) : ALIGN(4K)
 	{
 		*(.text)
-                /* Pad out the section to the next page boundary */
-                FILL(0x00);
-                . = ALIGN(4K) - 1;
-                BYTE(0x00);
 	}
 
 	/* Read-only data. */
@@ -26,6 +22,7 @@ SECTIONS
 		*(.rodata)
                 *(.eh_frame)
                 *(.rodata.*)
+                /* Pad out the section to the next page boundary */
                 FILL(0x00);
                 . = ALIGN(4K) - 1;
                 BYTE(0x00);
