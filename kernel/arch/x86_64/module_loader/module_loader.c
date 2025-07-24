@@ -53,6 +53,11 @@ void module_loader_main() {
     return;
   }
 
+  // figure out the highest address used by the MIS
+  const size_t mis_max_addr = (size_t)get_MIS_max_addr(mis);
+  const size_t first_free_page = ((mis_max_addr+1) & (SIZE_MAX - 0xfff)) + 0x1000;
+  printf("[+] First free page at: 0x%08zx\n", first_free_page);
+
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
     term_set_fg(4);
