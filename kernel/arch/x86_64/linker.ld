@@ -24,18 +24,12 @@ SECTIONS
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata)
+                *(.eh_frame)
+                *(.rodata.*)
                 FILL(0x00);
                 . = ALIGN(4K) - 1;
                 BYTE(0x00);
 	}
-
-        .eh_frame BLOCK(8) : ALIGN(8)
-        {
-                *(.eh_frame)
-                FILL(0x00);
-                . = ALIGN(4K) - 1;
-                BYTE(0x00);
-        }
 
 	/* Read-write data (initialized) */
 	.data BLOCK(4K) : ALIGN(4K)
