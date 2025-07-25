@@ -2,8 +2,10 @@
 #include "bump_alloc.h"
 #include <stdio.h>
 
-#define ERR_NOT_PAGE_ALIGNED -1
-#define ERR_FSIZE_NOT_PAGE -2
+#define ERR_OFF_NOT_PAGE_ALIGNED -1
+#define ERR_VIR_NOT_PAGE_ALIGNED -2
+#define ERR_FSIZE_NOT_PAGE -3
+#define ERR_MSIZE_NOT_PAGE -4
 
 void virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
                                    size_t *pdpt_i, size_t *pd_i,
@@ -46,9 +48,13 @@ int elf64_map_program_image(const char *const elf, volatile uint64_t *const pml4
   //
   // Returns:
   //    0 if program mapped successfully
-  //   -1 if a program segment was encountered with an offset which is
-  //      not page-aligned
-  //   -2 if a program segment was encountered with a fsize which is
+  //   -1 if a program segment was encountered with an offset address
+  //      which is not page-aligned
+  //   -2 if a program segment was encountered with a virtual address
+  //      which is not page-aligned
+  //   -3 if a program segment was encountered with a fsize which is
+  //      not a multiple of the page size
+  //   -4 if a program segment was encountered with a msize which is
   //      not a multiple of the page size
 
   const Elf64_Ehdr * const header = (const Elf64_Ehdr * const)elf;
@@ -57,12 +63,13 @@ int elf64_map_program_image(const char *const elf, volatile uint64_t *const pml4
 
   for (size_t i = 0; i < header->e_phnum; ++i) {
     const void *const segment_start = (const void *const)(pheader[i].p_offset + elf);
-    if ((size_t)segment_start % 0x1000 != 0) return ERR_NOT_PAGE_ALIGNED;
+    if ((size_t)segment_start % 0x1000 != 0) return ERR_OFF_NOT_PAGE_ALIGNED;
     const uint64_t virt_addr = pheader[i].p_vaddr;
-    if ((uint64_t)(uintptr_t)virt_addr % 0x1000 != 0) return ERR_NOT_PAGE_ALIGNED;
+    if ((uint64_t)(uintptr_t)virt_addr % 0x1000 != 0) return ERR_VIR_NOT_PAGE_ALIGNED;
     const size_t fsize = (size_t)pheader[i].p_filesz;
     if (fsize % 0x1000 != 0) return ERR_FSIZE_NOT_PAGE;
     const size_t msize = (size_t)pheader[i].p_memsz;
+    if (msize % 0x1000 != 0) return ERR_MSIZE_NOT_PAGE;
 
     // map the contents of the file into memory
     for (uint64_t j = 0; j < msize; j += 0x1000) {

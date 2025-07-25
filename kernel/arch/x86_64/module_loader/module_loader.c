@@ -93,8 +93,32 @@ void module_loader_main() {
     setup_page_tables();
     printf("Done!\n");
     printf("[+] Mapping ELF... ");
-    elf64_map_program_image(mod, page_level_4_tab);
-    printf("Done!\n");
+    int map_err = elf64_map_program_image(mod, page_level_4_tab);
+    if (map_err == 0) {
+      printf("Done!\n");
+    } else {
+      term_set_fg(4);
+      printf("Err!\n      ");
+      switch (map_err) {
+      case -1:
+        printf("Offset");
+        break;
+      case -2:
+        printf("Virtual address");
+        break;
+      case -3:
+        printf("fsize");
+        break;
+      case -4:
+        printf("msize");
+        break;
+      default:
+        printf("Unknown error!\n");
+        return;
+      }
+      printf(" not page aligned!\n");
+      return;
+    }
     printf("[+] Jumping to long loader...\n");
 
     entry.entry64 = get_elf64_entrypoint(mod);
