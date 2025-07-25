@@ -2,6 +2,7 @@ OBJS=\
 bootstrap.o \
 module_loader.o \
 elf.o \
+elf_paged.o \
 addr_checker.o \
 long_load.o \
 tty.o \
