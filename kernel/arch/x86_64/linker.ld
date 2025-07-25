@@ -8,7 +8,7 @@ ENTRY(_entry)
    kernel image. */
 SECTIONS
 {
-        . = 32M;
+        . = 0xfffffe8000200000;
         __kernel_start = .;
 
 	.text BLOCK(4K) : ALIGN(4K)
@@ -41,6 +41,15 @@ SECTIONS
 	/* Read-write data (uninitialized) and stack */
 	.bss BLOCK(4K) : ALIGN(4K)
 	{
+                /* Create stack in .bss directly.
+                   This allows us to access the stack directly from
+                   ASM, which we have to use to avoid symbol
+                   relocation errors.*/
+                . = ALIGN(16);
+                stack = .;
+                . += 16K;
+                stack_top = .;
+
 		*(COMMON)
 		*(.bss)
                 FILL(0x00);
