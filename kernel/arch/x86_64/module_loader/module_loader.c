@@ -9,10 +9,28 @@
 #include <stdio.h>
 #include <multiboot.h>
 #include <kernel/tty.h>
-#include "elf.h"
+#include "elf_paged.h"
 #include "addr_checker.h"
+#include "bump_alloc.h"
+
+extern const size_t __loader_end;
 
 #define PREV_LINE term_get_pos_y()-1
+
+/* We'll define the page tables needed to identity map the first 8MB
+   of memory in long mode. This requires four page tables, one PDT,
+   one PDPT, and one PML4T. */
+
+// define some constants for working with page tables
+#define sz_PT 512
+#define PT_ATTRS __attribute__((aligned(4096))) __attribute__((section(".bss")))
+
+// PML4T
+volatile uint64_t page_level_4_tab[sz_PT] PT_ATTRS;
+// PML4T[0]
+volatile static uint64_t page_dir_ptr_tab[sz_PT] PT_ATTRS;
+// PML4T[0][0]: This is our initial identity map
+volatile static uint64_t page_dir[sz_PT] PT_ATTRS;
 
 const MIS *mis;
 typedef union {
@@ -46,17 +64,21 @@ void module_loader_main() {
     return;
   }
   // print the ELF info
-  printf("      ELF %s-bit %s\n", (get_ELF_class(mod) == EI_CLASS_32BIT) ? "32" : (get_ELF_class(mod) == EI_CLASS_64BIT ? "64" : "?""?"), (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) ? "LE" : (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG ? "BE" : "?""?"));
+  printf("      ELF %s-bit %s\n",
+         (get_ELF_class(mod) == EI_CLASS_32BIT) ? "32" : (get_ELF_class(mod) == EI_CLASS_64BIT ? "64" : "?""?"),
+         (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) ? "LE" : (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG ? "BE" : "?""?")
+  );
   if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
     term_set_fg(4);
     term_print_string_at("BE", 17, PREV_LINE);
     return;
   }
 
-  // figure out the highest address used by the MIS
+  // find the first free address and set up the bump allocator
   const size_t mis_max_addr = (size_t)get_MIS_max_addr(mis);
-  const size_t first_free_page = ((mis_max_addr+1) & (SIZE_MAX - 0xfff)) + 0x1000;
-  printf("[+] First free page at: 0x%08zx\n", first_free_page);
+  const size_t highest_addr = mis_max_addr > __loader_end ? mis_max_addr : __loader_end;
+  bump_init(highest_addr + 1);
+  printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0));
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
@@ -64,28 +86,19 @@ void module_loader_main() {
     printf("[E] Module loader does not support 32-bit ELFs\n");
     return;
   } else {
-    printf("[+] Loading ELF... ");
-    elf64_build_program_image(mod);
-    printf("Done!\n");
-    printf("[+] Setting up identity pages... ");
+    printf("[+] Setting up identity tables... ");
     setup_page_tables();
     printf("Done!\n");
-    printf("[+] Jumping to entrypoint...\n");
+    printf("[+] Mapping ELF... ");
+    elf64_map_program_image(mod, page_level_4_tab);
+    printf("Done!\n");
+    printf("[+] Jumping to long loader...\n");
+    return;
 
     entry.entry64 = get_elf64_entrypoint(mod);
     asm ("call switch_to_long" : : : );
   }
 }
-
-/* We'll define the page tables needed to identity map the first 8MB
-   of memory in long mode. This requires four page tables, one PDT,
-   one PDPT, and one PML4T. */
-
-// define some constants for working with page tables
-#define sz_PT 512
-volatile uint64_t page_level_4_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-volatile static uint64_t page_dir_ptr_tab[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
-volatile static uint64_t page_dir[sz_PT] __attribute__((aligned(4096))) __attribute__((section(".bss")));
 
 static void zero_page_table(volatile uint64_t *table) {
   for (size_t i = 0; i < sz_PT; ++i) {
