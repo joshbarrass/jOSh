@@ -93,7 +93,6 @@ void module_loader_main() {
     elf64_map_program_image(mod, page_level_4_tab);
     printf("Done!\n");
     printf("[+] Jumping to long loader...\n");
-    return;
 
     entry.entry64 = get_elf64_entrypoint(mod);
     asm ("call switch_to_long" : : : );
