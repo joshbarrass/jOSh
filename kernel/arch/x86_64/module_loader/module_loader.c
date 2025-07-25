@@ -26,14 +26,14 @@ extern const size_t __loader_end;
 #define PT_ATTRS __attribute__((aligned(PAGE_ALIGNMENT))) __attribute__((section(".bss")))
 
 // PML4T
-volatile uint64_t page_level_4_tab[LEN_PAGE_TABLE] PT_ATTRS;
+uint64_t page_level_4_tab[LEN_PAGE_TABLE] PT_ATTRS;
 // PML4T[0]
-volatile static uint64_t page_dir_ptr_tab[LEN_PAGE_TABLE] PT_ATTRS;
+static uint64_t page_dir_ptr_tab[LEN_PAGE_TABLE] PT_ATTRS;
 // PML4T[0][0]: This is our initial identity map
-volatile static uint64_t page_dir[LEN_PAGE_TABLE] PT_ATTRS;
+static uint64_t page_dir[LEN_PAGE_TABLE] PT_ATTRS;
 
 // PML4T[509]: Kernel space
-volatile static uint64_t ks_pdpt[LEN_PAGE_TABLE] PT_ATTRS;
+static uint64_t ks_pdpt[LEN_PAGE_TABLE] PT_ATTRS;
 
 const MIS *mis;
 typedef union {

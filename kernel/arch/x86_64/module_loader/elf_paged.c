@@ -14,7 +14,7 @@ uint64_t *bump_malloc_pt() {
   return addr;
 }
 
-int elf64_map_program_image(const char *const elf, volatile uint64_t *const pml4t) {
+int elf64_map_program_image(const char *const elf, uint64_t *const pml4t) {
   // Assumes all page tables were zeroed at allocation, and all
   // allocated page tables have been added to the page table tree.
   // This way, a non-zero entry in any page table -> a page table
@@ -52,21 +52,21 @@ int elf64_map_program_image(const char *const elf, volatile uint64_t *const pml4
       virtual_to_page_table_indices(virt_addr+j, &i0, &i1, &i2, &i3);
 
       // ensure all the tables exist
-      volatile uint64_t *pdpt = fetch_page_table(pml4t, i0);
+      uint64_t *pdpt = fetch_page_table(pml4t, i0);
       if (pdpt == NULL) {
-        pml4t[i0] = (volatile uint64_t)bump_malloc_pt() | 3;
+        pml4t[i0] = (uint64_t)bump_malloc_pt() | 3;
         pdpt = fetch_page_table(pml4t, i0);
         zero_page_table(pdpt);
       }
-      volatile uint64_t *pd = fetch_page_table(pdpt, i1);
+      uint64_t *pd = fetch_page_table(pdpt, i1);
       if (pd == NULL) {
-        pdpt[i1] = (volatile uint64_t)bump_malloc_pt() | 3;
+        pdpt[i1] = (uint64_t)bump_malloc_pt() | 3;
         pd = fetch_page_table(pdpt, i1);
         zero_page_table(pd);
       }
-      volatile uint64_t *pt = fetch_page_table(pd, i2);
+      uint64_t *pt = fetch_page_table(pd, i2);
       if (pt == NULL) {
-        pd[i2] = (volatile uint64_t)bump_malloc_pt() | 3;
+        pd[i2] = (uint64_t)bump_malloc_pt() | 3;
         pt = fetch_page_table(pd, i2);
         zero_page_table(pt);
       }
@@ -74,11 +74,11 @@ int elf64_map_program_image(const char *const elf, volatile uint64_t *const pml4
       if (j < fsize) { // still inside the real file
         // point the table to the physical address of the real ELF
         // content
-        pt[i3] = (volatile uint64_t)(segment_start + j) | 3;
+        pt[i3] = (uint64_t)(segment_start + j) | 3;
       } else { // nobits data
         // allocate an empty page to store the data and point the
         // table to it
-        pt[i3] = (volatile uint64_t)(bump_malloc(PAGE_SIZE)) | 3;
+        pt[i3] = (uint64_t)(bump_malloc(PAGE_SIZE)) | 3;
       }
     }
   }
