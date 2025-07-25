@@ -32,6 +32,9 @@ volatile static uint64_t page_dir_ptr_tab[sz_PT] PT_ATTRS;
 // PML4T[0][0]: This is our initial identity map
 volatile static uint64_t page_dir[sz_PT] PT_ATTRS;
 
+// PML4T[509]: Kernel space
+volatile static uint64_t ks_pdpt[sz_PT] PT_ATTRS;
+
 const MIS *mis;
 typedef union {
   uint64_t entry64;
@@ -125,4 +128,7 @@ static void setup_page_tables() {
   page_dir[3] = (uint64_t)(0x600000) | 3 | 128;
   page_dir_ptr_tab[0] = (uint64_t)(uintptr_t)(page_dir) | 3;
   page_level_4_tab[0] = (uint64_t)(uintptr_t)(page_dir_ptr_tab) | 3;
+
+  // Add the kernel space entry
+  page_level_4_tab[sz_PT - 3] = (uint64_t)(uintptr_t)ks_pdpt | 3;
 }
