@@ -12,7 +12,8 @@ puts.o \
 errno.o \
 strto.o \
 isspace.o \
-bump_alloc.o
+bump_alloc.o \
+paging.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)

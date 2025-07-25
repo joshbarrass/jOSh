@@ -12,6 +12,7 @@
 #include "elf_paged.h"
 #include "addr_checker.h"
 #include "bump_alloc.h"
+#include "paging.h"
 
 extern const size_t __loader_end;
 
@@ -21,19 +22,18 @@ extern const size_t __loader_end;
    of memory in long mode. This requires four page tables, one PDT,
    one PDPT, and one PML4T. */
 
-// define some constants for working with page tables
-#define sz_PT 512
-#define PT_ATTRS __attribute__((aligned(4096))) __attribute__((section(".bss")))
+// define attrs for static page tables
+#define PT_ATTRS __attribute__((aligned(PAGE_ALIGNMENT))) __attribute__((section(".bss")))
 
 // PML4T
-volatile uint64_t page_level_4_tab[sz_PT] PT_ATTRS;
+volatile uint64_t page_level_4_tab[LEN_PAGE_TABLE] PT_ATTRS;
 // PML4T[0]
-volatile static uint64_t page_dir_ptr_tab[sz_PT] PT_ATTRS;
+volatile static uint64_t page_dir_ptr_tab[LEN_PAGE_TABLE] PT_ATTRS;
 // PML4T[0][0]: This is our initial identity map
-volatile static uint64_t page_dir[sz_PT] PT_ATTRS;
+volatile static uint64_t page_dir[LEN_PAGE_TABLE] PT_ATTRS;
 
 // PML4T[509]: Kernel space
-volatile static uint64_t ks_pdpt[sz_PT] PT_ATTRS;
+volatile static uint64_t ks_pdpt[LEN_PAGE_TABLE] PT_ATTRS;
 
 const MIS *mis;
 typedef union {
@@ -126,19 +126,6 @@ void module_loader_main() {
   }
 }
 
-static void zero_page_table(volatile uint64_t *table) {
-  for (size_t i = 0; i < sz_PT; ++i) {
-    table[i] = 0;
-  }
-}
-
-static void id_table(uint64_t *table, uint64_t pti) {
-  uint64_t start_addr = 0x1000 * sz_PT * pti;
-  for (uint64_t i = 0; i < sz_PT; ++i) {
-    table[i] = start_addr + (uint64_t)((0x1000 * i) | 3); // attributes: supervisor level, read/write, present
-  }
-}
-
 static void setup_page_tables() {
   zero_page_table(page_dir);
   zero_page_table(page_dir_ptr_tab);
@@ -154,5 +141,5 @@ static void setup_page_tables() {
   page_level_4_tab[0] = (uint64_t)(uintptr_t)(page_dir_ptr_tab) | 3;
 
   // Add the kernel space entry
-  page_level_4_tab[sz_PT - 3] = (uint64_t)(uintptr_t)ks_pdpt | 3;
+  page_level_4_tab[LEN_PAGE_TABLE - 3] = (uint64_t)(uintptr_t)ks_pdpt | 3;
 }
