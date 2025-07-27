@@ -21,7 +21,7 @@ SECTIONS
 	{
 		*(.rodata)
                 *(.eh_frame)
-                *(.rodata.*)
+                *(.rodata*)
                 /* Pad out the section to the next page boundary */
                 FILL(0x00);
                 . = ALIGN(4K) - 1;
