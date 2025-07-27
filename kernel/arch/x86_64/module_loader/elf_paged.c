@@ -7,6 +7,7 @@
 #define ERR_VIR_NOT_PAGE_ALIGNED -2
 #define ERR_FSIZE_NOT_PAGE -3
 #define ERR_MSIZE_NOT_PAGE -4
+#define ERR_OTHER -255
 
 uint64_t *bump_malloc_pt() {
   bump_align(PAGE_ALIGNMENT);
@@ -49,7 +50,7 @@ int elf64_map_program_image(const char *const elf, uint64_t *const pml4t) {
     for (uint64_t j = 0; j < msize; j += PAGE_SIZE) {
       // get the page table indices corresponding to the virtual address
       size_t i0, i1, i2, i3;
-      virtual_to_page_table_indices(virt_addr+j, &i0, &i1, &i2, &i3);
+      if (virtual_to_page_table_indices(virt_addr+j, &i0, &i1, &i2, &i3) != 0) return ERR_OTHER;
 
       // ensure all the tables exist
       uint64_t *pdpt = fetch_page_table(pml4t, i0);

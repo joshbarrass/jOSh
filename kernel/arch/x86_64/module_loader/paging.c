@@ -7,10 +7,10 @@ void zero_page_table(uint64_t *table) {
   }
 }
 
-void virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
+int virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
                                    size_t *pdpt_i, size_t *pd_i,
                                    size_t *pt_i) {
-  if (pml4t_i == NULL || pdpt_i == NULL || pd_i == NULL || pt_i == NULL) return;
+  if (pml4t_i == NULL || pdpt_i == NULL || pd_i == NULL || pt_i == NULL) return -1;
 
   addr >>= 12;
   *pt_i = addr & 511;
@@ -20,6 +20,8 @@ void virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
   *pdpt_i = addr & 511;
   addr >>= 9;
   *pml4t_i = addr & 511;
+
+  return 0;
 }
 
 uint64_t *fetch_page_table(uint64_t *table, const size_t i) {

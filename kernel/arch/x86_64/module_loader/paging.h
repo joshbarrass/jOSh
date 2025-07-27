@@ -10,7 +10,7 @@
 
 void zero_page_table(uint64_t *table);
 
-void virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
+int virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
                                    size_t *pdpt_i, size_t *pd_i,
                                    size_t *pt_i);
 
