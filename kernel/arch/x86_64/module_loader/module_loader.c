@@ -90,7 +90,7 @@ void module_loader_main() {
     printf("[E] Module loader does not support 32-bit ELFs\n");
     return;
   } else {
-    printf("[+] Setting up identity tables... ");
+    printf("[+] Setting up identity pages... ");
     setup_page_tables();
     printf("Done!\n");
     printf("[+] Mapping ELF... ");
