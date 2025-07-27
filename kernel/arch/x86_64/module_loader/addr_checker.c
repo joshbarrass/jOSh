@@ -49,16 +49,21 @@ uint64_t check_mod(const Mod *mod) {
 uint64_t check_mods(const MIS *mis) {
   const Mod *mods = get_mods(mis);
   uint64_t max_addr = 0;
-  // we intentionally check all but the first module. Since we are
-  // relocating things using a safe memmove, it doesn't matter if the
-  // ELF itself overlaps the load address.
-  for (size_t i = 1; i < mis->mods_count; ++i) {
+  for (size_t i = 0; i < mis->mods_count; ++i) {
     uint64_t mod_max = check_mod(&mods[i]);
     if (mod_max > max_addr) {
       max_addr = mod_max;
     }
   }
   return max_addr;
+}
+
+uint64_t check_mmap(const MIS *mis) {
+  const char *mmap = (const char*)get_mmap(mis);
+  for (size_t i = 0; i < mis->mmap_length; ++i) {
+    mmap += (uint32_t)(*mmap);
+  }
+  return (uint64_t)((uintptr_t)mmap);
 }
 
 // get_MIS_max_addr runs all of the functions for determining the max
@@ -76,6 +81,10 @@ uint64_t get_MIS_max_addr(const MIS *mis) {
   const uint64_t cmdline = check_cmdline(mis);
   if (cmdline > max_addr) {
     max_addr = cmdline;
+  }
+  const uint64_t mmap = check_mmap(mis);
+  if (mmap > max_addr) {
+    max_addr = mmap;
   }
   return max_addr;
 }

@@ -2,6 +2,7 @@ OBJS=\
 bootstrap.o \
 module_loader.o \
 elf.o \
+elf_paged.o \
 addr_checker.o \
 long_load.o \
 tty.o \
@@ -10,7 +11,9 @@ putchar.o \
 puts.o \
 errno.o \
 strto.o \
-isspace.o
+isspace.o \
+bump_alloc.o \
+paging.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)

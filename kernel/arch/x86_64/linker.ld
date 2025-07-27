@@ -8,11 +8,8 @@ ENTRY(_entry)
    kernel image. */
 SECTIONS
 {
-	/* The module loader is loaded at a 2M offset. However, x86_64
-	generally requires 2MB aligment, so to make sure there is no
-	overlap between the module loader and the kernel, we ensure
-	that the kernel is loaded to an offset of 4M */
-        . = 4M;
+        . = 0xfffffe8000200000; /* PML4T[509] + 2MB */
+        __kernel_start = .;
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{
@@ -23,20 +20,43 @@ SECTIONS
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata)
+                *(.eh_frame)
+                *(.rodata*)
+                /* Pad out the section to the next page boundary */
+                FILL(0x00);
+                . = ALIGN(4K) - 1;
+                BYTE(0x00);
 	}
 
 	/* Read-write data (initialized) */
 	.data BLOCK(4K) : ALIGN(4K)
 	{
 		*(.data)
+                /* Pad out the section to the next page boundary */
+                FILL(0x00);
+                . = ALIGN(4K) - 1;
+                BYTE(0x00);
 	}
 
 	/* Read-write data (uninitialized) and stack */
 	.bss BLOCK(4K) : ALIGN(4K)
 	{
+                /* Create stack in .bss directly.
+                   This allows us to access the stack directly from
+                   ASM, which we have to use to avoid symbol
+                   relocation errors.*/
+                . = ALIGN(16);
+                stack = .;
+                . += 16K;
+                stack_top = .;
+
 		*(COMMON)
 		*(.bss)
+                FILL(0x00);
+                . = ALIGN(4K);
 	}
+
+        __kernel_end = .;
 
 	/* The compiler may produce other sections, by default it will put them in
 	   a segment with the same name. Simply add stuff here as needed. */
