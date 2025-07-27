@@ -8,7 +8,7 @@ ENTRY(_entry)
    kernel image. */
 SECTIONS
 {
-        . = 0xfffffe8000200000;
+        . = 0xfffffe8000200000; /* PML4T[509] + 2MB */
         __kernel_start = .;
 
 	.text BLOCK(4K) : ALIGN(4K)

@@ -46,7 +46,7 @@ int elf64_map_program_image(const char *const elf, uint64_t *const pml4t) {
     const size_t msize = (size_t)pheader[i].p_memsz;
     if (msize % PAGE_ALIGNMENT != 0) return ERR_MSIZE_NOT_PAGE;
 
-    // map the contents of the file into memory
+    // map the contents of the file into memory one page at a time
     for (uint64_t j = 0; j < msize; j += PAGE_SIZE) {
       // get the page table indices corresponding to the virtual address
       size_t i0, i1, i2, i3;
