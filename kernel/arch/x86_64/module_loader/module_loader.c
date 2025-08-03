@@ -141,6 +141,9 @@ static void setup_page_tables() {
   page_dir_ptr_tab[0] = (uint64_t)(uintptr_t)(page_dir) | 3;
   page_level_4_tab[0] = (uint64_t)(uintptr_t)(page_dir_ptr_tab) | 3;
 
+  // Add the recursive entry
+  page_level_4_tab[LEN_PAGE_TABLE - 1] = (uint64_t)(uintptr_t)page_level_4_tab | 3;
+
   // Add the kernel space entry
   page_level_4_tab[LEN_PAGE_TABLE - 3] = (uint64_t)(uintptr_t)ks_pdpt | 3;
 }
