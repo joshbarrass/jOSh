@@ -219,11 +219,20 @@ int vprintf(const char *fmt, va_list args) {
       }
 
       // parse width, if it exists
-      int old_errno = errno; // save and restore errno -- printf shouldn't modify it
-      const char *width_end = fmt;
-      flags.width = strtol(fmt, (char **)&width_end, 10);
-      errno = old_errno;
-      fmt = width_end;
+      // first check for wildcard width
+      if (*fmt == '*') {
+        // read the arg
+        int wildcard_width = va_arg(args, int);
+        flags.width = wildcard_width >= 0 ? wildcard_width : 0;
+        ++fmt;
+      } else {
+        // otherwise, parse the number
+        int old_errno = errno; // save and restore errno -- printf shouldn't modify it
+        const char *width_end = fmt;
+        flags.width = strtol(fmt, (char **)&width_end, 10);
+        errno = old_errno;
+        fmt = width_end;
+      }
 
       // find length specifier, if it exists
       int_length_t length_specifier;
