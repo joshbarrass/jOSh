@@ -222,7 +222,8 @@ int vprintf(const char *fmt, va_list args) {
       // first check for wildcard width
       if (*fmt == '*') {
         // read the arg
-        flags.width = va_arg(args, int);
+        int wildcard_width = va_arg(args, int);
+        flags.width = wildcard_width >= 0 ? wildcard_width : 0;
         ++fmt;
       } else {
         // otherwise, parse the number
