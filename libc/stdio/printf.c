@@ -195,10 +195,12 @@ static int print_string(char *string, const flags_t flags) {
   // a strlen if it doesn't actually matter.
   if (flags.width > 0 && !flags.left) {
     const size_t len = strlen(string);
-    ptrdiff_t to_pad = flags.width - len;
-    written += to_pad;
-    while (to_pad-->0) {
-      putchar(' ');
+    if (len < flags.width) {
+      size_t to_pad = flags.width - len;
+      written += to_pad;
+      while (to_pad-->0) {
+        putchar(' ');
+      }
     }
   }
 
