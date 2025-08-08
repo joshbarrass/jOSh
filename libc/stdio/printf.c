@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <string.h>
 
 // defines a safe buffer size for formatting an integer to a string in
 // denary form
@@ -187,7 +188,30 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
 }
 
 static int print_string(char *string, const flags_t flags) {
-  return puts(string);
+  int written = 0;
+
+  // Pad with spaces first, but only if a width was actually specified
+  // and the string is right-aligned. We don't want to waste time with
+  // a strlen if it doesn't actually matter.
+  if (flags.width > 0 && !flags.left) {
+    const size_t len = strlen(string);
+    size_t to_pad = flags.width - len;
+    written += to_pad;
+    while (to_pad-->0) {
+      putchar(' ');
+    }
+  }
+
+  written += puts(string);
+
+  if (flags.left) {
+    while (written < flags.width) {
+      putchar(' ');
+      ++written;
+    }
+  }
+
+  return written;
 }
 
 int vprintf(const char *fmt, va_list args) {
