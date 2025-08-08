@@ -186,6 +186,10 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   return written;
 }
 
+static int print_string(char *string, const flags_t flags) {
+  return puts(string);
+}
+
 int vprintf(const char *fmt, va_list args) {
   int written = 0;
   
@@ -281,7 +285,7 @@ int vprintf(const char *fmt, va_list args) {
         written += print_int(written, flags);
         break;
       case 's':
-        written += puts(va_arg(args, char*));
+        written += print_string(va_arg(args, char*), flags);
         break;
       case 'i':
       case 'd':
