@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 void *memmove(void*, const void*, size_t);
+size_t strlen(const char *str);
 
 #ifdef __cplusplus
 }
