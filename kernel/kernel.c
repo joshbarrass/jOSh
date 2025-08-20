@@ -16,11 +16,13 @@
 
 #include <kernel/tty.h>
 #include <kernel/vga.h>
+#include <kernel/bootstruct.h>
 #include <multiboot.h>
 #include <kernel/panic.h>
 #include <archdef.h>
 #include <kernel/mmap.h>
 
+const BootStruct *bootstruct = NULL;
 const MIS *mis = NULL;
 
 static void print_welcome_message() {
@@ -52,6 +54,16 @@ void kernel_main() {
   term_info_color();
   term_clear_screen();
   print_welcome_message();
+  if (bootstruct != NULL) {
+    term_good_color();
+    printf("[+] Boot struct is available!\n");
+    term_info_color();
+  } else {
+    term_error_color();
+    printf("[!] Missing boot struct!\n");
+    term_info_color();
+  }
+
   if (mis == NULL) {
     term_error_color();
     printf("[!] Missing multiboot information struct!\n");

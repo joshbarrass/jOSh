@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <multiboot.h>
+#include <kernel/bootstruct.h>
 #include <kernel/tty.h>
 #include "elf_paged.h"
 #include "addr_checker.h"
@@ -42,6 +43,8 @@ typedef union {
   uint32_t entry32;
 } Entrypoint;
 Entrypoint entry;
+
+BootStruct bootstruct;
 
 static void setup_page_tables();
 
@@ -120,6 +123,22 @@ void module_loader_main() {
       printf(" not page aligned!\n");
       return;
     }
+    printf("[+] Building boot struct...\n");
+    bs_init(&bootstruct);
+    bootstruct.MIS = (bs_ptr_t)mis;
+    bootstruct.flags |= BS_FLAG_MIS;
+    bs_set_checksum(&bootstruct);
+    printf("      Flags: %u\n", bootstruct.flags);
+    printf("      MIS: %#zx\n", bootstruct.MIS);
+    printf("      Checksum: %#x\n", bootstruct.checksum);
+    if (bs_verify_checksum(&bootstruct)) {
+      printf("      Valid!\n");
+    } else {
+      term_set_fg(4);
+      printf("      Invalid!\n");
+      return;
+    }
+
     printf("[+] Jumping to long loader...\n");
 
     entry.entry64 = get_elf64_entrypoint(mod);

@@ -13,7 +13,8 @@ errno.o \
 strto.o \
 isspace.o \
 bump_alloc.o \
-paging.o
+paging.o \
+bootstruct.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)
@@ -21,6 +22,9 @@ loader.elf: module_loader.ld $(OBJS)
 	grub-file --is-x86-multiboot '$@'
 
 tty.o: ../../../tty.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+
+bootstruct.o: ../../../bootstruct.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 %.o: ../../../../libc/stdio/%.c

@@ -1,10 +1,16 @@
 #include <kernel/bootstruct.h>
 
-bool bs_verify_checksum(const BootStruct *bs) {
-  return (BOOTSTRUCT_MAGIC + bs->flags + bs->checksum) == 0;
+void bs_init(BootStruct *bs) {
+  bs->flags = 0;
+  bs->checksum = 0;
+  bs->MIS = 0;
 }
 
-static bs_flags_t bs_gen_checksum(const BootStruct *bs) {
+bool bs_verify_checksum(const BootStruct *bs) {
+  return (bs_flags_t)(BOOTSTRUCT_MAGIC + bs->flags + bs->checksum) == 0;
+}
+
+static inline bs_flags_t bs_gen_checksum(const BootStruct *bs) {
   return (bs_flags_t)(-(BOOTSTRUCT_MAGIC + bs->flags));
 }
 

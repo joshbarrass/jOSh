@@ -1,6 +1,7 @@
 ;;; Code very heavily based on:
 ;;; https://wiki.osdev.org/Setting_Up_Long_Mode
         BITS 32
+        BOOTSTRUCT_MAGIC equ 0x1B002ED1
 
 %macro call_print_str 1
         push dword %1
@@ -152,10 +153,10 @@ long_mode:
         ;; Set up RAX and RBX to pass the multiboot magic number and
         ;; MIS to the kernel
         xor rax, rax
-        mov eax, 0x2BADB002
+        mov eax, BOOTSTRUCT_MAGIC
         xor rbx, rbx
-        extern mis
-        mov ebx, dword [mis]
+        extern bootstruct
+        mov ebx, dword bootstruct
         ;; Retrieve the full 64-bit entrypoint pointer from the C code
         ;; and call it
         extern entry

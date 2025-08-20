@@ -23,6 +23,7 @@ inline static const MIS *bs_get_MIS(const BootStruct *bs) {
   return (const MIS *)((uintptr_t)bs->MIS);
 }
 
+void bs_init(BootStruct *bs);
 bool bs_verify_checksum(const BootStruct *bs);
 void bs_set_checksum(BootStruct *bs);
 
