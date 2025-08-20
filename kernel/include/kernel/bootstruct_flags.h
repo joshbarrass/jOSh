@@ -1,0 +1,6 @@
+#ifndef __BOOTSTRUCT_FLAGS_H
+#define __BOOTSTRUCT_FLAGS_H
+
+#define BS_FLAG_MIS 1
+
+#endif
