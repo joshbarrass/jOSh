@@ -128,9 +128,9 @@ void module_loader_main() {
     bootstruct.MIS = (bs_ptr_t)mis;
     bootstruct.flags |= BS_FLAG_MIS;
     bs_set_checksum(&bootstruct);
-    printf("      Flags: %u\n", bootstruct.flags);
-    printf("      MIS: %#zx\n", bootstruct.MIS);
-    printf("      Checksum: %#x\n", bootstruct.checksum);
+    printf("      Flags: %#x\n"
+           "      MIS: %#lx\n"
+           "      Checksum: %#x\n", bootstruct.flags, bootstruct.MIS, bootstruct.checksum);
     if (bs_verify_checksum(&bootstruct)) {
       printf("      Valid!\n");
     } else {
