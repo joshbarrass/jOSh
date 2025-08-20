@@ -22,6 +22,8 @@
 #include <archdef.h>
 #include <kernel/mmap.h>
 
+#define BS_IS_PRESENT (bootstruct != NULL)
+
 const BootStruct *bootstruct = NULL;
 const MIS *mis = NULL;
 
@@ -54,7 +56,7 @@ void kernel_main() {
   term_info_color();
   term_clear_screen();
   print_welcome_message();
-  if (bootstruct != NULL) {
+  if (BS_IS_PRESENT) {
     term_good_color();
     printf("[+] Boot struct is available!\n");
     term_info_color();
@@ -104,6 +106,19 @@ void kernel_main() {
   mmap_iterator iter = new_mmap_iterator(get_mmap(mis), mis->mmap_length);
   for (mmap *entry = mmap_iterator_next(&iter); entry != NULL ; entry = mmap_iterator_next(&iter)) {
     printf("    |0x%016zX - 0x%016zX|%s|0x%02x|\n", entry->base_addr, entry->base_addr+entry->length-1, get_mmap_type_string(entry->type), entry->type);
+  }
+
+  // retrieve the first free address from the boot struct, if present
+  if (BS_IS_PRESENT && bootstruct->flags & BS_FLAG_FREEADDR) {
+    const void *lowest_free_addr = bs_get_lowest_free_addr(bootstruct);
+    uintptr_t lowest_free_page = (uintptr_t)lowest_free_addr;
+    const uintptr_t page_diff = lowest_free_page % 0x1000;
+    if (page_diff != 0) {
+      lowest_free_page += 0x1000-page_diff;
+    }
+    printf("[*] First free address at: 0x%016zX (%zuKiB)\n[*] First free page at:    0x%016zX (%zuKiB)\n",
+           (uintptr_t)lowest_free_addr, (uintptr_t)lowest_free_addr/1024, lowest_free_page, lowest_free_page/1024);
+    printf("[*] Total free memory: %zuKiB\n", (uintptr_t)total_memory-lowest_free_page/1024);
   }
 
   return;
