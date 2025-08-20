@@ -4,6 +4,7 @@ void bs_init(BootStruct *bs) {
   bs->flags = 0;
   bs->checksum = 0;
   bs->MIS = 0;
+  bs->lowest_free_addr = 0;
 }
 
 bool bs_verify_checksum(const BootStruct *bs) {
