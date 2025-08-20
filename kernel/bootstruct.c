@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <kernel/bootstruct.h>
 
 void bs_init(BootStruct *bs) {

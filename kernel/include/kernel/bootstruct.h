@@ -2,7 +2,6 @@
 #define __BOOTSTRUCT_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <multiboot.h>
 #include <kernel/bootstruct_flags.h>
 
