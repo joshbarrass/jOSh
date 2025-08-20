@@ -127,6 +127,8 @@ void module_loader_main() {
     bs_init(&bootstruct);
     bootstruct.MIS = (bs_ptr_t)((uintptr_t)mis);
     bootstruct.flags |= BS_FLAG_MIS;
+    bootstruct.lowest_free_addr = (bs_ptr_t)((uintptr_t)bump_malloc(0));
+    bootstruct.flags |= BS_FLAG_FREEADDR;
     bs_set_checksum(&bootstruct);
     printf("      Flags: %#x\n"
            "      MIS: %#lx\n"

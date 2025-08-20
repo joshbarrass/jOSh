@@ -16,11 +16,16 @@ typedef struct __attribute__((packed)) {
   bs_flags_t checksum;
 
   bs_ptr_t MIS;
+  bs_ptr_t lowest_free_addr;
   
 } BootStruct;
 
 inline static const MIS *bs_get_MIS(const BootStruct *bs) {
   return (const MIS *)((uintptr_t)bs->MIS);
+}
+
+inline static void *bs_get_lowest_free_addr(const BootStruct *bs) {
+  return (void*)((uintptr_t)bs->lowest_free_addr);
 }
 
 void bs_init(BootStruct *bs);
