@@ -60,6 +60,10 @@ void term_print_char(const char c) {
   const size_t new_pos = term_print_char_at(c, pos_x, pos_y);
   pos_y = new_pos / VGA_WIDTH;
   pos_x = new_pos % VGA_WIDTH;
+  while (pos_y >= VGA_HEIGHT) {
+    term_scroll();
+    --pos_y;
+  }
 }
 
 size_t term_print_string_at(const char *s, const int x, const int y) {
