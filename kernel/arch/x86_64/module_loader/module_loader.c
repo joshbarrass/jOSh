@@ -125,7 +125,7 @@ void module_loader_main() {
     }
     printf("[+] Building boot struct...\n");
     bs_init(&bootstruct);
-    bootstruct.MIS = (bs_ptr_t)mis;
+    bootstruct.MIS = (bs_ptr_t)((uintptr_t)mis);
     bootstruct.flags |= BS_FLAG_MIS;
     bs_set_checksum(&bootstruct);
     printf("      Flags: %#x\n"
