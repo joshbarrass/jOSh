@@ -6,6 +6,11 @@ extern const MIS *mis;
 extern void kernel_main();
 
 __attribute__((noreturn,sysv_abi)) void _entry_c(uint32_t rax, uint32_t *rbx) {
+  // initialise the loader pointers to ensure they're zero to start
+  // with
+  mis = NULL;
+  bootstruct = NULL;
+
   // if we were booted directly by a multiboot-compliant bootloader,
   // we can save the pointer to the MIS
   if ((uint32_t)rax == (uint32_t)0x2BADB002) {
