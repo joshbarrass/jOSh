@@ -10,7 +10,6 @@ KERNEL_OBJS=\
 $(KERNEL_DIR)/kernel.o \
 $(KERNEL_DIR)/tty.o \
 $(KERNEL_DIR)/panic.o \
-$(KERNEL_DIR)/vga.o \
 $(KERNEL_DIR)/mmap.o \
 $(KERNEL_DIR)/bootstruct.o
 
