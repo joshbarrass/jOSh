@@ -12,6 +12,7 @@ static void build_gate_descriptor_64(GateDescriptor64 *gd, void *interrupt,
   offset >>= 16;
   gd->offset_2 = offset & 0xffffffffffffffff;
 
+  gd->segment = segment;
   gd->ist = ist;
   gd->gate_type = gate_type;
   gd->dpl = dpl;
