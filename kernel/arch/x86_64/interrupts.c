@@ -32,38 +32,11 @@ static void build_gate_descriptor_64(GateDescriptor64 *gd, void *interrupt,
 
 __attribute__ ((sysv_abi))
 void do_df() {
-  kpanic("Double fault");
+  kpanic("Double fault!");
   return;
 }
 
-// rax, rdi, rsi, rdx, rcx, r8, r9, r10, r11 are scratch registers
-// https://wiki.osdev.org/System_V_ABI#x86-64
-__attribute__ ((naked))
-static void df_handler() {
-  __asm__ volatile (
-                    "addq $4, %rsp\r\n" // discard the error code
-                    "pushq %rax\r\n"
-                    "pushq %rdi\r\n"
-                    "pushq %rsi\r\n"
-                    "pushq %rdx\r\n"
-                    "pushq %rcx\r\n"
-                    "pushq %r8\r\n"
-                    "pushq %r9\r\n"
-                    "pushq %r10\r\n"
-                    "pushq %r11\r\n"
-                    "call do_df\r\n"
-                    "popq %r11\r\n"
-                    "popq %r10\r\n"
-                    "popq %r9\r\n"
-                    "popq %r8\r\n"
-                    "popq %rcx\r\n"
-                    "popq %rdx\r\n"
-                    "popq %rsi\r\n"
-                    "popq %rdi\r\n"
-                    "popq %rax\r\n"
-                    "iretq\r\n"
-                    );
-}
+extern void df_handler();
 
 void setup_interrupts() {
   build_gate_descriptor_64(&IDT[8], (void *)&df_handler, 8, 0, 0xF, 0, true);
