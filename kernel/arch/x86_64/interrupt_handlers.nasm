@@ -42,5 +42,10 @@ df_handler:
         extern do_df
         call do_df
         popa_64
-        add rsp, 4
+        ;; remove error code error code is a qword in x86_64
+        ;; https://wiki.osdev.org/Interrupt_Service_Routines#x86-64
+        ;; "If the interrupt is an exception, the CPU will push an
+        ;; error code onto the stack, padded with bytes to form a
+        ;; quadword. "
+        add rsp, 8
         iretq
