@@ -38,9 +38,9 @@
 
 global df_handler
 df_handler:
-        add rsp, 4
         pusha_64
         extern do_df
         call do_df
         popa_64
+        add rsp, 4
         iretq
