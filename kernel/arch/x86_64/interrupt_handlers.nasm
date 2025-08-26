@@ -17,7 +17,7 @@
         push r14
         push r15
 %endmacro
-%macro popa_64 0
+        %macro popa_64 0
         pop r15
         pop r14
         pop r13
@@ -39,6 +39,10 @@
 global df_handler
 df_handler:
         pusha_64
+        ;; sysv abi says rdi is the first arg
+        ;; pass the current stack pointer as the first arg, so we can
+        ;; read it with the InterruptStackFrame struct.
+        mov rdi, rsp
         extern do_df
         call do_df
         popa_64
