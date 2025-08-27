@@ -85,10 +85,39 @@ void do_df(InterruptStackFrame *fr) {
   return;
 }
 
+__attribute__ ((sysv_abi))
+void do_pf(InterruptStackFrame *fr) {
+  kpanic("Page Fault!\n"
+         "Error code: %llx\n"
+         "Fault occured executing: %#018llx\n\n"
+         "Registers:\n"
+         "rax: %#018llx  rbx: %#018llx\n"
+         "rcx: %#018llx  rdx: %#018llx\n"
+         "rsi: %#018llx  rdi: %#018llx\n"
+         "rsp: %#018llx  rbp: %#018llx\n"
+         " r8: %#018llx   r9: %#018llx\n"
+         "r10: %#018llx  r11: %#018llx\n"
+         "r12: %#018llx  r13: %#018llx\n"
+         "r14: %#018llx  r15: %#018llx\n"
+         " cs: %#018llx   ss: %#018llx\n\n"
+         "CPU Flags: %#018llx\n",
+         fr->err_code,
+         fr->ret_ip, fr->rax, fr->rbx,
+         fr->rcx, fr->rdx, fr->rsi,
+         fr->rdi, fr->ret_sp, fr->rbp,
+         fr->r8, fr->r9, fr->r10,
+         fr->r11, fr->r12, fr->r13,
+         fr->r14, fr->r15, fr->ret_cs,
+         fr->ret_ss, fr->ret_flags);
+  return;
+}
+
 extern void df_handler();
+extern void pf_handler();
 
 void setup_interrupts() {
   build_gate_descriptor_64(&IDT[8], (void *)&df_handler, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[14], (void *)&pf_handler, 8, 0, 0xF, 0, true);
   IDTD.offset = (uintptr_t)IDT;
   IDTD.size = sizeof(GateDescriptor64) * 256;
   __asm__ volatile("lidt (%0)\r\n" ::"r"(&IDTD));

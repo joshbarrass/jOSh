@@ -53,3 +53,21 @@ df_handler:
         ;; quadword. "
         add rsp, 8
         iretq
+
+global pf_handler
+pf_handler:
+        pusha_64
+        ;; sysv abi says rdi is the first arg
+        ;; pass the current stack pointer as the first arg, so we can
+        ;; read it with the InterruptStackFrame struct.
+        mov rdi, rsp
+        extern do_pf
+        call do_pf
+        popa_64
+        ;; remove error code error code is a qword in x86_64
+        ;; https://wiki.osdev.org/Interrupt_Service_Routines#x86-64
+        ;; "If the interrupt is an exception, the CPU will push an
+        ;; error code onto the stack, padded with bytes to form a
+        ;; quadword. "
+        add rsp, 8
+        iretq
