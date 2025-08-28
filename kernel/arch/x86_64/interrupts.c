@@ -37,8 +37,51 @@ typedef struct __attribute__((packed)) {
   uint64_t ret_ss;
 } InterruptStackFrame;
 
+// https://wiki.osdev.org/Interrupt_Descriptor_Table#IDT_items
+static const char* const INTERRUPT_NAMES[32] = {"Divide Error",
+                                          "Debug Exception",
+                                          "NMI Interrupt",
+                                          "Breakpoint",
+                                          "Overflow",
+                                          "BOUND Range Exceeded",
+                                          "Undefined Opcode",
+                                          "No Math Coprocessor",
+                                          "Double Fault",
+                                          "Coprocessor Segment Overrun",
+                                          "Invalid TSS",
+                                          "Segment Not Present",
+                                          "Stack-Segment Fault",
+                                          "General Protection Fault",
+                                          "Page Fault",
+                                          "Reserved",
+                                          "Math Fault",
+                                          "Alignment Check",
+                                          "Machine Check",
+                                          "SIMD Floating-Point Exception",
+                                          "Virtualisation Exception",
+                                          "Control Protection Exception",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved",
+                                          "Reserved"};
+
+static const char* const INTERRUPT_SHORTCODES[32] = {"#DE", "#DB", "NMI", "#BP",
+                                               "#OF", "#BR", "#UD", "#NM",
+                                               "#DF", "",    "#TS", "#NP",
+                                               "#SS", "#GP", "#PF", "",
+                                               "#MF", "#AC", "#MC", "#XM",
+                                               "#VE", "#CP", "",    "",
+                                               "",    "",    "",    "",
+                                               "",    "",    "",    ""};
+
 static void
-build_gate_descriptor_64(GateDescriptor64 *gd, void *interrupt,
+build_gate_descriptor_64(GateDescriptor64 * gd, void *interrupt,
                          uint16_t segment, char ist, char gate_type, char dpl,
                          bool present) {
   uint64_t offset = (uint64_t)(uintptr_t)interrupt;
@@ -61,7 +104,11 @@ build_gate_descriptor_64(GateDescriptor64 *gd, void *interrupt,
 
 __attribute__ ((sysv_abi))
 void general_int_handler(InterruptStackFrame *fr) {
-  kpanic("Int %u!\n"
+  const char *int_name = "Unknown Interrupt";
+  if (fr->int_number < (sizeof(INTERRUPT_NAMES) / sizeof(INTERRUPT_NAMES[0]))) {
+    int_name = INTERRUPT_NAMES[fr->int_number];
+  }
+  kpanic("%s!\n"
          "Error code: %#llx\n"
          "Fault occured executing: %#018llx\n\n"
          "Registers:\n"
@@ -75,7 +122,7 @@ void general_int_handler(InterruptStackFrame *fr) {
          "r14: %#018llx  r15: %#018llx\n"
          " cs: %#018llx   ss: %#018llx\n\n"
          "CPU Flags: %#018llx\n",
-         fr->int_number, fr->err_code,
+         int_name, fr->err_code,
          fr->ret_ip, fr->rax, fr->rbx,
          fr->rcx, fr->rdx, fr->rsi,
          fr->rdi, fr->ret_sp, fr->rbp,
