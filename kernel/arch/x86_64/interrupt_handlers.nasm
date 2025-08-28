@@ -36,38 +36,40 @@
         pop rax
 %endmacro
 
-global df_handler
-df_handler:
+%macro handler 2 ; arg 1: interrupt number. arg 2: interrupt pushes err code?
+global handle_int%1
+handle_int%1:
+        push qword %1           ; push the interrupt number to the stack
+        %if %2<>0
+        jmp have_errcode
+        %else
+        jmp have_no_errcode
+        %endif
+%endmacro
+
+have_no_errcode:
+        ;; we need to push an error code ourselves to normalise the
+        ;; stack frame
+        push qword 0
+have_errcode:
+        ;; here we have an error code, so we can just push the
+        ;; registers and call the general handler
         pusha_64
         ;; sysv abi says rdi is the first arg
         ;; pass the current stack pointer as the first arg, so we can
         ;; read it with the InterruptStackFrame struct.
         mov rdi, rsp
-        extern do_df
-        call do_df
+        extern general_int_handler
+        call general_int_handler
         popa_64
-        ;; remove error code error code is a qword in x86_64
+        ;; remove the error code and the interrupt number
+        ;; error code is a qword in x86_64
         ;; https://wiki.osdev.org/Interrupt_Service_Routines#x86-64
         ;; "If the interrupt is an exception, the CPU will push an
         ;; error code onto the stack, padded with bytes to form a
-        ;; quadword. "
-        add rsp, 8
+        ;; quadword."
+        add rsp, 16
         iretq
 
-global pf_handler
-pf_handler:
-        pusha_64
-        ;; sysv abi says rdi is the first arg
-        ;; pass the current stack pointer as the first arg, so we can
-        ;; read it with the InterruptStackFrame struct.
-        mov rdi, rsp
-        extern do_pf
-        call do_pf
-        popa_64
-        ;; remove error code error code is a qword in x86_64
-        ;; https://wiki.osdev.org/Interrupt_Service_Routines#x86-64
-        ;; "If the interrupt is an exception, the CPU will push an
-        ;; error code onto the stack, padded with bytes to form a
-        ;; quadword. "
-        add rsp, 8
-        iretq
+handler 8, 1
+handler 14, 1
