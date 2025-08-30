@@ -133,8 +133,28 @@ void general_int_handler(InterruptStackFrame *fr) {
   return;
 }
 
+extern void handle_int0();
+extern void handle_int1();
+extern void handle_int2();
+extern void handle_int3();
+extern void handle_int4();
+extern void handle_int5();
+extern void handle_int6();
+extern void handle_int7();
 extern void handle_int8();
+extern void handle_int9();
+extern void handle_int10();
+extern void handle_int11();
+extern void handle_int12();
+extern void handle_int13();
 extern void handle_int14();
+extern void handle_int15();
+extern void handle_int16();
+extern void handle_int17();
+extern void handle_int18();
+extern void handle_int19();
+extern void handle_int20();
+extern void handle_int21();
 
 void setup_interrupts() {
   build_gate_descriptor_64(&IDT[8], (void *)&handle_int8, 8, 0, 0xF, 0, true);
