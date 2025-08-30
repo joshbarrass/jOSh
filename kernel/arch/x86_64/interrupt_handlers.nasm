@@ -71,5 +71,19 @@ have_errcode:
         add rsp, 16
         iretq
 
-handler 8, 1
-handler 14, 1
+%macro build_errcode_handlers 1-*
+        %rep %0
+        handler %1, 1
+        %rotate 1
+        %endrep
+%endmacro
+
+%macro build_noerrcode_handlers 1-*
+        %rep %0
+        handler %1, 0
+        %rotate 1
+        %endrep
+%endmacro
+
+build_errcode_handlers 8, 10, 11, 12, 13, 14, 17, 21
+build_noerrcode_handlers 0, 1, 2, 3, 4, 5, 6, 7, 9, 15, 16, 18, 19, 20
