@@ -3,6 +3,7 @@
 #include <kernel/x86_64/interrupts.h>
 #include <kernel/panic.h>
 
+__attribute__((aligned(4096)))
 static GateDescriptor64 IDT[256];
 static struct {
   uint16_t size;
@@ -157,9 +158,40 @@ extern void handle_int20();
 extern void handle_int21();
 
 void setup_interrupts() {
+  build_gate_descriptor_64(&IDT[0], (void *)&handle_int0, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[1], (void *)&handle_int1, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[2], (void *)&handle_int2, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[3], (void *)&handle_int3, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[4], (void *)&handle_int4, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[5], (void *)&handle_int5, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[6], (void *)&handle_int6, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[7], (void *)&handle_int7, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[8], (void *)&handle_int8, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[9], (void *)&handle_int9, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[10], (void *)&handle_int10, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[11], (void *)&handle_int11, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[12], (void *)&handle_int12, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[13], (void *)&handle_int13, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[14], (void *)&handle_int14, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[15], (void *)&handle_int15, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[16], (void *)&handle_int16, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[17], (void *)&handle_int17, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[18], (void *)&handle_int18, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[19], (void *)&handle_int19, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[20], (void *)&handle_int20, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[21], (void *)&handle_int21, 8, 0, 0xF, 0, true);
+  /* ==== Uncomment these when they're defined ====
+  build_gate_descriptor_64(&IDT[22], (void *)&handle_int22, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[23], (void *)&handle_int23, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[24], (void *)&handle_int24, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[25], (void *)&handle_int25, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[26], (void *)&handle_int26, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[27], (void *)&handle_int27, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[28], (void *)&handle_int28, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[29], (void *)&handle_int29, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[30], (void *)&handle_int30, 8, 0, 0xF, 0, true);
+  */
   IDTD.offset = (uintptr_t)IDT;
-  IDTD.size = sizeof(GateDescriptor64) * 256;
+  IDTD.size = sizeof(GateDescriptor64) * 256 - 1;
   __asm__ volatile("lidt (%0)\r\n" ::"r"(&IDTD));
 }
