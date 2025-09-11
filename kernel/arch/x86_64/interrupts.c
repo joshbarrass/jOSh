@@ -156,6 +156,16 @@ extern void handle_int18();
 extern void handle_int19();
 extern void handle_int20();
 extern void handle_int21();
+extern void handle_int22();
+extern void handle_int23();
+extern void handle_int24();
+extern void handle_int25();
+extern void handle_int26();
+extern void handle_int27();
+extern void handle_int28();
+extern void handle_int29();
+extern void handle_int30();
+extern void handle_int31();
 
 void setup_interrupts() {
   build_gate_descriptor_64(&IDT[0], (void *)&handle_int0, 8, 0, 0xF, 0, true);
@@ -180,7 +190,6 @@ void setup_interrupts() {
   build_gate_descriptor_64(&IDT[19], (void *)&handle_int19, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[20], (void *)&handle_int20, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[21], (void *)&handle_int21, 8, 0, 0xF, 0, true);
-  /* ==== Uncomment these when they're defined ====
   build_gate_descriptor_64(&IDT[22], (void *)&handle_int22, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[23], (void *)&handle_int23, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[24], (void *)&handle_int24, 8, 0, 0xF, 0, true);
@@ -190,7 +199,8 @@ void setup_interrupts() {
   build_gate_descriptor_64(&IDT[28], (void *)&handle_int28, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[29], (void *)&handle_int29, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[30], (void *)&handle_int30, 8, 0, 0xF, 0, true);
-  */
+  build_gate_descriptor_64(&IDT[31], (void *)&handle_int31, 8, 0, 0xF, 0, true);
+
   IDTD.offset = (uintptr_t)IDT;
   IDTD.size = sizeof(GateDescriptor64) * 256 - 1;
   __asm__ volatile("lidt (%0)\r\n" ::"r"(&IDTD));
