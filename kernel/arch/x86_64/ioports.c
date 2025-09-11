@@ -1,4 +1,4 @@
-#include <kernel/ioports.h>
+#include <kernel/x86_64/ioports.h>
 
 io_byte inb(const io_port_num port) {
   io_byte val;

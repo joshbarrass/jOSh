@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <kernel/vga.h>
-#include <kernel/ioports.h>
+#include <kernel/x86_64/ioports.h>
 
 void VGA_set_blink(const bool blink) {
   // http://www.osdever.net/FreeVGA/vga/attrreg.htm
