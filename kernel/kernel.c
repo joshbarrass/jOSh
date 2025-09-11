@@ -21,6 +21,7 @@
 #include <kernel/panic.h>
 #include <archdef.h>
 #include <kernel/mmap.h>
+#include <kernel/interrupts.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
 
@@ -71,6 +72,9 @@ void kernel_main() {
     printf("[!] Missing multiboot information struct!\n");
     return;
   }
+
+  setup_interrupts();
+  printf("Loaded interrupts\n");
 
   printf("[*] Checking required multiboot flags...\n");
   if (mis->FLAGS & MULTIBOOT_FLAG_FULL_MMAP) {
