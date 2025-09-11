@@ -73,8 +73,10 @@ void kernel_main() {
     return;
   }
 
+  term_good_color();
   setup_interrupts();
-  printf("Loaded interrupts\n");
+  printf("[+] Loaded interrupts\n");
+  term_info_color();
 
   printf("[*] Checking required multiboot flags...\n");
   if (mis->FLAGS & MULTIBOOT_FLAG_FULL_MMAP) {
