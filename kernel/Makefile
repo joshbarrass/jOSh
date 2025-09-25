@@ -15,7 +15,7 @@ $(KERNEL_DIR)/bootstruct.o
 
 KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR)/include/*.h)
 
-KERNEL_CFLAGS?=-isystem=/usr/include -mcmodel=large -mno-sse -mno-sse2 -mno-mmx
+KERNEL_CFLAGS?=-isystem=/usr/include -mcmodel=large -mno-sse -mno-sse2 -mno-mmx -mno-red-zone
 
 $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
