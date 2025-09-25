@@ -17,7 +17,7 @@ paging.o \
 bootstruct.o
 
 loader.elf: module_loader.ld $(OBJS)
-	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^)
+	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc
 	$(STRIP) --strip-unneeded '$@'
 	grub-file --is-x86-multiboot '$@'
 

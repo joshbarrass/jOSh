@@ -21,7 +21,7 @@ $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
 $(KERNEL_DIR)/kernel.elf: $(KERNEL_ARCH_DIR)/linker.ld $(KERNEL_OBJS) $(KERNEL_ARCH_OBJS) $(LIBC_DIR)/libk.a
-	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^)
+	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
 
 .PHONY: kernel_clean
 kernel_clean:
