@@ -10,7 +10,9 @@
 // with more than enough to spare. Once the memory manager is up and
 // running, we can dynamically allocate a second bitmap for the memory
 // above that, and stitch the two together behind the scenes.
-static PMMEntry pmm_bitmap_4GB[4ULL*1024ULL*1024ULL*1024ULL / PAGE_SIZE / PMM_STATES_PER_ENTRY];
+#define PMM_4GB_CONSTANT (4ULL*1024ULL*1024ULL*1024ULL)
+#define PMM_4GB_BITMAP_LENGTH (PMM_4GB_CONSTANT / PAGE_SIZE / PMM_STATES_PER_ENTRY)
+static PMMEntry pmm_bitmap_4GB[PMM_4GB_BITMAP_LENGTH];
 
 PageState pmm_get_page_state(const void *addr) {
   const size_t i = ((uintptr_t)addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
@@ -97,8 +99,19 @@ size_t count_free_pages() {
   return free_pages;
 }
 
+void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
+  uint64_t *b = (uint64_t*)pmm_bitmap_4GB;
+  const size_t length = n * sizeof(PMMEntry) / sizeof(uint64_t);
+  for (size_t i = 0; i < length; ++i) {
+    b[i] = 0;
+  }
+}
+
 void initialise_pmm(const void *first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
   printf("[*] Initialising PMM...\n");
+
+  // zero-fill the bitmap
+  initialise_bitmap(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
 
   // start filling in the bitmap from the mmap
   mmap_iterator iter = new_mmap_iterator(memory_map, mmap_length);
@@ -114,7 +127,7 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
     // loop through every page in this entry and set it
     for (void *addr = (void *)entry->base_addr;
          addr < (void *)(entry->base_addr + entry->length) &&
-         addr < (void *)(4ULL * 1024 * 1024 * 1024);
+         addr < (void *)(PMM_4GB_CONSTANT);
          addr += PAGE_SIZE) {
       pmm_set_page_state(addr, state);
     }
