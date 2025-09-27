@@ -89,12 +89,12 @@ void pmm_set_page_state(const void *addr, const PageState state) {
 
 #include <stdio.h>
 
-size_t count_free_pages() {
-  const uint64_t *bitmap = (const uint64_t*)pmm_bitmap_4GB;
-  const size_t length = sizeof(pmm_bitmap_4GB) / sizeof(bitmap[0]);
+size_t count_free_pages(PMMEntry *bitmap, const size_t n) {
+  const uint64_t *b = (const uint64_t*)bitmap;
+  const size_t length = n * sizeof(PMMEntry) / sizeof(uint64_t);
   size_t free_pages = 0;
   for (size_t i = 0; i < length; ++i) {
-    free_pages += __builtin_popcountll(bitmap[i]);
+    free_pages += __builtin_popcountll(b[i]);
   }
   return free_pages;
 }
@@ -155,6 +155,6 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
     printf("FREE\n");
   }
 
-  const size_t free_pages = count_free_pages();
+  const size_t free_pages = count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
   printf("    [*] %zu free pages (%zuKiB)\n", free_pages, 4*free_pages);
 }
