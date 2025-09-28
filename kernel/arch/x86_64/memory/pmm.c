@@ -141,20 +141,6 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
   }
   printf("    [*] Low memory reserved\n");
 
-  printf("    [*] 0x9F000 is ");
-  if (pmm_get_page_state((void *)0x9F000) == PAGE_USED) {
-    printf("USED\n");
-  } else {
-    printf("FREE\n");
-  }
-
-  printf("    [*] 0x7FDF000 is ");
-  if (pmm_get_page_state((void *)0x7FDF000) == PAGE_USED) {
-    printf("USED\n");
-  } else {
-    printf("FREE\n");
-  }
-
   const size_t free_pages = count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
   printf("    [*] %zu free pages (%zuKiB)\n", free_pages, 4*free_pages);
 }
