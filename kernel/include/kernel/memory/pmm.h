@@ -22,8 +22,8 @@ typedef struct __attribute__((packed)) {
 
 #define PMM_STATES_PER_ENTRY (sizeof(PMMEntry)*8ULL/PAGE_STATE_WIDTH)
 
-PageState pmm_get_page_state(const void *addr);
-void pmm_set_page_state(const void *addr, const PageState state);
 void initialise_pmm(const void *first_free_page, const mmap *memory_map, const uint32_t mmap_length);
+void pmm_free_pages(const void *addr, const size_t count);
+const void* pmm_get_pages(const size_t count);
 
 #endif
