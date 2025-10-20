@@ -27,8 +27,11 @@ static PMMEntry pmm_bitmap_4GB[PMM_4GB_BITMAP_LENGTH];
 // be prepared to scan for a free page if it isn't.
 static const void* current_LRFP = NULL;
 
-static PageState pmm_get_page_state(const void *addr) {
-  const size_t i = ((uintptr_t)addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
+static inline size_t page_addr_to_ID(const void *const addr) {
+  return ((const uintptr_t)addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
+}
+
+static PageState pmm_get_page_state_by_ID(const size_t i) {
   const size_t index = i / PMM_STATES_PER_ENTRY; // TODO: safety checks?
   const size_t entry = i % PMM_STATES_PER_ENTRY;
   // TODO: once we add in a second bitmap for the memory above 4GB,
@@ -64,8 +67,12 @@ static PageState pmm_get_page_state(const void *addr) {
   return state;
 }
 
-static void pmm_set_page_state(const void *addr, const PageState state) {
-  const size_t i = ((uintptr_t)addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
+static PageState pmm_get_page_state(const void *addr) {
+  const size_t i = page_addr_to_ID(addr);
+  return pmm_get_page_state_by_ID(i);
+}
+
+static void pmm_set_page_state_by_ID(const size_t i, const PageState state) {
   const size_t index = i / PMM_STATES_PER_ENTRY; // TODO: safety checks?
   const size_t entry = i % PMM_STATES_PER_ENTRY;
   // TODO: once we add in a second bitmap for the memory above 4GB,
@@ -98,6 +105,11 @@ static void pmm_set_page_state(const void *addr, const PageState state) {
     break;
   }
   return;
+}
+
+static void pmm_set_page_state(const void *addr, const PageState state) {
+  const size_t i = page_addr_to_ID(addr);
+  return pmm_set_page_state_by_ID(i, state);
 }
 
 #include <stdio.h>
@@ -165,10 +177,9 @@ void pmm_free_pages(const void *addr, const size_t count) {
   // update the lowest free page pointer if this page is lower than
   // the current value
   current_LRFP = (addr < current_LRFP) ? addr : current_LRFP;
-
+  const size_t id = page_addr_to_ID(addr);
   for (size_t i = 0; i < count; ++i) {
-    pmm_set_page_state(addr, PAGE_FREE);
-    addr += PAGE_SIZE;
+    pmm_set_page_state_by_ID(id + i, PAGE_FREE);
   }
 }
 
@@ -176,10 +187,10 @@ void pmm_free_pages(const void *addr, const size_t count) {
 // page it allocates, intended for quickly getting a single page
 // without contraints
 #if PAGE_STATE_WIDTH == 1
-static const void *find_one_free_page() {
+static const size_t find_one_free_page_ID() {
   if (pmm_get_page_state(current_LRFP) == PAGE_FREE) {
     const void *to_return = current_LRFP;
-    return to_return;
+    return (uintptr_t)to_return / PAGE_SIZE;
   }
 
   // If we're here, we need to scan for the next free page.
@@ -213,26 +224,27 @@ static const void *find_one_free_page() {
     const size_t bitmap_index = i * sizeof(uint64_t) / sizeof(PMMEntry);
     const size_t page_number_to_return = bitmap_index * PMM_STATES_PER_ENTRY + leading_zeroes;
     printf(" = page number %zu\n", page_number_to_return);
-    return (const void*)(page_number_to_return * PAGE_SIZE);
+    return page_number_to_return;
   }
 
   // if we can't find a free page, we're (currently) screwed
   kpanic("Failed to find a free page!");
-  return NULL;
+  return 0;
 }
 #endif
 
-static inline const void *find_free_pages(const size_t count) {
+static inline const size_t find_free_page_IDs(const size_t count) {
   if (count > 1) {
     kpanic("Multiple page allocation not implemented!");
   }
-  return find_one_free_page();
+  return find_one_free_page_ID();
 }
 
 const void *pmm_get_pages(const size_t count) {
-  const void* addr = find_free_pages(count);
+  const size_t id = find_free_page_IDs(count);
+  const void* addr = (const void*)(PAGE_SIZE * id);
   for (size_t i = 0; i < count; ++i) {
-    pmm_set_page_state(addr + i*PAGE_SIZE, PAGE_USED);
+    pmm_set_page_state_by_ID(id + i, PAGE_USED);
   }
   return addr;
 }
