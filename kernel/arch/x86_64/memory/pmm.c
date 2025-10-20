@@ -161,8 +161,8 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
   printf("    [*] Memory map loaded\n");
 
   // reserve any memory that's already in use
-  for (void *addr = NULL; addr < first_free_page; addr += PAGE_SIZE) {
-    pmm_set_page_state(addr, PAGE_USED);
+  for (size_t id = 0; id < page_addr_to_ID(first_free_page); ++id) {
+    pmm_set_page_state_by_ID(id, PAGE_USED);
   }
   printf("    [*] Low memory reserved\n");
 
