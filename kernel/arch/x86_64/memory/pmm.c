@@ -71,7 +71,7 @@ static PageState pmm_get_page_state_by_ID(const size_t i) {
   return state;
 }
 
-static PageState pmm_get_page_state(const void *addr) {
+static inline PageState pmm_get_page_state(const void *addr) {
   const size_t i = page_addr_to_ID(addr);
   return pmm_get_page_state_by_ID(i);
 }
@@ -111,7 +111,7 @@ static void pmm_set_page_state_by_ID(const size_t i, const PageState state) {
   return;
 }
 
-static void pmm_set_page_state(const void *addr, const PageState state) {
+static inline void pmm_set_page_state(const void *addr, const PageState state) {
   const size_t i = page_addr_to_ID(addr);
   return pmm_set_page_state_by_ID(i, state);
 }
@@ -193,7 +193,7 @@ void pmm_free_pages_by_ID(const size_t id, const size_t count) {
   }
 }
 
-void pmm_free_pages(const void *addr, const size_t count) {
+void inline pmm_free_pages(const void *addr, const size_t count) {
   const size_t id = page_addr_to_ID(addr);
   return pmm_free_pages_by_ID(id, count);
 }
