@@ -209,6 +209,11 @@ static const size_t find_one_free_page_ID() {
 
   // If we're here, we need to scan for the next free page.
   //
+  // An example of a reason we might make it here: OS allocates page
+  // n. OS then allocates page n+1. Page n gets freed; lowest free
+  // page is now n. OS allocates a page (will be page n); lowest free
+  // page pointer is now n+1, which hasn't been freed yet.
+  //
   // Order of bitfields is determined by the ABI [1]. x86-64 uses
   // System-V, which states that bit-fields are allocated from right
   // to left [2][3], i.e., LSB to MSB. This means if we cast the
@@ -248,6 +253,17 @@ static const size_t find_one_free_page_ID() {
     #ifdef VERBOSE_PMM
     printf(" = page number %zu\n", page_number_to_return);
     #endif
+    // What assumptions can we make here?
+    //  1) if we made it into this loop in the first place, the lowest
+    //     free page estimate was wrong, and we had to scan for a free
+    //     page.
+    //  2) we scanned the pages in order, so surely no page below this
+    //     one is free
+    // If this page is not free (anymore!) and no pages below it are
+    // free, we can update the pointer to the next page. It might be
+    // wrong, in which case we scan again, or the pointer could be
+    // pushed lower by another free.
+    current_LRFPID = page_number_to_return + 1;
     return page_number_to_return;
   }
 
