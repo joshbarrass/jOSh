@@ -269,8 +269,11 @@ static const size_t find_one_free_page_ID() {
 
   // if we can't find a free page, we're (currently) screwed
   kpanic("Failed to find a free page!\n\n"
-         "PMM reports %d free pages.\n",
-         count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH));
+         "1 page requested.\n"
+         "PMM reports %d free pages.\n"
+         "Current lowest recently freed page: %d\n",
+         count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH),
+         current_LRFPID);
   return 0;
 }
 #endif
