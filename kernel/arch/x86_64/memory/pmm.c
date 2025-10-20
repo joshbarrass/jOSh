@@ -5,6 +5,10 @@
 #include <kernel/memory/constants.h>
 #include <kernel/panic.h>
 
+#ifdef VERBOSE_PMM
+#include <stdio.h>
+#endif
+
 // Statically allocate a bitmap that covers us up to the 4GB
 // boundary. This will be pretty small, even on systems that don't
 // have much memory, and will allow us to set up the memory manager
@@ -112,8 +116,6 @@ static void pmm_set_page_state(const void *addr, const PageState state) {
   return pmm_set_page_state_by_ID(i, state);
 }
 
-#include <stdio.h>
-
 static size_t count_free_pages(PMMEntry *bitmap, const size_t n) {
   const uint64_t *b = (const uint64_t*)bitmap;
   const size_t length = n * sizeof(PMMEntry) / sizeof(uint64_t);
@@ -133,7 +135,9 @@ static void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
 }
 
 void initialise_pmm(const void *first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
+  #ifdef VERBOSE_PMM
   printf("[*] Initialising PMM...\n");
+  #endif
 
   // zero-fill the bitmap
   initialise_bitmap(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
@@ -158,19 +162,25 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
     }
     entry = mmap_iterator_next(&iter);
   }
+  #ifdef VERBOSE_PMM
   printf("    [*] Memory map loaded\n");
-
+  #endif
+  
   // reserve any memory that's already in use
   for (size_t id = 0; id < page_addr_to_ID(first_free_page); ++id) {
     pmm_set_page_state_by_ID(id, PAGE_USED);
   }
+  #ifdef VERBOSE_PMM
   printf("    [*] Low memory reserved\n");
-
+  #endif
+  
   // start the lowest free page tracker
   current_LRFP = first_free_page;
 
   const size_t free_pages = count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
+  #ifdef VERBOSE_PMM
   printf("    [*] %zu free pages (%zuKiB)\n", free_pages, 4*free_pages);
+  #endif
 }
 
 void pmm_free_pages(const void *addr, const size_t count) {
@@ -209,21 +219,31 @@ static const size_t find_one_free_page_ID() {
   // [3] https://cs61.seas.harvard.edu/site/pdf/x86-64-abi-20210928.pdf
   const uint64_t *b = (const uint64_t*)pmm_bitmap_4GB;
   const size_t page_number = ((uintptr_t)current_LRFP & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
+  #ifdef VERBOSE_PMM
   printf("Starting from page number %zu", page_number);
+  #endif
   const size_t page_index = page_number / PMM_STATES_PER_ENTRY;
+  #ifdef VERBOSE_PMM
   printf(" = bitmap index %zu", page_index);
+  #endif
   const size_t start_index = page_index / (sizeof(uint64_t) / sizeof(PMMEntry));
+  #ifdef VERBOSE_PMM
   printf(" = uint64 index %zu\n", start_index);
+  #endif
   for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / sizeof(uint64_t);
        ++i) {
     if (b[i] == 0) continue; // no free pages in this block of 64
     const int leading_zeroes = __builtin_ctzll(b[i]);
 
+    #ifdef VERBOSE_PMM
     printf("Found uint64 index %zu with %d trailing zeroes\n", i, leading_zeroes);
+    #endif
 
     const size_t bitmap_index = i * sizeof(uint64_t) / sizeof(PMMEntry);
     const size_t page_number_to_return = bitmap_index * PMM_STATES_PER_ENTRY + leading_zeroes;
+    #ifdef VERBOSE_PMM
     printf(" = page number %zu\n", page_number_to_return);
+    #endif
     return page_number_to_return;
   }
 
