@@ -29,7 +29,7 @@ static PMMEntry pmm_bitmap_4GB[PMM_4GB_BITMAP_LENGTH];
 // It should never be assumed that the page this points to is actually
 // free. You should always check the page is free before using it, and
 // be prepared to scan for a free page if it isn't.
-static const void* current_LRFP = NULL;
+static size_t current_LRFPID = 0;
 
 static inline size_t page_addr_to_ID(const void *const addr) {
   return ((const uintptr_t)addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
@@ -167,7 +167,8 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
   #endif
   
   // reserve any memory that's already in use
-  for (size_t id = 0; id < page_addr_to_ID(first_free_page); ++id) {
+  const size_t first_free_page_ID = page_addr_to_ID(first_free_page);
+  for (size_t id = 0; id < first_free_page_ID; ++id) {
     pmm_set_page_state_by_ID(id, PAGE_USED);
   }
   #ifdef VERBOSE_PMM
@@ -175,7 +176,7 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
   #endif
   
   // start the lowest free page tracker
-  current_LRFP = first_free_page;
+  current_LRFPID = first_free_page_ID;
 
   const size_t free_pages = count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
   #ifdef VERBOSE_PMM
@@ -183,14 +184,18 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
   #endif
 }
 
-void pmm_free_pages(const void *addr, const size_t count) {
+void pmm_free_pages_by_ID(const size_t id, const size_t count) {
   // update the lowest free page pointer if this page is lower than
   // the current value
-  current_LRFP = (addr < current_LRFP) ? addr : current_LRFP;
-  const size_t id = page_addr_to_ID(addr);
+  current_LRFPID = (id < current_LRFPID) ? id : current_LRFPID;
   for (size_t i = 0; i < count; ++i) {
     pmm_set_page_state_by_ID(id + i, PAGE_FREE);
   }
+}
+
+void pmm_free_pages(const void *addr, const size_t count) {
+  const size_t id = page_addr_to_ID(addr);
+  return pmm_free_pages_by_ID(id, count);
 }
 
 // this is intended as a fast algorithm that isn't picky about the
@@ -198,9 +203,8 @@ void pmm_free_pages(const void *addr, const size_t count) {
 // without contraints
 #if PAGE_STATE_WIDTH == 1
 static const size_t find_one_free_page_ID() {
-  if (pmm_get_page_state(current_LRFP) == PAGE_FREE) {
-    const void *to_return = current_LRFP;
-    return (uintptr_t)to_return / PAGE_SIZE;
+  if (pmm_get_page_state_by_ID(current_LRFPID) == PAGE_FREE) {
+    return current_LRFPID++;
   }
 
   // If we're here, we need to scan for the next free page.
@@ -218,7 +222,7 @@ static const size_t find_one_free_page_ID() {
   // [2] https://stackoverflow.com/a/73780500
   // [3] https://cs61.seas.harvard.edu/site/pdf/x86-64-abi-20210928.pdf
   const uint64_t *b = (const uint64_t*)pmm_bitmap_4GB;
-  const size_t page_number = ((uintptr_t)current_LRFP & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
+  const size_t page_number = current_LRFPID;
   #ifdef VERBOSE_PMM
   printf("Starting from page number %zu", page_number);
   #endif
@@ -248,7 +252,9 @@ static const size_t find_one_free_page_ID() {
   }
 
   // if we can't find a free page, we're (currently) screwed
-  kpanic("Failed to find a free page!");
+  kpanic("Failed to find a free page!\n\n"
+         "PMM reports %d free pages.\n",
+         count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH));
   return 0;
 }
 #endif
