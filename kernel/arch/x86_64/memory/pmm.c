@@ -333,7 +333,12 @@ static const size_t find_N_free_contiguous_page_IDs(const size_t N) {
       }
       ++contiguous_pages;
 
-      if (contiguous_pages == N) {
+      if (contiguous_pages >= N) {
+        // Update the lowest free page tracker.
+        // It can ONLY be correctly updated if the page number we're
+        // returning matches it. If it doesn't, we might've skipped
+        // over a block of pages that wasn't large enough.
+        if (page_number_to_return == current_LRFPID) current_LRFPID += N;
         return page_number_to_return;
       }
     }
@@ -341,7 +346,7 @@ static const size_t find_N_free_contiguous_page_IDs(const size_t N) {
   
   // if we can't find a free page, we're (currently) screwed
   kpanic("Failed to find free page!\n\n"
-         "%zu page requested.\n"
+         "%zu pages requested.\n"
          "PMM reports %zu free pages.\n"
          "Current lowest recently freed page: %zu\n",
          N,
