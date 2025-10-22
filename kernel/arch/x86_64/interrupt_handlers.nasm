@@ -39,19 +39,14 @@
 %macro handler 2 ; arg 1: interrupt number. arg 2: interrupt pushes err code?
 global handle_int%1
 handle_int%1:
-        push qword %1           ; push the interrupt number to the stack
-        %if %2<>0
-        jmp have_errcode
-        %else
-        jmp have_no_errcode
+        %if %2==0               ; if we don't already have an error code...
+        push qword 0            ; push a dummy error code to normalise the stack frame
         %endif
+        push qword %1           ; push the interrupt number to the stack
+        jmp interrupt_stub
 %endmacro
 
-have_no_errcode:
-        ;; we need to push an error code ourselves to normalise the
-        ;; stack frame
-        push qword 0
-have_errcode:
+interrupt_stub:
         ;; here we have an error code, so we can just push the
         ;; registers and call the general handler
         pusha_64
