@@ -313,6 +313,9 @@ static const size_t find_N_free_contiguous_page_IDs(const size_t N) {
   for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / sizeof(uint64_t); ++i) {
     if (b[i] == 0) {
       // no free pages in this block of 64
+      #ifdef VERBOSE_PMM
+      if (run_started) printf("Run ended with %zu pages.\n", contiguous_pages);
+      #endif
       contiguous_pages = 0;
       run_started = false;
       continue;
@@ -323,8 +326,11 @@ static const size_t find_N_free_contiguous_page_IDs(const size_t N) {
     for (int bit = __builtin_ctzll(b[i]); bit < 64; ++bit) {
       const uint64_t v = b[i] >> bit;
 
-      // if the current bit shows a full page, end the run and skip
+      // if the current bit shows a used page, end the run and skip
       if ((v & 1) == 0) {
+        #ifdef VERBOSE_PMM
+        printf("Run ended with %zu pages.\n", contiguous_pages);
+        #endif
         contiguous_pages = 0;
         run_started = false;
         continue;
@@ -335,6 +341,9 @@ static const size_t find_N_free_contiguous_page_IDs(const size_t N) {
         run_started = true;
         const size_t bitmap_index = i * sizeof(uint64_t) / sizeof(PMMEntry);
         page_number_to_return = bitmap_index * PMM_STATES_PER_ENTRY + bit;
+        #ifdef VERBOSE_PMM
+        printf("Run started at page %zu.\n", page_number_to_return);
+        #endif
       }
       ++contiguous_pages;
 
