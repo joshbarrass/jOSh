@@ -311,7 +311,12 @@ static const size_t find_N_free_contiguous_page_IDs(const size_t N) {
   size_t page_number_to_return = 0;
   bool run_started = false;
   for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / sizeof(uint64_t); ++i) {
-    if (b[i] == 0) continue; // no free pages in this block of 64
+    if (b[i] == 0) {
+      // no free pages in this block of 64
+      contiguous_pages = 0;
+      run_started = false;
+      continue;
+    }
 
     // loop over all the bits in this block, skipping the first run of
     // zeroes
