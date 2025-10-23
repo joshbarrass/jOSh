@@ -3,6 +3,7 @@
 
 #include <multiboot.h>
 
+// width of a page state in *bits*
 #define PAGE_STATE_WIDTH (1ULL)
 typedef enum {
   PAGE_USED = 0,
