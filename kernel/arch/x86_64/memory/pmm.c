@@ -118,7 +118,7 @@ static inline void pmm_set_page_state_by_addr(const void *addr, const PageState 
 
 static size_t count_free_pages(PMMEntry *bitmap, const size_t n) {
   const uint64_t *b = (const uint64_t*)bitmap;
-  const size_t length = n * sizeof(PMMEntry) / sizeof(uint64_t);
+  const size_t length = n * sizeof(PMMEntry) / (sizeof(uint64_t));
   size_t free_pages = 0;
   for (size_t i = 0; i < length; ++i) {
     free_pages += __builtin_popcountll(b[i]);
@@ -128,7 +128,7 @@ static size_t count_free_pages(PMMEntry *bitmap, const size_t n) {
 
 static void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
   uint64_t *b = (uint64_t*)pmm_bitmap_4GB;
-  const size_t length = n * sizeof(PMMEntry) / sizeof(uint64_t);
+  const size_t length = n * sizeof(PMMEntry) / (sizeof(uint64_t));
   for (size_t i = 0; i < length; ++i) {
     b[i] = 0;
   }
@@ -235,11 +235,11 @@ static const size_t find_one_free_page() {
   #ifdef VERBOSE_PMM
   printf(" = bitmap index %zu", page_index);
   #endif
-  const size_t start_index = page_index / (sizeof(uint64_t) / sizeof(PMMEntry));
+  const size_t start_index = page_index / (sizeof(uint64_t) / (sizeof(PMMEntry)));
   #ifdef VERBOSE_PMM
   printf(" = uint64 index %zu\n", start_index);
   #endif
-  for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / sizeof(uint64_t);
+  for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / (sizeof(uint64_t));
        ++i) {
     if (b[i] == 0) continue; // no free pages in this block of 64
     const int leading_zeroes = __builtin_ctzll(b[i]);
@@ -310,7 +310,7 @@ static const size_t find_N_free_pages(const size_t N) {
   size_t contiguous_pages = 0;
   size_t page_number_to_return = 0;
   bool run_started = false;
-  for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / sizeof(uint64_t); ++i) {
+  for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / (sizeof(uint64_t)); ++i) {
     if (b[i] == 0) {
       // no free pages in this block of 64
       #ifdef VERBOSE_PMM
