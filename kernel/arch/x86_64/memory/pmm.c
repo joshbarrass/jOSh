@@ -178,8 +178,8 @@ void initialise_pmm(const void *first_free_page, const mmap *memory_map, const u
   // start the lowest free page tracker
   current_LRFPID = first_free_page_ID;
 
-  const size_t free_pages = count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
   #ifdef VERBOSE_PMM
+  const size_t free_pages = count_free_pages(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
   printf("    [*] %zu free pages (%zuKiB)\n", free_pages, 4*free_pages);
   #endif
 }
