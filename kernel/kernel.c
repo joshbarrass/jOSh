@@ -127,6 +127,14 @@ void kernel_main() {
     printf("[*] First free address at: 0x%016zX (%zuKiB)\n[*] First free page at:    0x%016zX (%zuKiB)\n",
            (uintptr_t)lowest_free_addr, (uintptr_t)lowest_free_addr/1024, lowest_free_page, lowest_free_page/1024);
     printf("[*] Total free memory: %zuKiB\n", (uintptr_t)total_memory-lowest_free_page/1024);
+  } else {
+    // currently have no alternative implementation to work around
+    // this -- just panic
+    kpanic("Lowest free page info unavailable.\n\n"
+           "Bootstruct is present? %d\n"
+           "Bootstruct flags: %d\n",
+           BS_IS_PRESENT, bootstruct->flags);
+    return;
   }
 
   initialise_pmm((void*)(uintptr_t)lowest_free_page, get_mmap(mis), mis->mmap_length);
