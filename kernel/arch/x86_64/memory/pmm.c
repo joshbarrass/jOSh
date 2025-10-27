@@ -130,7 +130,7 @@ static void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
   uint64_t *b = (uint64_t*)pmm_bitmap_4GB;
   const size_t length = n * sizeof(PMMEntry) / (sizeof(uint64_t));
   for (size_t i = 0; i < length; ++i) {
-    b[i] = 0;
+    b[i] = 0; // mark all 64 pages in this block as used (0)
   }
 }
 
@@ -327,7 +327,7 @@ static const size_t find_N_free_pages(const size_t N) {
       const uint64_t v = b[i] >> bit;
 
       // if the current bit shows a used page, end the run and skip
-      if ((v & 1) == 0) {
+      if ((v & 1) == PAGE_USED) {
         #ifdef VERBOSE_PMM
         printf("Run ended with %zu pages.\n", contiguous_pages);
         #endif
@@ -335,7 +335,7 @@ static const size_t find_N_free_pages(const size_t N) {
         run_started = false;
         continue;
       }
-      // else: (v & 1) == 1
+      // else: (v & 1) == PAGE_FREE
       if (!run_started) {
         // starting a new run -- calculate and store the starting page
         run_started = true;
