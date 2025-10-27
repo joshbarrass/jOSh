@@ -22,6 +22,7 @@
 #include <archdef.h>
 #include <kernel/mmap.h>
 #include <kernel/interrupts.h>
+#include <kernel/memory/pmm.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
 
@@ -115,9 +116,10 @@ void kernel_main() {
   }
 
   // retrieve the first free address from the boot struct, if present
+  uintptr_t lowest_free_page;
   if (BS_IS_PRESENT && bootstruct->flags & BS_FLAG_FREEADDR) {
     const void *lowest_free_addr = bs_get_lowest_free_addr(bootstruct);
-    uintptr_t lowest_free_page = (uintptr_t)lowest_free_addr;
+    lowest_free_page = (uintptr_t)lowest_free_addr;
     const uintptr_t page_diff = lowest_free_page % 0x1000;
     if (page_diff != 0) {
       lowest_free_page += 0x1000-page_diff;
@@ -125,7 +127,17 @@ void kernel_main() {
     printf("[*] First free address at: 0x%016zX (%zuKiB)\n[*] First free page at:    0x%016zX (%zuKiB)\n",
            (uintptr_t)lowest_free_addr, (uintptr_t)lowest_free_addr/1024, lowest_free_page, lowest_free_page/1024);
     printf("[*] Total free memory: %zuKiB\n", (uintptr_t)total_memory-lowest_free_page/1024);
+  } else {
+    // currently have no alternative implementation to work around
+    // this -- just panic
+    kpanic("Lowest free page info unavailable.\n\n"
+           "Bootstruct is present? %d\n"
+           "Bootstruct flags: %d\n",
+           BS_IS_PRESENT, bootstruct->flags);
+    return;
   }
+
+  initialise_pmm((void*)(uintptr_t)lowest_free_page, get_mmap(mis), mis->mmap_length);
 
   return;
 }

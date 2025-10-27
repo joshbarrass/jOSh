@@ -15,13 +15,13 @@ $(KERNEL_DIR)/bootstruct.o
 
 KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR)/include/*.h)
 
-KERNEL_CFLAGS?=-isystem=/usr/include -mcmodel=large -mno-sse -mno-sse2 -mno-mmx
+KERNEL_CFLAGS?=-isystem=/usr/include -mcmodel=large -mno-sse -mno-sse2 -mno-mmx -mno-red-zone
 
 $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
 $(KERNEL_DIR)/kernel.elf: $(KERNEL_ARCH_DIR)/linker.ld $(KERNEL_OBJS) $(KERNEL_ARCH_OBJS) $(LIBC_DIR)/libk.a
-	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^)
+	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
 
 .PHONY: kernel_clean
 kernel_clean:
