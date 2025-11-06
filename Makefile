@@ -8,7 +8,7 @@ CXX=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-g++)
 STRIP=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-strip)
 AR=$(abspath $(TARGET_ARCH)-elf-gcc-13.3.0/bin/$(TARGET_ARCH)-elf-ar)
 
-CFLAGS?=-O2 -Wall -std=gnu99
+CFLAGS:=-O2 -Wall -std=gnu99 $(CFLAGS)
 CFLAGS:=$(CFLAGS) --sysroot=$(SYSROOT)
 
 all: jOSh.iso
