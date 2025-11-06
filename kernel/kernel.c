@@ -8,6 +8,8 @@
 #define ARCH_32 1
 #endif
 
+#define VERTLINE "\xb3"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -109,10 +111,10 @@ void kernel_main() {
   printf("    * High memory: %zuKiB\n", (size_t)mis->mem_upper);
 
   // print the memory map
-  printf("    |       start       -         end       |type| raw|\n");
+  printf("    "VERTLINE"       start       -         end       "VERTLINE"type"VERTLINE" raw"VERTLINE"\n");
   mmap_iterator iter = new_mmap_iterator(get_mmap(mis), mis->mmap_length);
   for (mmap *entry = mmap_iterator_next(&iter); entry != NULL ; entry = mmap_iterator_next(&iter)) {
-    printf("    |0x%016zX - 0x%016zX|%s|0x%02x|\n", entry->base_addr, entry->base_addr+entry->length-1, get_mmap_type_string(entry->type), entry->type);
+    printf("    "VERTLINE"0x%016zX - 0x%016zX"VERTLINE"%s"VERTLINE"0x%02x"VERTLINE"\n", entry->base_addr, entry->base_addr+entry->length-1, get_mmap_type_string(entry->type), entry->type);
   }
 
   // retrieve the first free address from the boot struct, if present
