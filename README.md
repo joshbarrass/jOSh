@@ -2,6 +2,16 @@
 
 jOSh is a monolithic hobby kernel predominantly written in C. At present, it targets legacy boot x86-64, though it is hoped that support may be extended to UEFI, and later to other architectures. Its main purpose is to help me learn how an operating system works by re-implementing one from scratch. It is currently in a _very_ early stage of development, and does not yet provide essential features needed for running programs. However, it is in a continual state of development, and I hope it will eventually be a fully capable OS.
 
+## Features
+
+ - Multiboot 1 (`2BADB002`) support via a custom long mode loader application.
+ - Higher half kernel
+ - Paging
+ - Interrupt handlers
+ - 80×25 text mode output
+ 
+The issues page is a good place to see what features are currently in the works.
+
 ## Building
 
 _Note: jOSh currently only supports x86-64! Many platform-specific features will be missing on other architectures, and compilation will almost certainly fail._
@@ -23,3 +33,7 @@ This will create the sysroot in the source directory and install all header file
 ```
 make test
 ```
+
+## Contributing
+
+I am currently **not** accepting external contributions at this point outside of special circumstances. Please understand that this is a personal learning project for me, and having others contribute solutions takes away from my learning experience and the fun of this project. However, once the OS reaches a more stable and more complete state, I may open it up for contributions.
