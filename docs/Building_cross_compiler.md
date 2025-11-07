@@ -47,7 +47,7 @@ make -j
 make install
 cd ..
 ```
- 6) Compile GCC. Note the `CFLAGS_FOR_TARGET` variable used for libgcc.
+ 6) Compile GCC. Note the `CFLAGS_FOR_TARGET` variable used for libgcc. Note that we cannot pass `-no-mmx`, `-no-sse` and `-no-sse2` when building libgcc; these are assumed to be present on all x86-64 processors and their use is required by the SysV ABI for floating point return values.
 ```bash
 mkdir build-gcc && cd build-gcc
 ../gcc-13.3.0/configure --target=$TARGET --prefix="$PREFIX" --disable-nls --enable-languages=c,c++ --without-headers --disable-hosted-libstdcxx --enable-multilib
