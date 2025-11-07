@@ -20,7 +20,7 @@ _LIBC_OBJS=$(addsuffix .o, $(_LIBC_OBJ_NAMES))
 LIBK_OBJS=$(addprefix $(LIBC_DIR)/, $(_LIBK_OBJS))
 LIBC_OBJS=$(addprefix $(LIBC_DIR)/, $(_LIBC_OBJS))
 
-LIBK_CFLAGS?=-D__is_libk -isystem=/usr/include -mcmodel=large -mno-sse -mno-sse2 -mno-mmx -mno-red-zone
+LIBK_CFLAGS?=-D__is_libk $(KERNEL_CFLAGS)
 LIBC_CFLAGS?=-D__is_libc -isystem=/usr/include
 
 $(LIBC_DIR)/%.o: $(LIBC_DIR)/%.c
