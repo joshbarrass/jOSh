@@ -1,4 +1,4 @@
-#include <kernel/x86_64/memory/paging.h>
+#include <kernel/x86_64/memory/recursive_pt.h>
 
 // x86-64 addresses are 48 bits, but are stored as sign-extended
 // 64-bit values. This function performs the sign extension
