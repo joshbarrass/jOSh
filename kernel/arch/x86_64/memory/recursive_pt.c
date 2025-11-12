@@ -18,7 +18,7 @@ PageTableEntry *get_page_table_pointer(const PageTableLevel level, const ptindex
 
   for (int i = 0; i < 4; ++i) {
     if (i <= level) {
-      base_addr |= 511;
+      base_addr |= RECURSIVE_ENTRY_INDEX;
     } else {
       base_addr |= (indices[i] & 511);
     }
@@ -26,7 +26,7 @@ PageTableEntry *get_page_table_pointer(const PageTableLevel level, const ptindex
   }
   base_addr <<= 3ULL;
 
-  return (PageTableEntry*)canonicalise_addr(base_addr + 8*indices[level]);
+  return (PageTableEntry*)canonicalise_addr(base_addr + sizeof(PageTableEntry)*indices[level]);
 }
 
 // Returns the virtual address corresponding to (*PageTableEntry)CR3
