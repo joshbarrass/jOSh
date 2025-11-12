@@ -12,6 +12,9 @@ typedef uint64_t PageTableEntry;
 
 typedef unsigned short ptindex_t;
 
+// x86-64 addresses are 48 bits, but are stored as sign-extended
+// 64-bit values. This function performs the sign extension
+// (canonicalisation) of a pointer.
 inline __attribute__((always_inline)) uintptr_t canonicalise_addr(uintptr_t addr) {
   return ((int64_t)addr << 16) >> 16;
 }
