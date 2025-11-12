@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define RECURSIVE_ENTRY_INDEX 511
+
 enum PageTableLevel {
   PML4T = 3,
   PDPT = 2,
