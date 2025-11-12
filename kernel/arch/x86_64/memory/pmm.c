@@ -134,7 +134,7 @@ static void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
   }
 }
 
-void initialise_pmm(const void *first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
+void pmm_init(const void *first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
   #ifdef VERBOSE_PMM
   printf("[*] Initialising PMM...\n");
   #endif

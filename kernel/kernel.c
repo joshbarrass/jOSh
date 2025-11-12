@@ -139,7 +139,7 @@ void kernel_main() {
     return;
   }
 
-  initialise_pmm((void*)(uintptr_t)lowest_free_page, get_mmap(mis), mis->mmap_length);
+  pmm_init((void*)(uintptr_t)lowest_free_page, get_mmap(mis), mis->mmap_length);
 
   return;
 }
