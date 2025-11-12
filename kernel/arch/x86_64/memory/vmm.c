@@ -1,5 +1,5 @@
 #include <kernel/memory/vmm.h>
-#include <kernel/x86_64/memory/paging.h>
+#include <kernel/x86_64/memory/recursive_pt.h>
 
 void vmm_init() {
   // We must fetch and store the physical address of the kernel-space
