@@ -10,6 +10,8 @@ typedef enum PageTableLevel PageTableLevel;
 
 typedef uint64_t PageTableEntry;
 
+typedef unsigned short ptindex_t;
+
 inline __attribute__((always_inline)) uintptr_t canonicalise_addr(uintptr_t addr) {
   return ((int64_t)addr << 16) >> 16;
 }
@@ -18,10 +20,10 @@ inline __attribute__((always_inline)) uintptr_t canonicalise_addr(uintptr_t addr
 // returns &CR3[i][j][k]    if level == PD
 // returns &CR3[i][j]       if level == PDPT
 // returns &CR3[i]          if level == PML4T
-PageTableEntry *get_page_table_pointer(const PageTableLevel level, const uint16_t i, const uint64_t j, const uint64_t k, const uint64_t l) {
-  uint16_t indices[4] = {l, k, j, i};
+PageTableEntry *get_page_table_pointer(const PageTableLevel level, const ptindex_t i, const ptindex_t j, const ptindex_t k, const ptindex_t l) {
+  ptindex_t indices[4] = {l, k, j, i};
   
-  uint64_t base_addr = 0;
+  uintptr_t base_addr = 0;
 
   for (int i = 0; i < 4; ++i) {
     if (i <= level) {
@@ -44,20 +46,18 @@ PageTableEntry *get_PML4T() {
 
 // Returns the virtual address corresponding to (**PageTableEntry)CR3[PML4T_i]
 // This can be treated as a PageTableEntry[512]
-PageTableEntry *get_PDPT(const uint64_t PML4T_i) {
+PageTableEntry *get_PDPT(const ptindex_t PML4T_i) {
   return get_page_table_pointer(PDPT, PML4T_i, 0, 0, 0);
 }
 
 // Returns the virtual address corresponding to (***PageTableEntry)CR3[PML4T_i][PDPT_i]
 // This can be treated as a PageTableEntry[512]
-PageTableEntry *get_PD(const uint64_t PML4T_i, const uint16_t PDPT_i) {
+PageTableEntry *get_PD(const ptindex_t PML4T_i, const ptindex_t PDPT_i) {
   return get_page_table_pointer(PD, PML4T_i, PDPT_i, 0, 0);
 }
 
 // Returns the virtual address corresponding to (****PageTableEntry)CR3[PML4T_i][PDPT_i][PD_i]
 // This can be treated as a PageTableEntry[512]
-PageTableEntry *get_PT(const uint64_t PML4T_i, const uint16_t PDPT_i, const uint16_t PD_i) {
+PageTableEntry *get_PT(const ptindex_t PML4T_i, const ptindex_t PDPT_i, const ptindex_t PD_i) {
   return get_page_table_pointer(PT, PML4T_i, PDPT_i, PD_i, 0);
 }
-
-
