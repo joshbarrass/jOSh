@@ -2,6 +2,7 @@
 #define __X86_64_PAGING 1
 
 #include <stdint.h>
+#include <kernel/x86_64/memory/paging.h>
 
 #define RECURSIVE_ENTRY_INDEX 511
 
@@ -12,8 +13,6 @@ enum PageTableLevel {
   PT = 0
 };
 typedef enum PageTableLevel PageTableLevel;
-
-typedef uint64_t PageTableEntry;
 
 typedef unsigned short ptindex_t;
 

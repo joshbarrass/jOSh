@@ -14,6 +14,5 @@ void vmm_init() {
   const PageTableEntry *PML4T = get_PML4T();
   // convert the kernel start address to an index
   const ptindex_t kspace_i = (KERNEL_VADDR_START & (511ULL << 39)) >> 39;
-  // bitmask removes the properties above and below the physical address
-  KSPACE_PDPT_PHYS_ADDR = PML4T[kspace_i] & 0xffffffffff000ULL;
+  KSPACE_PDPT_PHYS_ADDR = PTE_get_addr(PML4T[kspace_i]);
 }
