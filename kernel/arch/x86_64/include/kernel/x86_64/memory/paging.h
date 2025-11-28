@@ -3,7 +3,12 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <kernel/memory/constants.h>
+
+#define ENTRIES_PER_PAGE_TABLE (511)
+
+typedef unsigned short ptindex_t;
 
 /*
   Order of bitfields is determined by the ABI [1]. x86-64 uses
@@ -19,7 +24,7 @@ typedef struct __attribute__((packed)) {
   bool disable_cache : 1;
   bool accessed : 1;
   bool dirty : 1;
-  uint8_t __reserved_0 : 1;
+  bool page_size : 1;
   bool global : 1;
   uint8_t user_defined_l : 3;
   uintptr_t addr_shr_12 : (MEMORY_ADDRESS_BITS - 12);
@@ -34,5 +39,11 @@ typedef struct __attribute__((packed)) {
 __attribute__((always_inline)) static inline uintptr_t PTE_get_addr(PageTableEntry pte) {
   return pte.addr_shr_12 << 12;
 }
+
+struct ptindices {
+  ptindex_t pml4t_i, pdpt_i, pd_i, pt_i;
+};
+
+struct ptindices virt_addr_to_ptindices(uintptr_t addr);
 
 #endif
