@@ -1,22 +1,10 @@
-#ifndef __X86_64_PAGING
-#define __X86_64_PAGING 1
+#ifndef __X86_64_RECURSIVE_PT_H
+#define __X86_64_RECURSIVE_PT_H 1
 
 #include <stdint.h>
 #include <kernel/x86_64/memory/paging.h>
 
 #define RECURSIVE_ENTRY_INDEX 511
-
-enum PageTableLevel {
-  PML4T = 3,
-  PDPT = 2,
-  PD = 1,
-  PT = 0
-};
-typedef enum PageTableLevel PageTableLevel;
-
-typedef unsigned short ptindex_t;
-
-PageTableEntry *get_page_table_pointer(const PageTableLevel level, const ptindex_t i, const ptindex_t j, const ptindex_t k, const ptindex_t l);
 
 // Returns the virtual address corresponding to (*PageTableEntry)CR3
 // This can be treated as a PageTableEntry[512]
