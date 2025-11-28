@@ -12,9 +12,9 @@ void vmm_init();
 
 // vmm_kmap maps a contiguous physical address space into a the kernel's address space.
 // Args:
-//   - phys_addr: physical address to map into the address space
+//   - phys_addr: physical address to map into the address space. Does not necessarily have to be page-aligned.
 //   - size: size in bytes to map into the address space. If this is a multiple of the page size, you can generally assume that the memory will be mapped exactly. If this is not a multiple of the page size, it is up to the implementation as to how to handle this.
-//   - virt_addr: virtual address to map the physical memory to. If this is 0, the kernel will find an address by itself. If this is non-zero, the kernel will try to map it there; if the destination is already in use, it will search for a free address above the requested address.
+//   - virt_addr: virtual address to map the physical memory to. If this is 0, the kernel will find an address by itself. If this is greater than or equal to the start of kernel-space, the kernel will try to map it exactly where you request; if the requested address lies outside kernel-space or the destination is already in use, it will search for a free address in kernel-space above the requested address.
 //   - flags: flags to adjust the behaviour -- reserved for future use!
 void* vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr, flags_t flags);
 // vmm_unmap removes a contiguous virtual address space from the kernel's address space.
