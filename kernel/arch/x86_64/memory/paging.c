@@ -2,6 +2,10 @@
 #include <kernel/x86_64/memory/paging.h>
 #include <kernel/x86_64/memory/recursive_pt.h>
 
+#ifdef VERBOSE_PAGING
+#include <stdio.h>
+#endif
+
 struct ptindices virt_addr_to_ptindices(uintptr_t addr) {
   struct ptindices out;
 
@@ -48,7 +52,9 @@ static void invlpg(void *addr) {
                     "invlpg (%0)"
                     : : "r" (addr)
                     );
+  #ifdef VERBOSE_PAGING
   printf("Invalidated %#18zx\n", (uintptr_t)addr);
+  #endif
 }
 
 // create_page_table_entry will create all of the necessary page table
@@ -75,7 +81,9 @@ bool create_page_table_entry(void *virt_addr, const PageTableEntry entry) {
     pdpt->writeable = true;
     pdpt->user = entry.user;
     pdpt->present = true;
+    #ifdef VERBOSE_PAGING
     printf("Created PDPT @ PML4T[%u]\n", is.pml4t_i);
+    #endif
     // need to invalidate the recursive entry so we can manage this
     // new table correctly
     invlpg(get_PDPT(is.pml4t_i));
@@ -90,7 +98,9 @@ bool create_page_table_entry(void *virt_addr, const PageTableEntry entry) {
     pd->writeable = true;
     pd->user = entry.user;
     pd->present = true;
+    #ifdef VERBOSE_PAGING
     printf("Created PD @ PDPT[%u]\n", is.pdpt_i);
+    #endif
     invlpg(get_PD(is.pml4t_i, is.pdpt_i));
     clear_pagetable(get_PD(is.pml4t_i, is.pdpt_i));
   }
@@ -103,7 +113,9 @@ bool create_page_table_entry(void *virt_addr, const PageTableEntry entry) {
     pt->writeable = true;
     pt->user = entry.user;
     pt->present = true;
+    #ifdef VERBOSE_PAGING
     printf("Created PT @ PD[%u]\n", is.pd_i);
+    #endif
     invlpg(get_PT(is.pml4t_i, is.pdpt_i, is.pd_i));
     clear_pagetable(get_PT(is.pml4t_i, is.pdpt_i, is.pd_i));
   }
