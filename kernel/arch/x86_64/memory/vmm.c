@@ -71,6 +71,7 @@ void *vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr,
   const uintptr_t phys_offset = phys_addr - phys_page;
 
   const size_t pages_required = pages_needed_for_size(size);
+  printf("Need %zu pages\n", pages_required);
 
   size_t found_free_pages = 0;
   uintptr_t start_addr = virt_addr;
@@ -89,7 +90,17 @@ void *vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr,
 
   if (found_free_pages < pages_required) kpanic("vmm_kmap could not find enough free pages\nRequested: %zu\n", pages_required);
 
-  // TODO: create the mapping in the page table
+  // create the mapping in the page table
+  for (size_t i = 0; i < pages_required; ++i) {
+    const uintptr_t addr = start_addr + i*PAGE_SIZE;
+    const uintptr_t page_addr = phys_page + i*PAGE_SIZE;
+    const PageTableEntry entry =
+        {true,  true, false,      false, false, false, false, false,
+         false, 0,    page_addr >> 12, 0,     0,     0,     false}; // TODO: writeable should be controllable.
+    if (!create_page_table_entry(addr, entry)) {
+      kpanic("vmm_kmap: failed to create page table entry");
+    }
+  }
 
   return (void*)start_addr + phys_offset;
 }

@@ -46,4 +46,6 @@ struct ptindices {
 
 struct ptindices virt_addr_to_ptindices(uintptr_t addr);
 
+bool create_page_table_entry(void *virt_addr, const PageTableEntry entry);
+
 #endif
