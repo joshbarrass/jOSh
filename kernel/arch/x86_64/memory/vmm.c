@@ -4,6 +4,10 @@
 #include <kernel/x86_64/memory/recursive_pt.h>
 #include <kernel/panic.h>
 
+#ifdef VERBOSE_VMM
+#include <stdio.h>
+#endif
+
 static const ptindex_t KSPACE_PML4T_INDEX = (KERNEL_VADDR_START & (511ULL << 39)) >> 39;
 static const uintptr_t KSPACE_END = KERNEL_VADDR_START + (ENTRIES_PER_PAGE_TABLE * ENTRIES_PER_PAGE_TABLE * ENTRIES_PER_PAGE_TABLE * PAGE_SIZE);
 
@@ -71,7 +75,9 @@ void *vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr,
   const uintptr_t phys_offset = phys_addr - phys_page;
 
   const size_t pages_required = pages_needed_for_size(size);
+  #ifdef VERBOSE_VMM
   printf("Need %zu pages\n", pages_required);
+  #endif
 
   size_t found_free_pages = 0;
   uintptr_t start_addr = virt_addr;
@@ -97,7 +103,7 @@ void *vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr,
     const PageTableEntry entry =
         {true,  true, false,      false, false, false, false, false,
          false, 0,    page_addr >> 12, 0,     0,     0,     false}; // TODO: writeable should be controllable.
-    if (!create_page_table_entry(addr, entry)) {
+    if (!create_page_table_entry((void*)addr, entry)) {
       kpanic("vmm_kmap: failed to create page table entry");
     }
   }
