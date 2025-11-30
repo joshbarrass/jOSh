@@ -21,7 +21,7 @@ void* vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr, flag
 // Args:
 //   - virt_addr: virtual address to unmap.
 //   - size: size in bytes to unmap
-void* vmm_kunmap(uintptr_t virt_addr, const size_t size);
+void vmm_kunmap(uintptr_t virt_addr, const size_t size);
 
 // mmap/munmap -- user-space memory
 // Args are mostly the same as the kspace equivalents, but accepts an
@@ -30,6 +30,6 @@ void* vmm_kunmap(uintptr_t virt_addr, const size_t size);
 // but it is needed to manipulate an individual process's userspace
 // memory.
 void* vmm_mmap(VAddressSpace *addrspace, uintptr_t phys_addr, const size_t size, uintptr_t virt_addr, flags_t flags);
-void* vmm_munmap(VAddressSpace *addrspace, uintptr_t virt_addr, const size_t size);
+void vmm_munmap(VAddressSpace *addrspace, uintptr_t virt_addr, const size_t size);
 
 #endif
