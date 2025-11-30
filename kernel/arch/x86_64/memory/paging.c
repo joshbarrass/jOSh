@@ -57,6 +57,20 @@ static void invlpg(void *addr) {
   #endif
 }
 
+static void create_intermediate_entry(PageTableEntry *target,
+                                      PageTableEntry *recursive_addr, const bool user) {
+  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(1);
+  clear_pagetableentry(target);
+  target->addr_shr_12 = phys_page >> 12;
+  target->writeable = true;
+  target->user = user;
+  target->present = true;
+  // need to invalidate the recursive entry so we can manage this new
+  // table correctly
+  invlpg(recursive_addr);
+  clear_pagetable(recursive_addr);
+}
+
 // create_page_table_entry will create all of the necessary page table
 // structures to create a given page table entry for a given virtual
 // address. The upper levels of the page table hierarchy will be
@@ -74,50 +88,24 @@ bool create_page_table_entry(void *virt_addr, const PageTableEntry entry) {
   const struct ptindices is = virt_addr_to_ptindices((uintptr_t)virt_addr);
   PageTableEntry *pml4t = get_PML4T();
   if (!pml4t[is.pml4t_i].present) { // PDPT is missing
-    const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(1);
-    PageTableEntry *pdpt = &pml4t[is.pml4t_i];
-    clear_pagetableentry(pdpt);
-    pdpt->addr_shr_12 = phys_page >> 12;
-    pdpt->writeable = true;
-    pdpt->user = entry.user;
-    pdpt->present = true;
+    create_intermediate_entry(&pml4t[is.pml4t_i], get_PDPT(is.pml4t_i), entry.user);
     #ifdef VERBOSE_PAGING
     printf("Created PDPT @ PML4T[%u]\n", is.pml4t_i);
     #endif
-    // need to invalidate the recursive entry so we can manage this
-    // new table correctly
-    invlpg(get_PDPT(is.pml4t_i));
-    clear_pagetable(get_PDPT(is.pml4t_i));
   }
   PageTableEntry *pdpt = get_PDPT(is.pml4t_i);
   if (!pdpt[is.pdpt_i].present) { // PD is missing
-    const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(1);
-    PageTableEntry *pd = &pdpt[is.pdpt_i];
-    clear_pagetableentry(pd);
-    pd->addr_shr_12 = phys_page >> 12;
-    pd->writeable = true;
-    pd->user = entry.user;
-    pd->present = true;
+    create_intermediate_entry(&pdpt[is.pdpt_i], get_PD(is.pml4t_i, is.pdpt_i), entry.user);
     #ifdef VERBOSE_PAGING
     printf("Created PD @ PDPT[%u]\n", is.pdpt_i);
     #endif
-    invlpg(get_PD(is.pml4t_i, is.pdpt_i));
-    clear_pagetable(get_PD(is.pml4t_i, is.pdpt_i));
   }
   PageTableEntry *pd = get_PD(is.pml4t_i, is.pdpt_i);
   if (!pd[is.pd_i].present) { // PT is missing
-    const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(1);
-    PageTableEntry *pt = &pd[is.pd_i];
-    clear_pagetableentry(pt);
-    pt->addr_shr_12 = phys_page >> 12;
-    pt->writeable = true;
-    pt->user = entry.user;
-    pt->present = true;
+    create_intermediate_entry(&pd[is.pd_i], get_PT(is.pml4t_i, is.pdpt_i, is.pd_i), entry.user);
     #ifdef VERBOSE_PAGING
     printf("Created PT @ PD[%u]\n", is.pd_i);
     #endif
-    invlpg(get_PT(is.pml4t_i, is.pdpt_i, is.pd_i));
-    clear_pagetable(get_PT(is.pml4t_i, is.pdpt_i, is.pd_i));
   }
   PageTableEntry *pt = get_PT(is.pml4t_i, is.pdpt_i, is.pd_i);
   pt[is.pt_i] = entry;
