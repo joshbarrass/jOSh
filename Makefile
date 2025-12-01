@@ -1,5 +1,6 @@
 KERNEL_DIR?=kernel
 LIBC_DIR?=libc
+APPS_DIR?=apps
 TARGET_ARCH?=x86_64
 SYSROOT?=sysroot
 SYSROOT:=$(abspath $(SYSROOT))
@@ -15,6 +16,7 @@ all: jOSh.iso
 
 include $(KERNEL_DIR)/Makefile
 include $(LIBC_DIR)/Makefile
+include $(APPS_DIR)/Makefile
 
 jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS)
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o jOSh.iso grubiso
