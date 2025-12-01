@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <limits.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <kernel/tty.h>
 #include <kernel/vga.h>
@@ -26,6 +27,7 @@
 #include <kernel/interrupts.h>
 #include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
+#include <kernel/memory/vmm.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
 
@@ -55,6 +57,8 @@ inline static void term_good_color() {
 inline static void term_error_color() {
   term_set_fg(VGA_COLOR_RED);
 }
+
+#include <elf.h>
 
 void kernel_main() {
   VGA_set_blink(false);
@@ -141,6 +145,53 @@ void kernel_main() {
   }
 
   pmm_init(lowest_free_page, get_mmap(mis), mis->mmap_length);
+  vmm_init();
+
+  const Mod *target_mod = NULL;
+  const Mod *mods = get_mods(mis);
+  for (size_t i = 0; i < mis->mods_count; ++i) {
+    const Mod *mod = mods + i;
+    if (strcmp("init.elf", get_mod_string(mod)) == 0) {
+      target_mod = mod;
+      break;
+    }
+  }
+  if (target_mod == NULL) {
+    term_error_color();
+    printf("[!] Failed to find init.elf\n");
+    return;
+  }
+  printf("[*] Loading init.elf...\n");
+
+  const void* initelf = get_mod_start(target_mod);
+  if (!is_ELF(initelf)) {
+    term_error_color();
+    printf("[!] init.elf is not a valid ELF\n");
+    return;
+  }
+  if (get_ELF_class(initelf) != EI_CLASS_64BIT) {
+    term_error_color();
+    printf("[!] init.elf is not ELF64\n");
+    return;
+  }
+  if (get_ELF_endianness(initelf) != EI_ENDIANNESS_LITTLE) {
+    term_error_color();
+    printf("[!] init.elf is not little-endian\n");
+    return;
+  }
+  term_good_color();
+  printf("[+] ELF appears good!\n");
+  term_info_color();
+
+  printf("[*] Building program image... ");
+  elf64_build_program_image(initelf);
+  term_good_color();
+  printf("Done!\n");
+  term_info_color();
+
+  printf("[*] Calling entrypoint...\n");
+  void (*entry)() = (void*)(uintptr_t)get_elf64_entrypoint(initelf);
+  entry();
 
   return;
 }
