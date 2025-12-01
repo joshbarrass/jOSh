@@ -64,3 +64,6 @@ sysroot/
 kernel/.headers_installed
 bx_enh_dbg.ini
 Makefile.local
+apps/kernel.syms
+apps/libk.syms
+apps/retain_symbols_file
