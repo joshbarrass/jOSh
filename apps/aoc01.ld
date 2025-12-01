@@ -1,7 +1,5 @@
 ENTRY(main)
 
-INPUT(apps/kernel_iface.elf)
-
 SECTIONS
 {
         . = 0xfffffe8040000000; /* PML4T[509] + 1GB */
