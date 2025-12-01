@@ -46,13 +46,13 @@ int main() {
       numbers_start = input++;
       continue;
     } else if (*input == '\n' || *input == 0) {
-      // read the number and compute the new position
-      int num = atoi(numbers_start) * dir;
-      /* printf("Num: %d\n", num); */
-      position = (position + num) % 100;
       reading_num = false;
-      if (position == 0) ++times_passed;
-      /* printf("Position: %d\n", position); */
+      // read the number and compute the new position
+      int num = atoi(numbers_start);
+      for (int i = 0; i < num; ++i) {
+        position = (position + dir) % 100;
+        if (position == 0) ++times_passed;
+      }
     }
     ++input;
   }
