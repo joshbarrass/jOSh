@@ -18,8 +18,9 @@ include $(KERNEL_DIR)/Makefile
 include $(LIBC_DIR)/Makefile
 include $(APPS_DIR)/Makefile
 
-jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS) $(APPS_ALL)
+jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS) $(APPS_ALL) $(APPS_ISO_DEPENDS)
 	cp $(APPS_ALL) grubiso/
+	cp -r $(APPS_DIR)/inputs/ grubiso/
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o jOSh.iso grubiso
 
 grubiso/boot/jOSh.elf: kernel/kernel.elf
