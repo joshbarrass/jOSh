@@ -47,7 +47,7 @@ static void clear_pagetable(PageTableEntry *table) {
   }
 }
 
-static void invlpg(void *addr) {
+void invlpg(void *addr) {
   __asm__ volatile (
                     "invlpg (%0)"
                     : : "r" (addr)

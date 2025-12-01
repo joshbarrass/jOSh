@@ -110,3 +110,19 @@ void *vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr,
 
   return (void*)start_addr + phys_offset;
 }
+
+void vmm_kunmap(uintptr_t virt_addr, const size_t size) {
+  // ensure the addresses are page-aligned and cover everything they
+  // should
+  const uintptr_t end_addr = round_up_addr(virt_addr + size);
+  virt_addr = round_down_addr(virt_addr);
+
+  // TODO: this is fine and plenty simple for now and for kspace, but
+  // in the future it may be worth freeing up the page tables if
+  // they're no longer needed.
+  for (; virt_addr < end_addr; virt_addr += PAGE_SIZE) {
+    const struct ptindices is = virt_addr_to_ptindices(virt_addr);
+    get_PT(is.pml4t_i, is.pdpt_i, is.pd_i)[is.pt_i].present = false;
+    invlpg((void *)virt_addr);
+  }
+}
