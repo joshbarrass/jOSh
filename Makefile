@@ -18,7 +18,8 @@ include $(KERNEL_DIR)/Makefile
 include $(LIBC_DIR)/Makefile
 include $(APPS_DIR)/Makefile
 
-jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS)
+jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS) $(APPS_ALL)
+	cp $(APPS_ALL) grubiso/
 	grub-mkrescue -d /usr/lib/grub/i386-pc -o jOSh.iso grubiso
 
 grubiso/boot/jOSh.elf: kernel/kernel.elf
@@ -41,7 +42,7 @@ debug: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
 
 .PHONY: clean
-clean: kernel_arch_clean kernel_clean libc_clean
+clean: kernel_arch_clean kernel_clean libc_clean apps_clean
 	rm -f jOSh.iso
 	rm -rf ./grubiso/
 	rm -rf ./sysroot

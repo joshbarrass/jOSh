@@ -1,8 +1,10 @@
 ENTRY(main)
 
+INPUT(apps/kernel_iface.elf)
+
 SECTIONS
 {
-        . = 0xfffffe8000200000; /* PML4T[509] + 1GB */
+        . = 0xfffffe8040000000; /* PML4T[509] + 1GB */
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{
@@ -27,8 +29,8 @@ SECTIONS
 		*(.data)
                 /* Pad out the section to the next page boundary */
                 FILL(0x00);
-                . = ALIGN(4K) - 1;
-                BYTE(0x00);
+                /* . = ALIGN(4K) - 1; */
+                /* BYTE(0x00); */
 	}
 
 	/* Read-write data (uninitialized) and stack */
