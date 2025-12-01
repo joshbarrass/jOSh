@@ -46,11 +46,14 @@ void elf64_build_program_image(const char *const elf) {
     const size_t fsize = (size_t)pheader[i].p_filesz;
     const size_t msize = (size_t)pheader[i].p_memsz;
 
+    size_t pages_mapped = 0;
+
     // find how much of the segment is not page-aligned
     const size_t size_to_map = (fsize / PAGE_SIZE) * PAGE_SIZE;
     const size_t physical_remainder = fsize % PAGE_SIZE;
-    // map the page-aligned chunk directly
-    vmm_kmap((uintptr_t)segment_start, size_to_map, (uintptr_t)virt_addr, 0);
+    // map the page-aligned chunk directly if there is one to map
+    if (size_to_map > 0) vmm_kmap((uintptr_t)segment_start, size_to_map, (uintptr_t)virt_addr, 0);
+    pages_mapped += size_to_map / PAGE_SIZE;
     if (physical_remainder != 0) {
       // copy the remainder to a new page and map that contiguously
       const uintptr_t newpage = (uintptr_t)pmm_alloc_pages(1);
@@ -59,15 +62,16 @@ void elf64_build_program_image(const char *const elf) {
       for (int i = physical_remainder; i < PAGE_SIZE; ++i) {
         ((char*)((uintptr_t)virt_addr + size_to_map))[i] = 0;
       }
+      ++pages_mapped;
     }
 
     // generate enough pages for the remaining msize
-    const size_t virtual_excess = msize - fsize;
-    size_t pages_needed = virtual_excess / PAGE_SIZE;
-    const size_t rem = virtual_excess % PAGE_SIZE;
-    if (rem > 0) pages_needed += 1;
-    const uintptr_t newpage = (uintptr_t)pmm_alloc_pages(pages_needed);
-    vmm_kmap(newpage, pages_needed*PAGE_SIZE, (uintptr_t)virt_addr + fsize, 0);
+    size_t total_pages_needed = msize / PAGE_SIZE;
+    const size_t rem = msize % PAGE_SIZE;
+    if (rem > 0) total_pages_needed += 1;
+    const size_t pages_to_alloc = total_pages_needed - pages_mapped;
+    const uintptr_t newpage = (uintptr_t)pmm_alloc_pages(pages_to_alloc);
+    vmm_kmap(newpage, pages_to_alloc*PAGE_SIZE, (uintptr_t)virt_addr + fsize, 0);
   }
 }
 

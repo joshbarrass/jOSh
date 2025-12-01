@@ -17,20 +17,12 @@ SECTIONS
 		*(.rodata)
                 *(.eh_frame)
                 *(.rodata*)
-                /* Pad out the section to the next page boundary */
-                FILL(0x00);
-                . = ALIGN(4K) - 1;
-                BYTE(0x00);
 	}
 
 	/* Read-write data (initialized) */
 	.data BLOCK(4K) : ALIGN(4K)
 	{
 		*(.data)
-                /* Pad out the section to the next page boundary */
-                FILL(0x00);
-                /* . = ALIGN(4K) - 1; */
-                /* BYTE(0x00); */
 	}
 
 	/* Read-write data (uninitialized) and stack */
@@ -38,8 +30,6 @@ SECTIONS
 	{
 		*(COMMON)
 		*(.bss)
-                FILL(0x00);
-                . = ALIGN(4K);
 	}
 
 	/* The compiler may produce other sections, by default it will put them in
