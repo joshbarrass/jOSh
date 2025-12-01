@@ -6,6 +6,7 @@ LIBC_INCLUDEDIR?=$(LIBC_PREFIX)/include
 _LIBC_OBJ_NAMES=\
 string/memmove \
 string/strlen \
+string/strcmp \
 stdio/printf \
 stdio/puts \
 stdio/putchar \
