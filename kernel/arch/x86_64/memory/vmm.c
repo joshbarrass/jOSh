@@ -36,7 +36,7 @@ static inline uintptr_t round_down_addr(uintptr_t addr) {
   return addr - remainder;
 }
 
-static inline size_t pages_needed_for_size(size_t size) {
+static inline size_t pages_needed_for_size(const size_t size) {
   const size_t pages = size / PAGE_SIZE;
   const size_t remainder = size % PAGE_SIZE;
   if (remainder == 0) return pages;
@@ -64,17 +64,18 @@ static bool is_virt_addr_used(const uintptr_t virt_addr) {
 
 void *vmm_kmap(uintptr_t phys_addr, const size_t size, uintptr_t virt_addr,
                flags_t flags) {
-  // adjust the target address to get our starting point
+  // adjust the target address to get page-aligned starting point
   virt_addr = round_up_addr(virt_addr);
   if (virt_addr < KERNEL_VADDR_START) {
     virt_addr = KERNEL_VADDR_START;
   }
 
-  // get the address of the physical page that phys_addr lies within
+  // get the range of the physical pages we need to use
+  const uintptr_t phys_page_end = round_up_addr(phys_addr + size);
   const uintptr_t phys_page = round_down_addr(phys_addr);
   const uintptr_t phys_offset = phys_addr - phys_page;
 
-  const size_t pages_required = pages_needed_for_size(size);
+  const size_t pages_required = pages_needed_for_size(phys_page_end - phys_page);
   #ifdef VERBOSE_VMM
   printf("Need %zu pages\n", pages_required);
   #endif
@@ -123,6 +124,9 @@ void vmm_kunmap(uintptr_t virt_addr, const size_t size) {
   for (; virt_addr < end_addr; virt_addr += PAGE_SIZE) {
     const struct ptindices is = virt_addr_to_ptindices(virt_addr);
     get_PT(is.pml4t_i, is.pdpt_i, is.pd_i)[is.pt_i].present = false;
+#ifdef VERBOSE_VMM
+    printf("Unmapped %#18zx\n", virt_addr);
+#endif
     invlpg((void *)virt_addr);
   }
 }
