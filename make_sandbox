@@ -6,6 +6,7 @@ bwrap \
   --ro-bind /lib /lib \
   --ro-bind /lib64 /lib64 \
   --ro-bind /etc/fonts /etc/fonts \
+  --ro-bind /etc/alternatives /etc/alternatives \
   --tmpfs /tmp \
   --tmpfs ~/.cache/fontconfig \
   --bind "$(pwd)" /sandbox \

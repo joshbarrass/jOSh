@@ -190,8 +190,18 @@ void kernel_main() {
   term_info_color();
 
   printf("[*] Calling entrypoint...\n");
-  void (*entry)() = (void*)(uintptr_t)get_elf64_entrypoint(initelf);
-  entry();
+  int (*entry)() = (void*)(uintptr_t)get_elf64_entrypoint(initelf);
+  int returncode = entry();
+
+  if (returncode == 0) {
+    term_good_color();
+    printf("[+] ");
+  } else {
+    term_error_color();
+    printf("[!] ");
+  }
+  printf("Return code: %d\n", returncode);
+  term_info_color();
 
   return;
 }
