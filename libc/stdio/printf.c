@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdio_ops.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -64,7 +65,7 @@ static inline flags_t make_unset_flags() {
    (length) == LEN_T ? va_arg(args, size_t) :     \
    va_arg(args, unsigned int))
 
-static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
+static int print_uint(struct io_ops *ctx, uintmax_t d, const bool negative, const flags_t flags) {
   const size_t buflen = PRINT_INT_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
@@ -85,26 +86,26 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   // pad the width before the sign for spaces
   if (!flags.left && !flags.zero) {
     for (int j = 0; j < to_pad; ++j) {
-      putchar(' ');
+      ctx->putchar(ctx, ' ');
       ++written;
     }
   }
   
   if (negative) {
-    putchar('-');
+    ctx->putchar(ctx, '-');
     ++written;
   } else if (flags.force_sign) {
-    putchar('+');
+    ctx->putchar(ctx, '+');
     ++written;
   } else if (flags.space) {
-    putchar(' ');
+    ctx->putchar(ctx, ' ');
     ++written;
   }
 
   // pad after for zeros
   if (!flags.left && flags.zero) {
     for (int j = 0; j < to_pad; ++j) {
-      putchar('0');
+      ctx->putchar(ctx, '0');
       ++written;
     }
   }
@@ -112,13 +113,13 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
   while (i-->0) {
-    putchar(buf[i]);
+    ctx->putchar(ctx, buf[i]);
     ++written;
   }
 
   if (flags.left) {
     while (written < flags.width) {
-      putchar(' ');
+      ctx->putchar(ctx, ' ');
       ++written;
     }
   }
@@ -126,11 +127,11 @@ static int print_uint(uintmax_t d, const bool negative, const flags_t flags) {
   return written;
 }
 
-static int print_int(const intmax_t d, const flags_t flags) {
-  return print_uint((d < 0) ? (uintmax_t)(~d) + 1u : d, (d < 0) ? true : false, flags);
+static int print_int(struct io_ops *ctx, const intmax_t d, const flags_t flags) {
+  return print_uint(ctx, (d < 0) ? (uintmax_t)(~d) + 1u : d, (d < 0) ? true : false, flags);
 }
 
-static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags) {
+static int print_hex_uint(struct io_ops *ctx, uintmax_t v, const bool uppercase, const flags_t flags) {
   const size_t buflen = PRINT_HEX_BUFFER_SIZE(uintmax_t);
   char buf[buflen];
 
@@ -150,21 +151,21 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   // pad before 0x if padding with spaces
   if (!flags.left && !flags.zero) {
     while (to_pad-->0) {
-      putchar(' ');
+      ctx->putchar(ctx, ' ');
       ++written;
     }
   }
 
   if (flags.hash) {
-    putchar('0');
-    putchar(uppercase ? 'X' : 'x');
+    ctx->putchar(ctx, '0');
+    ctx->putchar(ctx, uppercase ? 'X' : 'x');
     written += 2;
   }
 
   // pad after for zeros
   if (!flags.left && flags.zero) {
     while (to_pad-->0) {
-      putchar('0');
+      ctx->putchar(ctx, '0');
       ++written;
     }
   }
@@ -172,14 +173,14 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   // now go through the buffer in reverse to print the chars
   // this loop will stop at i=0, including printing i=0
   while (i-->0) {
-    putchar(buf[i]);
+    ctx->putchar(ctx, buf[i]);
     ++written;
   }
 
   // write extra spaces if left-aligned
   if (flags.left) {
     while (written < flags.width) {
-      putchar(' ');
+      ctx->putchar(ctx, ' ');
       ++written;
     }
   }
@@ -187,7 +188,7 @@ static int print_hex_uint(uintmax_t v, const bool uppercase, const flags_t flags
   return written;
 }
 
-static int print_string(char *string, const flags_t flags) {
+static int print_string(struct io_ops *ctx, char *string, const flags_t flags) {
   int written = 0;
 
   // Pad with spaces first, but only if a width was actually specified
@@ -199,16 +200,16 @@ static int print_string(char *string, const flags_t flags) {
       size_t to_pad = flags.width - len;
       written += to_pad;
       while (to_pad-->0) {
-        putchar(' ');
+        ctx->putchar(ctx, ' ');
       }
     }
   }
 
-  written += puts(string);
+  written += ctx->puts(ctx, string);
 
   if (flags.left) {
     while (written < flags.width) {
-      putchar(' ');
+      ctx->putchar(ctx, ' ');
       ++written;
     }
   }
@@ -216,12 +217,12 @@ static int print_string(char *string, const flags_t flags) {
   return written;
 }
 
-int vprintf(const char *fmt, va_list args) {
+static int vprintf_backend(struct io_ops *ctx, const char *fmt, va_list args) {
   int written = 0;
   
   for (; *fmt != 0; ++fmt) {
     if (*fmt != '%') {
-      putchar(*fmt);
+      ctx->putchar(ctx, *fmt);
       ++written;
     } else if (*fmt == '%') {
       // parse flags if they exist
@@ -308,29 +309,29 @@ int vprintf(const char *fmt, va_list args) {
       ++fmt;
       switch (*fmt) {
       case 'n':
-        written += print_int(written, flags);
+        written += print_int(ctx, written, flags);
         break;
       case 's':
-        written += print_string(va_arg(args, char*), flags);
+        written += print_string(ctx, va_arg(args, char*), flags);
         break;
       case 'i':
       case 'd':
-        written += print_int(INT_LEN_ARG(length_specifier, args), flags);
+        written += print_int(ctx, INT_LEN_ARG(length_specifier, args), flags);
         break;
       case 'u':
-        written += print_uint(UINT_LEN_ARG(length_specifier, args), false, flags);
+        written += print_uint(ctx, UINT_LEN_ARG(length_specifier, args), false, flags);
         break;
       case 'x':
-        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), false, flags);
+        written += print_hex_uint(ctx, UINT_LEN_ARG(length_specifier, args), false, flags);
         break;
       case 'X':
-        written += print_hex_uint(UINT_LEN_ARG(length_specifier, args), true, flags);
+        written += print_hex_uint(ctx, UINT_LEN_ARG(length_specifier, args), true, flags);
         break;
       default:
-        putchar('%');
+        ctx->putchar(ctx, '%');
         ++written;
       case '%':
-        putchar(*fmt);
+        ctx->putchar(ctx, *fmt);
         ++written;
       }
     }
@@ -338,10 +339,28 @@ int vprintf(const char *fmt, va_list args) {
   return written;
 }
 
+int vprintf(const char *fmt, va_list args) {
+  struct io_ops ops = get_stdio_ops();
+  return vprintf_backend(&ops, fmt, args);
+}
+
 int printf(const char *fmt, ...) {
   va_list args;
   va_start(args, fmt);
   const int written = vprintf(fmt, args);
+  va_end(args);
+  return written;
+}
+
+int vsprintf(char *buf, const char *fmt, va_list args) {
+  struct buffer_ops ops = get_buffer_ops(buf);
+  return vprintf_backend((struct io_ops*)(&ops), fmt, args);
+}
+
+int sprintf(char *buf, const char *fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+  const int written = vsprintf(buf, fmt, args);
   va_end(args);
   return written;
 }

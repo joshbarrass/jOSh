@@ -9,6 +9,7 @@ string/strlen \
 stdio/printf \
 stdio/puts \
 stdio/putchar \
+stdio/ops \
 stdlib/atoi \
 ctype/isspace \
 errno/errno \

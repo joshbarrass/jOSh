@@ -9,6 +9,7 @@ tty.o \
 printf.o \
 putchar.o \
 puts.o \
+ops.o \
 errno.o \
 strto.o \
 isspace.o \
