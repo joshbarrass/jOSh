@@ -358,7 +358,9 @@ int printf(const char *fmt, ...) {
 
 int vsprintf(char *buf, const char *fmt, va_list args) {
   struct buffer_ops ops = get_buffer_ops(buf);
-  return vprintf_backend((struct io_ops*)(&ops), fmt, args);
+  const int to_return = vprintf_backend((struct io_ops*)(&ops), fmt, args);
+  ops.ops.putchar((struct io_ops*)&ops, '\0');
+  return to_return;
 }
 
 int sprintf(char *buf, const char *fmt, ...) {
