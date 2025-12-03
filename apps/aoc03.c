@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <multiboot.h>
 
+#define NUM_VALS (2)
+
 extern const MIS *mis;
 
 static const char *empty_string = "\0";
@@ -18,6 +20,18 @@ static char *get_input() {
   return empty_string;
 }
 
+int get_highest_in_N(const char *input, const size_t N, const char **endptr) {
+  int max = 0;
+  for (size_t i = 0; i < N; ++i) {
+    char val = input[i] - '0';
+    if (val > max) {
+      max = val;
+      *endptr = input + i + 1;
+    }
+  }
+  return max;
+}
+
 int get_bank_max(const char *input, const char **endptr) {
   int total = 0;
 
@@ -26,25 +40,19 @@ int get_bank_max(const char *input, const char **endptr) {
     ++bank_length;
   }
   *endptr = input + bank_length + 1;
-  if (bank_length == 0)
-    return 0;
+  if (bank_length == 0) return 0;
 
-  // There are much faster ways of doing this than just trialling
-  // every combination (e.g. finding the largest digit, and then
-  // finding the largest digit to the right of it), but this solves
-  // the problem, and I paid for that sprintf, I'm going to get full
-  // use out of it!
-  static char buf[3] = { 0 };
-  int max = 0;
-  for (size_t start_pos = 0; start_pos < bank_length - 1; ++start_pos) {
-    for (size_t target = start_pos + 1; target < bank_length; ++target) {
-      sprintf(buf, "%c%c", (int)input[start_pos], (int)input[target]);
-      int sum = atoi(buf);
-      if (sum > max) max = sum;
-    }
+  const char *prev_ptr = input;
+  size_t digits_remaining = NUM_VALS;
+  while (digits_remaining-- > 0) {
+    total *= 10;
+    size_t N = bank_length - digits_remaining;
+    total += get_highest_in_N(input, N, &input);
+    bank_length -= (input - prev_ptr);
+    prev_ptr = input;
   }
-
-  return max;
+  
+  return total;
 }
 
 int main() {
