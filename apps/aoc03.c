@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <multiboot.h>
 
-#define NUM_VALS (2)
+#define NUM_VALS (12)
 
 extern const MIS *mis;
 
@@ -32,8 +32,8 @@ int get_highest_in_N(const char *input, const size_t N, const char **endptr) {
   return max;
 }
 
-int get_bank_max(const char *input, const char **endptr) {
-  int total = 0;
+long long int get_bank_max(const char *input, const char **endptr) {
+  long long int total = 0;
 
   size_t bank_length = 0;
   while (input[bank_length] >= '0' && input[bank_length] <= '9') {
@@ -58,12 +58,12 @@ int get_bank_max(const char *input, const char **endptr) {
 int main() {
   const char *input = get_input();
 
-  int sum = 0;
+  long long int sum = 0;
   while (*input != '\0') {
     sum += get_bank_max(input, &input);
   }
 
-  printf("Total: %d\n", sum);
+  printf("Total: %lld\n", sum);
 
   return 0;
 }
