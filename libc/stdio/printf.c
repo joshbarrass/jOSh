@@ -311,6 +311,10 @@ static int vprintf_backend(struct io_ops *ctx, const char *fmt, va_list args) {
       case 'n':
         written += print_int(ctx, written, flags);
         break;
+      case 'c':
+        ++written;
+        ctx->putchar(ctx, (char)va_arg(args, int));
+        break;
       case 's':
         written += print_string(ctx, va_arg(args, char*), flags);
         break;
