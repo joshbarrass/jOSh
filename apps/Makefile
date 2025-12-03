@@ -6,7 +6,7 @@ APPS_INCLUDEDIR?=$(APPS_PREFIX)/include
 APPS_DEPS=$(LIBC_DIR)/libk.a $(APPS_DIR)/kernel_iface.elf
 
 APPS_ALL=\
-$(APPS_DIR)/hello_world.elf $(APPS_DIR)/aoc01.elf $(APPS_DIR)/aoc02.elf
+$(APPS_DIR)/hello_world.elf $(APPS_DIR)/aoc01.elf $(APPS_DIR)/aoc02.elf $(APPS_DIR)/aoc03.elf
 
 APPS_ISO_DEPENDS=$(wildcard $(APPS_DIR)/inputs/*)
 
@@ -23,10 +23,10 @@ $(APPS_DIR)/kernel_iface.elf: $(KERNEL_DIR)/kernel.elf $(APPS_DIR)/retain_symbol
 	ld -r -R '$<' -o '$@' --retain-symbols-file '$(APPS_DIR)/retain_symbols_file'
 
 $(APPS_DIR)/%.o: $(APPS_DIR)/%.c
-	$(CC) -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
+	$(CC) -c '$<' -o '$@' -ffreestanding $(CFLAGS) -flto $(KERNEL_CFLAGS)
 
 $(APPS_DIR)/%.elf: $(APPS_DIR)/%.ld $(APPS_DIR)/%.o $(APPS_DEPS)
-	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
+	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) -flto $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
 
 .PHONY: apps_clean
 apps_clean:
