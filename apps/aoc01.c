@@ -1,22 +1,7 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include <multiboot.h>
-
-extern const MIS *mis;
-
-const char *empty_string = "\0";
-
-static char *get_input() {
-  const Mod *mods = get_mods(mis);
-  for (size_t i = 0; i < mis->mods_count; ++i) {
-    const Mod *mod = mods + i;
-    if (strcmp("input", get_mod_string(mod)) == 0) {
-      return (char*)get_mod_start(mod);
-    }
-  }
-  return empty_string;
-}
+#include <stdbool.h>
+#include "aoc_common.h"
 
 enum Direction {
   LEFT = -1, RIGHT = 1

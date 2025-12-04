@@ -1,24 +1,8 @@
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <multiboot.h>
+#include <stddef.h>
+#include "aoc_common.h"
 
 #define NUM_VALS (12)
-
-extern const MIS *mis;
-
-static const char *empty_string = "\0";
-
-static char *get_input() {
-  const Mod *mods = get_mods(mis);
-  for (size_t i = 0; i < mis->mods_count; ++i) {
-    const Mod *mod = mods + i;
-    if (strcmp("input", get_mod_string(mod)) == 0) {
-      return (char*)get_mod_start(mod);
-    }
-  }
-  return empty_string;
-}
 
 int get_highest_in_N(const char *input, const size_t N, const char **endptr) {
   int max = 0;
