@@ -25,6 +25,9 @@ $(APPS_DIR)/kernel_iface.elf: $(KERNEL_DIR)/kernel.elf $(APPS_DIR)/retain_symbol
 $(APPS_DIR)/%.o: $(APPS_DIR)/%.c
 	$(CC) -c '$<' -o '$@' -ffreestanding $(CFLAGS) -flto $(KERNEL_CFLAGS)
 
+$(APPS_DIR)/aoc%.elf: $(APPS_DIR)/aoc%.ld $(APPS_DIR)/aoc%.o $(APPS_DIR)/aoc_common.o $(APPS_DEPS)
+	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) -flto $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
+
 $(APPS_DIR)/%.elf: $(APPS_DIR)/%.ld $(APPS_DIR)/%.o $(APPS_DEPS)
 	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) -flto $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
 
