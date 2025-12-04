@@ -29,10 +29,8 @@ Range parse_range(const char *buf, const char **endptr) {
 
 bool is_num_invalid(const unsigned long long int num) {
   // convert to a string
-  char buf[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5] = { 0 };
-  sprintf(buf, "%lld", num);
-  
-  const size_t l = strlen(buf);
+  char buf[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5];
+  const size_t l = sprintf(buf, "%lld", num);
   if (l == 1) return false;
 
   // calculate the length of the longest substring that could be
@@ -43,22 +41,15 @@ bool is_num_invalid(const unsigned long long int num) {
   }
 
   // check all lengths of substring for invalid options
-  static char substr[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5] = { 0 };
-  static char chunk[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5] = { 0 };
+  static char substr[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5];
+  static char chunk[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5];
   for (size_t substr_l = 1; substr_l <= max_substr_length; ++substr_l) {
     if (l % substr_l != 0) continue;
-
-    // clear buffers
-    for (size_t i = 0; i < sizeof(substr) / sizeof(substr[0]); ++i) {
-      substr[i] = 0;
-    }
-    for (size_t i = 0; i < sizeof(chunk) / sizeof(chunk[0]); ++i) {
-      chunk[i] = 0;
-    }
 
     // copy the substring of this length into a buffer
     for (size_t i = 0; i < substr_l; ++i) {
       substr[i] = buf[i];
+      substr[i+1] = 0;
     }
 
     // loop through each chunk of the string, copy that location into
@@ -68,6 +59,7 @@ bool is_num_invalid(const unsigned long long int num) {
       // build a chunk of length substr_l
       for (size_t j = 0; j < substr_l; ++j) {
         chunk[j] = buf[i+j];
+        chunk[j+1] = 0;
       }
       /* printf("Chunk %zu (substr_l=%zu): %s\n", i, substr_l, chunk); */
 
