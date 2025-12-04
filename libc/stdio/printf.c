@@ -37,10 +37,11 @@ typedef struct {
   bool hash;
   bool zero;
   long width;
+  long precision;
 } flags_t;
 
 static inline flags_t make_unset_flags() {
-  flags_t to_return = {false, false, false, false, false, 0};
+  flags_t to_return = {false, false, false, false, false, 0, 0};
   return to_return;
 }
 
@@ -195,7 +196,8 @@ static int print_string(struct io_ops *ctx, char *string, const flags_t flags) {
   // and the string is right-aligned. We don't want to waste time with
   // a strlen if it doesn't actually matter.
   if (flags.width > 0 && !flags.left) {
-    const size_t len = strlen(string);
+    const size_t len = flags.precision > 0 ? flags.precision : strlen(string);
+    printf("Precision: %ld\n", flags.precision);
     if (len < flags.width) {
       size_t to_pad = flags.width - len;
       written += to_pad;
@@ -205,7 +207,16 @@ static int print_string(struct io_ops *ctx, char *string, const flags_t flags) {
     }
   }
 
-  written += ctx->puts(ctx, string);
+  if (flags.precision > 0) {
+    // manually write chars to get the correct length
+    for (size_t i = 0; i < flags.precision; ++i) {
+      if (string[i] == 0) break;
+      ctx->putchar(ctx, string[i]);
+    }
+    written += flags.precision;
+  } else {
+    written += ctx->puts(ctx, string);
+  }
 
   if (flags.left) {
     while (written < flags.width) {
@@ -263,6 +274,26 @@ static int vprintf_backend(struct io_ops *ctx, const char *fmt, va_list args) {
         flags.width = strtol(fmt, (char **)&width_end, 10);
         errno = old_errno;
         fmt = width_end;
+      }
+
+      // parse precision, if it exists
+      // first check for precision indicator
+      if (*fmt == '.') {
+        ++fmt;
+        // then check for wildcard width
+        if (*fmt == '*') {
+          // read the arg
+          int wildcard_precision = va_arg(args, int);
+          flags.precision = wildcard_precision >= 0 ? wildcard_precision : 0;
+          ++fmt;
+        } else {
+          // otherwise, parse the number
+          int old_errno = errno; // save and restore errno -- printf shouldn't modify it
+          const char *precision_end = fmt;
+          flags.precision = strtol(fmt, (char **)&precision_end, 10);
+          errno = old_errno;
+          fmt = precision_end;
+        }
       }
 
       // find length specifier, if it exists
