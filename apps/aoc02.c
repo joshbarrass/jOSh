@@ -9,7 +9,7 @@ typedef struct Range {
   unsigned long long int end;
 } Range;
 
-Range parse_range(const char *buf, const char **endptr) {
+static Range parse_range(const char *buf, const char **endptr) {
   const char *first_num_end;
   Range r = {0, 0};
   r.start = strtoull(buf, &first_num_end, 10);
@@ -27,7 +27,7 @@ Range parse_range(const char *buf, const char **endptr) {
   return r;
 }
 
-bool is_num_invalid(const unsigned long long int num) {
+static bool is_num_invalid(const unsigned long long int num) {
   // convert to a string
   char buf[(8 * sizeof(unsigned long long int)) * 30103 / 100000 + 5];
   const size_t l = sprintf(buf, "%lld", num);
@@ -74,7 +74,7 @@ bool is_num_invalid(const unsigned long long int num) {
   return false;
 }
 
-unsigned long long int sum_invalid_IDs(const Range r) {
+static unsigned long long int sum_invalid_IDs(const Range r) {
   unsigned long long int total = 0;
 
   for (unsigned long long int i = r.start; i <= r.end; ++i) {

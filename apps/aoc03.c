@@ -4,7 +4,7 @@
 
 #define NUM_VALS (12)
 
-int get_highest_in_N(const char *input, const size_t N, const char **endptr) {
+static int get_highest_in_N(const char *input, const size_t N, const char **endptr) {
   int max = 0;
   for (size_t i = 0; i < N; ++i) {
     char val = input[i] - '0';
@@ -16,7 +16,7 @@ int get_highest_in_N(const char *input, const size_t N, const char **endptr) {
   return max;
 }
 
-long long int get_bank_max(const char *input, const char **endptr) {
+static long long int get_bank_max(const char *input, const char **endptr) {
   long long int total = 0;
 
   size_t bank_length = 0;
