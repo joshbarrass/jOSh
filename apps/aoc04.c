@@ -12,14 +12,18 @@ typedef struct Grid {
   size_t width;
   size_t stride;
   size_t height;
-  const char *buf;
+  char *buf;
 } Grid;
 
-static const char grid_get(const Grid *g, size_t x, size_t y) {
-  return g->buf[(g->width + g->stride)*y + x]; 
+static char *grid_get_ptr(const Grid *g, size_t x, size_t y) {
+  return &g->buf[(g->width + g->stride)*y + x]; 
 }
 
-static const Grid new_grid(const char *input) {
+static char grid_get(const Grid *g, size_t x, size_t y) {
+  return *grid_get_ptr(g, x, y); 
+}
+
+static const Grid new_grid(char *input) {
   // scan until we get an invalid character to determine the width
   Grid g = {0, 0, 0, input};
   while (input[g.width] == FREE_CHAR || input[g.width] == FULL_CHAR) {
@@ -63,13 +67,20 @@ int main() {
   Grid g = new_grid(input);
   printf("Grid (%zux%zu, stride=%zu)\n", g.width, g.height, g.stride);
 
+  int prev_num_accessible;
   int num_accessible = 0;
-  for (size_t y = 0; y < g.height; ++y) {
-    for (size_t x = 0; x < g.width; ++x) {
-      if (grid_get(&g, x, y) == FREE_CHAR) continue;
-      if (get_full_neighbours(&g, x, y) < THRESHOLD) ++num_accessible;
+  do {
+    prev_num_accessible = num_accessible;
+    for (size_t y = 0; y < g.height; ++y) {
+      for (size_t x = 0; x < g.width; ++x) {
+        if (grid_get(&g, x, y) == FREE_CHAR) continue;
+        if (get_full_neighbours(&g, x, y) < THRESHOLD) {
+          ++num_accessible;
+          *grid_get_ptr(&g, x, y) = FREE_CHAR;
+        }
+      }
     }
-  }
+  } while (prev_num_accessible != num_accessible);
 
   printf("Total: %d\n", num_accessible);
   
