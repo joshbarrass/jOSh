@@ -6,7 +6,7 @@ APPS_INCLUDEDIR?=$(APPS_PREFIX)/include
 APPS_DEPS=$(LIBC_DIR)/libk.a $(APPS_DIR)/kernel_iface.elf
 
 APPS_ALL=\
-$(APPS_DIR)/hello_world.elf $(APPS_DIR)/aoc01.elf $(APPS_DIR)/aoc02.elf $(APPS_DIR)/aoc03.elf $(APPS_DIR)/aoc04.elf $(APPS_DIR)/aoc05.elf $(APPS_DIR)/aoc06.elf
+$(APPS_DIR)/hello_world.elf $(APPS_DIR)/aoc01.elf $(APPS_DIR)/aoc02.elf $(APPS_DIR)/aoc03.elf $(APPS_DIR)/aoc04.elf $(APPS_DIR)/aoc05.elf $(APPS_DIR)/aoc06.elf $(APPS_DIR)/aoc07.elf
 
 APPS_ISO_DEPENDS=$(wildcard $(APPS_DIR)/inputs/*)
 
