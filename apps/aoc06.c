@@ -30,6 +30,24 @@ static char **malloc_array(const size_t n) {
   return (char**)vmm_kmap(phys_page, bytes, 0, 0);
 }
 
+static char *malloc_string(const size_t n) {
+  const size_t bytes = sizeof(char) * n;
+  size_t pages_needed = bytes / PAGE_SIZE;
+  const size_t remainder = bytes % PAGE_SIZE;
+  if (remainder != 0) ++pages_needed;
+
+  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
+  return (char*)vmm_kmap(phys_page, bytes, 0, 0);
+}
+
+static bool is_just_spaces(const char *s) {
+  while (*s != 0) {
+    if (*s != ' ') return false;
+    ++s;
+  }
+  return true;
+}
+
 int main() {
   char *input = get_input();
   
@@ -58,12 +76,15 @@ int main() {
     if (i != n_lines) return -1;
   }
 
+  // allocate an array for the list of digits
+  char *digits = malloc_string(problem_size+1);
+
   val_t sum = 0;
   while (lines[problem_size][0] != 0) {
     // read the operator
     bool safe = true;
     while (lines[problem_size][0] != '*' && lines[problem_size][0] != '+') {
-      if (lines[problem_size][0] == 0 || lines[problem_size] == '\n') {
+      if (lines[problem_size][0] == 0) {
         safe = false;
         break;
       }
@@ -73,16 +94,27 @@ int main() {
     const char operator = lines[problem_size][0];
     /* printf("Operator: %c\n", operator); */
     val_t total = (operator == '*') ? 1 : 0;
-    for (size_t i = 0; i < problem_size; ++i) {
-      val_t num = strtoull(lines[i], &lines[i], 10);
-      /* printf("Num: %llu\n", num); */
-      switch (operator) {
-      case '+':
-        total += num; break;
-      case '*':
-        total *= num; break;
-      }
+
+    // wipe the digits string
+    for (size_t i = 0; i < (problem_size + 1); ++i) {
+      digits[i] = 0;
     }
+
+    // copy into the digits and parse until we're left with all spaces
+    do {
+      for (size_t i = 0; i < problem_size; ++i) {
+        digits[i] = lines[i][0];
+        ++lines[i];
+      }
+      if (is_just_spaces(digits)) break;
+      const val_t num = strtoull(digits, NULL, 10);
+      /* printf("Digits: %s, Num: %llu\n", digits, num); */
+      switch (operator) {
+      case '*': total *= num; break;
+      case '+': total += num; break;
+      }
+    } while (!is_just_spaces(digits));
+
     /* printf("Total: %llu\n", total); */
     sum += total;
     ++lines[problem_size];
