@@ -22,6 +22,25 @@ def main():
 
     args = sorted(sys.argv[2:])
     with open(cfg_file, "w") as f:
+        # create the example input submenu
+        f.write("submenu \"Test inputs\" {\n")
+        for arg in args:
+            day = parse_day(arg)
+            if day is None:
+                continue
+            f.write(
+f"""menuentry "Test - Day {day:02}" {{
+	multiboot /boot/jOShload.elf
+        module /boot/jOSh.elf "KERNEL.ELF"
+        module /aoc{day:02}.elf "init.elf"
+        module /inputs/day{day}_example "input"
+}}
+
+"""
+                )
+        f.write("}\n\n")
+
+        # Create the regular entries
         for arg in args:
             day = parse_day(arg)
             if day is None:
