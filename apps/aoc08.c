@@ -5,8 +5,6 @@
 #include <kernel/memory/vmm.h>
 #include "aoc_common.h"
 
-#define N_MERGES (1000)
-
 typedef int coord_t;
 typedef unsigned long long int  dist_t;
 
@@ -149,50 +147,30 @@ int main() {
 
   // start clustering
   size_t i; size_t j;
-  for (size_t merge = 0; merge < N_MERGES; ++merge) {
+  bool all_connected = false;
+  while (!all_connected) {
     find_shortest_distance(n_lights, distances, &i, &j);
 
     // i and j now contain the two closest lights
     // merge them
     size_t new_group = group[i];
     size_t old_group = group[j];
+    all_connected = true;
     for (size_t k = 0; k < n_lights; ++k) {
       if (group[k] == old_group) {
         // put them in the same group and invalidate the distance
         // between them
         group[k] = new_group;
         distances[get_condensed_index(i, j, n_lights)] = 0;
-      }
+      } else if (group[k] != new_group) all_connected = false;
     }
   }
   printf("Finished clustering!\n");
 
-  // count the groups
-  size_t *group_counts = malloc_sizet_array(n_lights);
-  for (size_t i = 0; i < n_lights; ++i) {
-    group_counts[i] = 0;
-  }
-  for (size_t i = 0; i < n_lights; ++i) {
-    ++group_counts[group[i]];
-  }
+  printf("Last merge: %zu and %zu\n", i, j);
 
-  // calculate the required result
-  unsigned long long int total = 1;
-  for (size_t N = 0; N < 3; ++N) {
-    long long int biggest = -1;
-    size_t biggest_i = 0;
-    for (size_t i = 0; i < n_lights; ++i) {
-      if ((long long int)group_counts[i] > biggest) {
-        biggest = group_counts[i];
-        biggest_i = i;
-      }
-    }
-    if (biggest < 1) break;
-    group_counts[biggest_i] = 0;
-    total *= biggest;
-  }
-
-  printf("Total: %llu\n", total);
+  long long int total = coords[i].x * coords[j].x;
+  printf("Result: %lld\n", total);
 
   return 0;
 }
