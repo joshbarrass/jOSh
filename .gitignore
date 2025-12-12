@@ -68,3 +68,4 @@ apps/kernel.syms
 apps/libk.syms
 apps/retain_symbols_file
 apps/inputs/*
+apps/aoc.cfg
