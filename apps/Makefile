@@ -47,6 +47,10 @@ grubiso/boot/grub/aoc.cfg: $(APPS_DIR)/aoc.cfg
 	mkdir -p grubiso/boot/grub/
 	cp $(APPS_DIR)/aoc.cfg grubiso/boot/grub/aoc.cfg
 
+$(APPS_DIR)/aoc.cfg: $(APPS_DIR)/gen_aoc_cfg.py $(APPS_ALL)
+	rm -f $(APPS_DIR)/aoc.cfg
+	python3 '$<' '$@' $(filter-out $<,$^)
+
 .PHONY: apps_clean
 apps_clean:
 	rm -f $(APPS_ALL)
