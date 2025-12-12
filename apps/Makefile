@@ -17,7 +17,7 @@ aoc07.elf
 
 APPS_ALL=$(addprefix $(APPS_DIR)/, $(APPS_ELF_NAMES))
 
-APPS_ISO_DEPENDS=$(wildcard $(APPS_DIR)/inputs/*)
+APPS_ISO_DEPENDS=$(wildcard $(APPS_DIR)/inputs/*) grubiso/boot/grub/aoc.cfg
 
 $(APPS_DIR)/libk.syms: $(LIBC_DIR)/libk.a
 	nm -g --defined-only '$<' | awk '{print $$3}' | awk NF | sort > '$@'
@@ -42,6 +42,10 @@ $(APPS_DIR)/aoc%.elf: $(APPS_DIR)/aoc_common.ld $(APPS_DIR)/aoc%.o $(APPS_DIR)/a
 
 $(APPS_DIR)/%.elf: $(APPS_DIR)/%.ld $(APPS_DIR)/%.o $(APPS_DEPS)
 	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) -flto $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
+
+grubiso/boot/grub/aoc.cfg: $(APPS_DIR)/aoc.cfg
+	mkdir -p grubiso/boot/grub/
+	cp $(APPS_DIR)/aoc.cfg grubiso/boot/grub/aoc.cfg
 
 .PHONY: apps_clean
 apps_clean:
