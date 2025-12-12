@@ -13,7 +13,8 @@ aoc03.elf \
 aoc04.elf \
 aoc05.elf \
 aoc06.elf \
-aoc07.elf
+aoc07.elf \
+aoc08.elf
 
 APPS_ALL=$(addprefix $(APPS_DIR)/, $(APPS_ELF_NAMES))
 
