@@ -375,6 +375,36 @@ static LinEq machine_to_lineq(const Machine *m) {
   return lineq;
 }
 
+static void matrix_swap_rows(Matrix *m, size_t row1, size_t row2) {
+  for (size_t col = 0; col < m->cols; ++col) {
+    int tmp = matrix_get(m, row2, col);
+    matrix_set(m, row2, col, matrix_get(m, row1, col));
+    matrix_set(m, row1, col, tmp);
+  }
+}
+
+static void matrix_swap_cols(Matrix *m, size_t col1, size_t col2) {
+  for (size_t row = 0; row < m->rows; ++row) {
+    int tmp = matrix_get(m, col2, row);
+    matrix_set(m, row, col2, matrix_get(m, row, col1));
+    matrix_set(m, row, col1, tmp);
+  }
+}
+
+static void matrix_scale_row(Matrix *m, size_t row, int s) {
+  for (size_t col = 0; col < m->cols; ++col) {
+    matrix_set(m, row, col, s*matrix_get(m, row, col));
+  }
+}
+
+static void matrix_add_row(Matrix *m, size_t row, size_t to) {
+  for (size_t col = 0; col < m->cols; ++col) {
+    matrix_set(m, to, col, matrix_get(m, row, col) + matrix_get(m, row, to));
+  }
+}
+
+static void lineq_reduce(LinEq *e) {}
+
 static void press_button_joltage(const Button *b, joltage_t *state) {
   for (size_t i = 0; i < b->n_lights; ++i) {
     ++state[b->lights[i]];
@@ -389,79 +419,9 @@ static void press_buttons_joltage(const Machine *m, joltage_t *state, const int 
   }
 }
 
-static bool are_joltages_correct(const Machine *m, const joltage_t *state) {
-  for (size_t i = 0; i < m->n_lights; ++i) {
-    if (state[i] != m->joltages[i]) return false;
-  }
-  return true;
-}
-
-static bool test_buttons_joltages(const Machine *m, int *buttons) {
-  joltage_t state[MAX_LIGHTS] = { 0 };
-  press_buttons_joltage(m, state, buttons);
-  return are_joltages_correct(m, state);
-}
-
-static void gen_buttons_array(int *buttons, int N, int k, int index, int remaining) {
-  if (index == k - 1) {
-    // Last part gets the remainder
-    buttons[index] = remaining;
-    return;
-  }
-
-  for (int x = 0; x <= remaining; x++) {
-    buttons[index] = x;
-    gen_buttons_array(buttons, N, k, index + 1, remaining - x);
-  }
-}
-
-static long long int factorial(long long int n) {
-  if (n == 0) return 1;
-  long long int total = 1;
-  for (long long int i = 2; i <= n; ++i) {
-    total *= n;
-  }
-  return total;
-}
-
-static long long int choose(long long int n, long long int k) {
-  return factorial(n) / (factorial(n-k) * factorial(k));
-}
-
 static int find_fewest_buttons_joltage(const Machine *m) {
-  struct generator g;
-
-  // find the largest number in the joltage requirements. That will be
-  // the absolute minimum number of button presses, otherwise the
-  // counter could never reach that value!
-  int n = 0;
-  for (size_t i = 0; i < m->n_lights; ++i) {
-    if (m->joltages[i] > n) n = m->joltages[i];
-  }
-  --n; // we increment at the start of the loop, so we must start one lower
-
-  bool done = false;
-  while (!done) {
-    ++n;
-    generator_init(&g, n, m->n_buttons);
-    generator_next(&g);
-    while (generator_next(&g)) {
-      if (test_buttons_joltages(m, g.state)) {
-        done = true;
-        break;
-      }
-    }
-    if (errno != 0) {
-      switch (errno) {
-      case ERR_STACK_OVERFLOW:
-        printf("Error in generator: stack overflow\n");
-        break;
-      }
-      errno = 0;
-      return -2;
-    }
-  }
-  return n;
+  // convert the machine to a system of linear equations
+  LinEq eq = machine_to_lineq(m);
 }
 
 int main() {
