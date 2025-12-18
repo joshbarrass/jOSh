@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <kernel/memory/constants.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
+#include <kernel/vgadef.h>
 #include "aoc_common.h"
 
 #define MAX_LIGHTS (10)
@@ -207,6 +209,184 @@ static int find_fewest_buttons(const Machine *m) {
   return fewest_buttons;
 }
 
+/* Part 2 */
+
+// stack frame for the generator to emulate the recursive generator
+// for the weak compositions
+struct generator_frame {
+  int n;
+  int k;
+  int v;
+  int i; // index into the state array
+};
+
+#define GENERATOR_STACK_SIZE (MAX_BUTTONS+1)
+#define ERR_STACK_OVERFLOW 1
+
+struct generator {
+  int N;
+  int n;
+  int k;
+
+  int state[MAX_BUTTONS];
+  struct generator_frame stack[GENERATOR_STACK_SIZE];
+  size_t sp;
+  bool started;
+};
+
+void generator_init(struct generator *g, int n, int k) {
+  g->N = n;
+  g->n = n;
+  g->k = k;
+  g->sp = 0;
+  g->started = false;
+}
+
+// Based on https://stackoverflow.com/a/59131521
+bool generator_next(struct generator *g) {
+  if (!g->started) {
+    // push initial frame
+    g->stack[0] = (struct generator_frame){ g->n, g->k, 0, 0 };
+    g->sp = 1;
+    g->started = true;
+  }
+
+  while (g->sp > 0) {
+    struct generator_frame *f = &g->stack[g->sp - 1];
+
+    // base case: no slots left
+    if (f->k == 0) {
+      if (f->n == 0) {
+        g->sp--;
+        return true;
+      }
+      g->sp--;
+      continue;
+    }
+
+    // skip solutions that will not satisfy the constraint
+    if (f->n < 0 || f->n > f->k * g->N) {
+      g->sp--;
+      continue;
+    }
+
+    // try next value
+    if (f->v <= g->N) {
+      int v = f->v++;
+      g->state[f->i] = v;
+
+      // check stack isn't full!
+      if (g->sp >= GENERATOR_STACK_SIZE) {
+        errno = ERR_STACK_OVERFLOW;
+        return false;
+      }
+
+      // push next stack frame
+      g->stack[g->sp++] = (struct generator_frame){
+        .n = f->n - v,
+        .k = f->k - 1,
+        .v = 0,
+        .i = f->i + 1
+      };
+    } else {
+      // hit maximum v -- end of loop
+      g->sp--;
+    }
+  }
+
+  return false;
+}
+
+static void
+press_button_joltage(const Button *b, joltage_t *state) {
+  for (size_t i = 0; i < b->n_lights; ++i) {
+    ++state[b->lights[i]];
+  }
+}
+
+static void press_buttons_joltage(const Machine *m, joltage_t *state, const int *buttons) {
+  for (size_t i = 0; i < m->n_buttons; ++i) {
+    for (size_t j = 0; j < buttons[i]; ++j) {
+      press_button_joltage(&m->buttons[i], state);
+    }
+  }
+}
+
+static bool are_joltages_correct(const Machine *m, const joltage_t *state) {
+  for (size_t i = 0; i < m->n_lights; ++i) {
+    if (state[i] != m->joltages[i]) return false;
+  }
+  return true;
+}
+
+static bool test_buttons_joltages(const Machine *m, int *buttons) {
+  joltage_t state[MAX_LIGHTS] = { 0 };
+  press_buttons_joltage(m, state, buttons);
+  return are_joltages_correct(m, state);
+}
+
+static void gen_buttons_array(int *buttons, int N, int k, int index, int remaining) {
+  if (index == k - 1) {
+    // Last part gets the remainder
+    buttons[index] = remaining;
+    return;
+  }
+
+  for (int x = 0; x <= remaining; x++) {
+    buttons[index] = x;
+    gen_buttons_array(buttons, N, k, index + 1, remaining - x);
+  }
+}
+
+static long long int factorial(long long int n) {
+  if (n == 0) return 1;
+  long long int total = 1;
+  for (long long int i = 2; i <= n; ++i) {
+    total *= n;
+  }
+  return total;
+}
+
+static long long int choose(long long int n, long long int k) {
+  return factorial(n) / (factorial(n-k) * factorial(k));
+}
+
+static int find_fewest_buttons_joltage(const Machine *m) {
+  struct generator g;
+
+  // find the largest number in the joltage requirements. That will be
+  // the absolute minimum number of button presses, otherwise the
+  // counter could never reach that value!
+  int n = 0;
+  for (size_t i = 0; i < m->n_lights; ++i) {
+    if (m->joltages[i] > n) n = m->joltages[i];
+  }
+  --n; // we increment at the start of the loop, so we must start one lower
+
+  bool done = false;
+  while (!done) {
+    ++n;
+    generator_init(&g, n, m->n_buttons);
+    generator_next(&g);
+    while (generator_next(&g)) {
+      if (test_buttons_joltages(m, g.state)) {
+        done = true;
+        break;
+      }
+    }
+    if (errno != 0) {
+      switch (errno) {
+      case ERR_STACK_OVERFLOW:
+        printf("Error in generator: stack overflow\n");
+        break;
+      }
+      errno = 0;
+      return -2;
+    }
+  }
+  return n;
+}
+
 int main() {
   const char *input = get_input();
   const size_t n_machines = count_lines(input, true);
@@ -244,7 +424,28 @@ int main() {
     /* printf("Machine %zu solveable with %d buttons\n", i+1, b); */
     total += b;
   }
-  printf("Total: %ld\n", total);
+  printf("Part 1 Total: %ld\n", total);
+
+  total = 0;
+  // add a progress bar
+  printf("%3d/%3d[", 0, n_machines);
+  for (size_t i = 0; i < (30); ++i) {
+    printf("-");
+  }
+  printf("]");
+  for (size_t i = 0; i < n_machines; ++i) {
+    // print the progress bar
+    size_t n_segs = (i * (30)) / n_machines;
+    printf("\r%03d/%03d[", i, n_machines);
+    for (size_t j = 0; j < n_segs; ++j) {
+      printf("=");
+    }
+
+    const int b = find_fewest_buttons_joltage(&machines[i]);
+    /* printf("Machine %zu joltage solveable with %d buttons\n", i+1, b); */
+    total += b;
+  }
+  printf("\nPart 2 Total: %ld\n", total);
 
   return 0;
 }
