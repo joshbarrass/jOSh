@@ -297,8 +297,85 @@ bool generator_next(struct generator *g) {
   return false;
 }
 
-static void
-press_button_joltage(const Button *b, joltage_t *state) {
+#define MAX_MAT_SIZE (MAX_LIGHTS*(MAX_BUTTONS+1))
+
+typedef struct Matrix {
+  size_t rows;
+  size_t cols;
+  int elems[MAX_MAT_SIZE];
+} Matrix;
+
+typedef struct LinEq {
+  Matrix eqns;
+  int max_presses[MAX_BUTTONS];
+} LinEq;
+
+static void init_matrix_elems(Matrix *m) {
+  for (size_t i = 0; i < MAX_MAT_SIZE; ++i) {
+    m->elems[i] = 0;
+  }
+}
+
+static int *matrix_get_ptr(const Matrix *m, const size_t row, const size_t col) {
+  if (m->rows == 0 || m->cols == 0) return 0;
+  return &m->elems[m->cols*row + col];
+}
+
+static int matrix_get(const Matrix *m, const size_t row, const size_t col) {
+  if (m->rows == 0 || m->cols == 0) return 0;
+  return *(const int*)matrix_get_ptr(m, row, col);
+}
+
+static void matrix_set(Matrix *m, const size_t row, const size_t col, const int val) {
+  if (m->rows == 0 || m->cols == 0) return;
+  *matrix_get_ptr(m, row, col) = val;
+}
+
+static Matrix machine_to_matrix(const Machine *m) {
+  Matrix mat = {
+    .rows = m->n_lights,
+    .cols = m->n_buttons + 1
+  };
+  // zero the elements
+  init_matrix_elems(&mat);
+
+  // add the buttons as column vectors
+  for (size_t j = 0; j < m->n_buttons; ++j) {
+    const Button b = m->buttons[j];
+    for (size_t i = 0; i < b.n_lights; ++i) {
+      matrix_set(&mat, b.lights[i], j, 1);
+    }
+  }
+  // add the joltage vector
+  for (size_t i = 0; i < m->n_lights; ++i) {
+    matrix_set(&mat, i, mat.cols-1, m->joltages[i]);
+  }
+  
+  return mat;
+}
+
+static LinEq machine_to_lineq(const Machine *m) {
+  LinEq lineq = {
+    .eqns = machine_to_matrix(m)
+  };
+  for (size_t i = 0; i < lineq.eqns.cols - 1; ++i) {
+    lineq.max_presses[i] = INT32_MAX;
+  }
+
+  for (size_t button = 0; button < lineq.eqns.cols - 1; ++button) {
+    for (size_t row = 0; row < lineq.eqns.rows; ++row) {
+      int rowval = matrix_get(&lineq.eqns, row, button);
+      if (rowval == 1) {
+        int rowmax = matrix_get(&lineq.eqns, row, lineq.eqns.cols - 1);
+        if (rowmax < lineq.max_presses[button]) lineq.max_presses[button] = rowmax;
+      }
+    }
+  }
+
+  return lineq;
+}
+
+static void press_button_joltage(const Button *b, joltage_t *state) {
   for (size_t i = 0; i < b->n_lights; ++i) {
     ++state[b->lights[i]];
   }
@@ -426,26 +503,17 @@ int main() {
   }
   printf("Part 1 Total: %ld\n", total);
 
-  total = 0;
-  // add a progress bar
-  printf("%3d/%3d[", 0, n_machines);
-  for (size_t i = 0; i < (30); ++i) {
-    printf("-");
-  }
-  printf("]");
-  for (size_t i = 0; i < n_machines; ++i) {
-    // print the progress bar
-    size_t n_segs = (i * (30)) / n_machines;
-    printf("\r%03d/%03d[", i, n_machines);
-    for (size_t j = 0; j < n_segs; ++j) {
-      printf("=");
+  LinEq m = machine_to_lineq(&machines[0]);
+  for (size_t i = 0; i < m.eqns.rows; ++i) {
+    for (size_t j = 0; j < m.eqns.cols; ++j) {
+      printf("%d ", matrix_get(&m.eqns, i, j));
     }
-
-    const int b = find_fewest_buttons_joltage(&machines[i]);
-    /* printf("Machine %zu joltage solveable with %d buttons\n", i+1, b); */
-    total += b;
+    printf("\n");
   }
-  printf("\nPart 2 Total: %ld\n", total);
+  for (size_t i = 0; i < m.eqns.cols - 1; ++i) {
+    printf("%d ", m.max_presses[i]);
+  }
+  printf("\n");
 
   return 0;
 }
