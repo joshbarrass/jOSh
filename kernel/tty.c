@@ -119,6 +119,10 @@ void term_new_line() {
   }
 }
 
+void term_carriage_return() {
+  pos_x = 0;
+}
+
 void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
                  const size_t w, const size_t h) {
   for (size_t i = 0; i < h; ++i) {

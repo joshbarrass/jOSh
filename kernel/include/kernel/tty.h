@@ -36,6 +36,7 @@ void term_println(const char *s);
 void term_scroll();
 void term_scroll_n(const unsigned char n);
 void term_new_line();
+void term_carriage_return();
 void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y, const size_t w, const size_t h);
 
 #ifdef __cplusplus

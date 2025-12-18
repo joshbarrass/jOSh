@@ -8,6 +8,9 @@ int putchar(char c) {
   case '\n':
     term_new_line();
     break;
+  case '\r':
+    term_carriage_return();
+    break;
   default:
     term_print_char(c);
     break;
