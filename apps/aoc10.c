@@ -11,6 +11,8 @@
 #define CHAR_LIGHT_OFF '.'
 #define CHAR_LIGHT_ON '#'
 
+typedef size_t iter_t;
+
 #define array_malloc(T) static T *malloc_##T##_array (const size_t n) { \
   const size_t bytes = sizeof(T) * n; \
   size_t pages_needed = bytes / PAGE_SIZE; \
@@ -31,7 +33,7 @@ typedef struct Button {
 typedef struct Machine {
   size_t n_lights;
   bool target_state[MAX_LIGHTS];
-  bool state[MAX_LIGHTS];
+  /* bool state[MAX_LIGHTS]; */
   size_t n_buttons;
   Button buttons[MAX_BUTTONS];
   joltage_t joltages[MAX_LIGHTS];
@@ -41,7 +43,7 @@ void zero_init_machine(Machine *m) {
   m->n_lights = 0;
   for (size_t i = 0; i < MAX_LIGHTS; ++i) {
     m->target_state[i] = false;
-    m->state[i] = false;
+    /* m->state[i] = false; */
     m->joltages[i] = 0;
   }
   m->n_buttons = 0;
@@ -50,12 +52,6 @@ void zero_init_machine(Machine *m) {
     for (size_t j = 0; j < MAX_LIGHTS; ++j) {
       m->buttons[i].lights[j] = 0;
     }
-  }
-}
-
-void reset_machine_state(Machine *m) {
-  for (size_t i = 0; i < MAX_LIGHTS; ++i) {
-    m->state[i] = false;
   }
 }
 
@@ -172,6 +168,45 @@ static void print_machine(const Machine *m) {
   printf("%d}\n", m->joltages[m->n_lights-1]);
 }
 
+static void press_button(const Button *b, bool *state) {
+  for (size_t i = 0; i < b->n_lights; ++i) {
+    state[b->lights[i]] = !state[b->lights[i]];
+  }
+}
+
+static void press_buttons(const Machine *m, bool *state, iter_t buttons) {
+  size_t i = 0;
+  while (buttons > 0 && i < m->n_buttons) {
+    if ((buttons & 1) == 1) press_button(&m->buttons[i], state);
+    buttons >>= 1;
+    i += 1;
+  }
+}
+
+static bool is_state_correct(const Machine *m, const bool *state) {
+  for (size_t i = 0; i < m->n_lights; ++i) {
+    if (state[i] != m->target_state[i]) return false;
+  }
+  return true;
+}
+
+static bool test_buttons(const Machine *m, iter_t buttons) {
+  bool state[MAX_LIGHTS] = { false };
+  press_buttons(m, state, buttons);
+  return is_state_correct(m, state);
+}
+
+static int find_fewest_buttons(const Machine *m) {
+  int fewest_buttons = INT32_MAX;
+  for (iter_t iterator = 1; iterator < (1 << m->n_buttons); ++iterator) {
+    if (test_buttons(m, iterator)) {
+      int buttons_used = __builtin_popcountll(iterator);
+      if (buttons_used < fewest_buttons) fewest_buttons = buttons_used;
+    }
+  }
+  return fewest_buttons;
+}
+
 int main() {
   const char *input = get_input();
   const size_t n_machines = count_lines(input, true);
@@ -203,6 +238,13 @@ int main() {
   /* for (size_t i = 0; i < n_machines; ++i) { */
   /*   print_machine(machines+i); */
   /* } */
+  long int total = 0;
+  for (size_t i = 0; i < n_machines; ++i) {
+    const int b = find_fewest_buttons(&machines[i]);
+    /* printf("Machine %zu solveable with %d buttons\n", i+1, b); */
+    total += b;
+  }
+  printf("Total: %ld\n", total);
 
   return 0;
 }
