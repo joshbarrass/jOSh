@@ -517,7 +517,7 @@ static bool test_buttons_joltage(const Machine *m, const int *buttons) {
   return true;
 }
 
-static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
+static int find_fewest_buttons_joltage(const Machine *m) {
   // convert the machine to a system of linear equations
   LinEq eq;
   size_t diagonal_length;
@@ -568,9 +568,6 @@ static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
     dof = eq.eqns.cols - 1 - diagonal_length;
     /* printf("Have %zu degrees of freedom\n", dof); */
   } while (dof > 4 && roll < eq.eqns.rows);
-
-  // recalculate max presses according to the new values
-  if (recalc) calculate_max_presses(&eq);
 
   // use a generator to brute force just the degrees of freedom
   int min_presses = INT32_MAX;
@@ -634,7 +631,6 @@ static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
       /* printf("Min now %d\n", min_presses); */
     }
   }
-  if (min_presses == INT32_MAX && recalc) return find_fewest_buttons_joltage(m, false);
 
   return min_presses;
 }
@@ -693,7 +689,7 @@ int main() {
       printf("=");
     }
     
-    const int b = find_fewest_buttons_joltage(&machines[i], false);
+    const int b = find_fewest_buttons_joltage(&machines[i]);
     if (b == INT32_MAX) {
       printf("Failed on %zu\n", i);
     }
@@ -702,7 +698,7 @@ int main() {
   }
   printf("\nPart 2 Total: %ld\n", total);
 
-  /* printf("Min: %d\n", find_fewest_buttons_joltage(&machines[47], true)); */
+  /* printf("Min: %d\n", find_fewest_buttons_joltage(&machines[47])); */
 
   return 0;
 }
