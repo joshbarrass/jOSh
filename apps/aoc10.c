@@ -254,6 +254,7 @@ typedef struct Matrix {
 typedef struct LinEq {
   Matrix eqns;
   int max_presses[MAX_BUTTONS];
+  size_t original_col[MAX_BUTTONS];
 } LinEq;
 
 static void init_matrix_elems(Matrix *m) {
@@ -319,6 +320,7 @@ static LinEq machine_to_lineq(const Machine *m) {
   };
   for (size_t i = 0; i < lineq.eqns.cols - 1; ++i) {
     lineq.max_presses[i] = INT32_MAX;
+    lineq.original_col[i] = i;
   }
 
   calculate_max_presses(&lineq);
@@ -331,6 +333,14 @@ static void matrix_swap_rows(Matrix *m, size_t row1, size_t row2) {
     int tmp = matrix_get(m, row2, col);
     matrix_set(m, row2, col, matrix_get(m, row1, col));
     matrix_set(m, row1, col, tmp);
+  }
+}
+
+static void matrix_roll_rows(Matrix *m, size_t roll) {
+  for (size_t i = 0; i < roll; ++i) {
+    for (size_t row = 0; row < m->rows - 1; ++row) {
+      matrix_swap_rows(m, row, row+1);
+    }
   }
 }
 
@@ -380,6 +390,7 @@ static void deep_copy_lineq(const LinEq * restrict src, LinEq * restrict dst) {
   dst->eqns.cols = src->eqns.cols;
   for (size_t i = 0; i < MAX_BUTTONS; ++i) {
     dst->max_presses[i] = src->max_presses[i];
+    dst->original_col[i] = src->original_col[i];
   }
 }
 
@@ -409,6 +420,10 @@ static void lineq_reduce(LinEq *e) {
           int tmp = e->max_presses[col];
           e->max_presses[col] = e->max_presses[row];
           e->max_presses[row] = tmp;
+          // ... and column tracker
+          size_t tmp2 = e->original_col[col];
+          e->original_col[col] = e->original_col[row];
+          e->original_col[row] = tmp2;
           break;
         }
       }
@@ -448,6 +463,10 @@ static void lineq_reduce(LinEq *e) {
           int tmp = e->max_presses[col];
           e->max_presses[col] = e->max_presses[row];
           e->max_presses[row] = tmp;
+          // ... and column tracker
+          size_t tmp2 = e->original_col[col];
+          e->original_col[col] = e->original_col[row];
+          e->original_col[row] = tmp2;
           break;
         }
       }
@@ -486,44 +505,69 @@ static void press_buttons_joltage(const Machine *m, joltage_t *state, const int 
   }
 }
 
+static bool test_buttons_joltage(const Machine *m, const int *buttons) {
+  joltage_t state[MAX_LIGHTS];
+  for (size_t i = 0; i < MAX_LIGHTS; ++i) {
+    state[i] = 0;
+  }
+  press_buttons_joltage(m, state, buttons);
+  for (size_t i = 0; i < m->n_lights; ++i) {
+    if (state[i] != m->joltages[i]) return false;
+  }
+  return true;
+}
+
 static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
   // convert the machine to a system of linear equations
-  LinEq eq = machine_to_lineq(m);
-  lineq_reduce(&eq);
+  LinEq eq;
+  size_t diagonal_length;
+  size_t dof;
+  int roll = 0;
 
-  /* for (size_t i = 0; i < eq.eqns.rows; ++i) { */
-  /*   for (size_t j = 0; j < eq.eqns.cols; ++j) { */
-  /*     printf("%2d ", matrix_get(&eq.eqns, i, j)); */
-  /*   } */
-  /*   printf("\n"); */
-  /* } */
-  /* for (size_t i = 0; i < eq.eqns.cols - 1; ++i) { */
-  /*   printf("%2d ", eq.max_presses[i]); */
-  /* } */
-  /* printf("\n"); */
+  // aim to get under 4 degrees of freedom, since that's about the
+  // limit of tractability. If we end up with a matrix with more dof
+  // than that, roll the rows and try again to see if we get something
+  // better
+  do {
+    eq = machine_to_lineq(m);
+    matrix_roll_rows(&eq.eqns, roll++);
+    lineq_reduce(&eq);
 
-  // count how large the diagonal section is
-  size_t diagonal_length = 0;
-  bool is_diag = true;
-  for (size_t col = 0; col < eq.eqns.cols-1; ++col) {
-    for (size_t row = 0; row < eq.eqns.rows; ++row) {
-      const int val = matrix_get(&eq.eqns, row, col);
-      if (row == col && val == 0) {
-        is_diag = false;
-        break;
+    /* for (size_t i = 0; i < eq.eqns.rows; ++i) { */
+    /*   for (size_t j = 0; j < eq.eqns.cols; ++j) { */
+    /*     printf("%2d ", matrix_get(&eq.eqns, i, j)); */
+    /*   } */
+    /*   printf("\n"); */
+    /* } */
+    /* for (size_t i = 0; i < eq.eqns.cols - 1; ++i) { */
+    /*   printf("%2d ", eq.max_presses[i]); */
+    /* } */
+    /* printf("\n"); */
+
+    // count how large the diagonal section is
+    diagonal_length = 0;
+    bool is_diag = true;
+    for (size_t col = 0; col < eq.eqns.cols-1; ++col) {
+      for (size_t row = 0; row < eq.eqns.rows; ++row) {
+        const int val = matrix_get(&eq.eqns, row, col);
+        if (row == col && val == 0) {
+          is_diag = false;
+          break;
+        }
+        if (row != col && val != 0) {
+          is_diag = false;
+          break;
+        }
       }
-      if (row != col && val != 0) {
-        is_diag = false;
+      if (!is_diag)
         break;
-      }
+      ++diagonal_length;
     }
-    if (!is_diag) break;
-    ++diagonal_length;
-  }
 
-  /* printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length); */
-  const size_t dof = eq.eqns.cols - 1 - diagonal_length;
-  /* printf("Have %zu degrees of freedom\n", dof); */
+    /* printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length); */
+    dof = eq.eqns.cols - 1 - diagonal_length;
+    /* printf("Have %zu degrees of freedom\n", dof); */
+  } while (dof > 4 && roll < eq.eqns.rows);
 
   // recalculate max presses according to the new values
   if (recalc) calculate_max_presses(&eq);
@@ -533,6 +577,7 @@ static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
   struct generator g;
   generator_init(&g, &eq.max_presses[diagonal_length], dof);
 
+  int buttons[MAX_BUTTONS];
   while (generator_next(&g)) { // does this succeed for n=0?
     // make a mutable copy of the lineq
     static LinEq eq_tmp;
@@ -545,6 +590,7 @@ static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
       int pushes = g.state[i - diagonal_length];
       push_total += pushes;
       matrix_add_scaled_col(&eq_tmp.eqns, i, -pushes, eq.eqns.cols-1);
+      buttons[eq.original_col[i]] = pushes;
     }
     if (push_total >= min_presses) continue;
 
@@ -573,8 +619,16 @@ static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
         break;
       }
       push_total += pushes;
+      buttons[eq.original_col[col]] = pushes;
     }
-    if (!is_valid) continue;
+    if (!is_valid) continue; 
+
+    // check that the solution works using the original machine
+    if (!test_buttons_joltage(m, buttons)) {
+      /* printf("\nGenerated invalid state!\n"); */
+      continue;
+    }
+
     if (push_total < min_presses) {
       min_presses = push_total;
       /* printf("Min now %d\n", min_presses); */
@@ -624,9 +678,6 @@ int main() {
   }
   printf("Part 1 Total: %ld\n", total);
 
-  /* for (size_t i = 0; i < 3; ++i) { */
-  /*   printf("Min %zu: %d\n", i, find_fewest_buttons_joltage(&machines[i])); */
-  /* } */
   total = 0;
   // add a progress bar
   printf("%3d/%3zu[", 0, n_machines);
@@ -642,7 +693,7 @@ int main() {
       printf("=");
     }
     
-    const int b = find_fewest_buttons_joltage(&machines[i], true);
+    const int b = find_fewest_buttons_joltage(&machines[i], false);
     if (b == INT32_MAX) {
       printf("Failed on %zu\n", i);
     }
