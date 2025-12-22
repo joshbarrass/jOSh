@@ -395,7 +395,9 @@ static void deep_copy_lineq(const LinEq * restrict src, LinEq * restrict dst) {
   }
 }
 
-static void lineq_reduce(LinEq *e) {
+// returns true if the lineq is fully solved and we have the minimum
+// number of degrees of freedom
+static bool lineq_reduce(LinEq *e) {
   for (size_t row = 0; row < e->eqns.rows; ++row) {
     // check whether the row has a non-zero value on the diagonal
     int diag = matrix_get(&e->eqns, row, row);
@@ -450,7 +452,7 @@ static void lineq_reduce(LinEq *e) {
         continue;
       }
       // if we couldn't find a new non-zero row, then we're done!
-      return;
+      return true;
     }
 
     // try to get a diagonal value with unit magnitude
@@ -471,7 +473,7 @@ static void lineq_reduce(LinEq *e) {
           break;
         }
       }
-      if (diag != 1 && diag != -1) return; // failed to simplify further -- hope for the best?
+      if (diag != 1 && diag != -1) return false; // failed to simplify further
     }
 
     // ensure the diagonal is positive
@@ -490,6 +492,7 @@ static void lineq_reduce(LinEq *e) {
       }
     }
   }
+  return true;
 }
 
 static void press_button_joltage(const Button *b, joltage_t *state) {
@@ -523,7 +526,7 @@ static size_t minimise_dof(const Machine *m, LinEq *out) {
   for (size_t roll = 0; roll < m->n_lights; ++roll) {
     LinEq eq = machine_to_lineq(m);
     matrix_roll_rows(&eq.eqns, roll);
-    lineq_reduce(&eq);
+    bool minimal = lineq_reduce(&eq);
 
     size_t diagonal_length = 0;
     bool is_diag = true;
@@ -550,6 +553,7 @@ static size_t minimise_dof(const Machine *m, LinEq *out) {
       deep_copy_lineq(&eq, out);
       min_dof = dof;
     }
+    if (minimal) break;
   }
   return min_dof;
 }
@@ -559,6 +563,19 @@ static int find_fewest_buttons_joltage(const Machine *m) {
   LinEq eq;
   const size_t dof = minimise_dof(m, &eq);
   const size_t diagonal_length = (eq.eqns.cols-1) - dof;
+
+  /* for (size_t i = 0; i < eq.eqns.rows; ++i) { */
+  /*   for (size_t j = 0; j < eq.eqns.cols; ++j) { */
+  /*     printf("%2d ", matrix_get(&eq.eqns, i, j)); */
+  /*   } */
+  /*   printf("\n"); */
+  /* } */
+  /* for (size_t i = 0; i < eq.eqns.cols - 1; ++i) { */
+  /*   printf("%2d ", eq.max_presses[i]); */
+  /* } */
+  /* printf("\n"); */
+  /* printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length); */
+  /* printf("Have %zu degrees of freedom\n", dof); */
 
   // use a generator to brute force just the degrees of freedom
   int min_presses = INT32_MAX;
