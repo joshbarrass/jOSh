@@ -385,7 +385,7 @@ static void matrix_swap_rows(Matrix *m, size_t row1, size_t row2) {
 
 static void matrix_swap_cols(Matrix *m, size_t col1, size_t col2) {
   for (size_t row = 0; row < m->rows; ++row) {
-    int tmp = matrix_get(m, col2, row);
+    int tmp = matrix_get(m, row, col2);
     matrix_set(m, row, col2, matrix_get(m, row, col1));
     matrix_set(m, row, col1, tmp);
   }
@@ -399,11 +399,110 @@ static void matrix_scale_row(Matrix *m, size_t row, int s) {
 
 static void matrix_add_row(Matrix *m, size_t row, size_t to) {
   for (size_t col = 0; col < m->cols; ++col) {
-    matrix_set(m, to, col, matrix_get(m, row, col) + matrix_get(m, row, to));
+    matrix_set(m, to, col, matrix_get(m, row, col) + matrix_get(m, to, col));
   }
 }
 
-static void lineq_reduce(LinEq *e) {}
+static void matrix_add_scaled_row(Matrix *m, size_t row, int s, size_t to) {
+  for (size_t col = 0; col < m->cols; ++col) {
+    matrix_set(m, to, col, s*matrix_get(m, row, col) + matrix_get(m, to, col));
+  }
+}
+
+static void matrix_add_col(Matrix *m, size_t col, size_t to) {
+  for (size_t row = 0; row < m->rows; ++row) {
+    matrix_set(m, row, to, matrix_get(m, row, col) + matrix_get(m, row, to));
+  }
+}
+
+static void matrix_add_scaled_col(Matrix *m, size_t col, int s, size_t to) {
+  for (size_t row = 0; row < m->rows; ++row) {
+    matrix_set(m, row, to, s*matrix_get(m, row, col) + matrix_get(m, row, to));
+  }
+}
+
+static void deep_copy_lineq(const LinEq * restrict src, LinEq * restrict dst) {
+  for (size_t i = 0; i < MAX_MAT_SIZE; ++i) {
+    dst->eqns.elems[i] = src->eqns.elems[i];
+  }
+  dst->eqns.rows = src->eqns.rows;
+  dst->eqns.cols = src->eqns.cols;
+  for (size_t i = 0; i < MAX_BUTTONS; ++i) {
+    dst->max_presses[i] = src->max_presses[i];
+  }
+}
+
+static void lineq_reduce(LinEq *e) {
+  for (size_t row = 0; row < e->eqns.rows; ++row) {
+    // check whether the row has a non-zero value on the diagonal
+    int diag = matrix_get(&e->eqns, row, row);
+    if (diag == 0) {
+      // rearrange the rows so we have a non-zero diagonal term
+      for (size_t other = row+1; other < e->eqns.rows; ++other) {
+        diag = matrix_get(&e->eqns, other, row);
+        if (diag != 0) {
+          matrix_swap_rows(&(e->eqns), other, row);
+          break;
+        }
+      }
+    }
+    if (diag == 0) {
+      // If we made it here, there are no rows with a non-zero value
+      // on the diagonal. In this case, we can swap the columns
+      // instead
+      for (size_t col = row + 1; col < e->eqns.cols - 1; ++col) {
+        diag = matrix_get(&e->eqns, row, col);
+        if (diag != 0) {
+          matrix_swap_cols(&(e->eqns), col, row);
+          // also swap the max_presses columns
+          int tmp = e->max_presses[col];
+          e->max_presses[col] = e->max_presses[row];
+          e->max_presses[row] = tmp;
+          break;
+        }
+      }
+    }
+    if (diag == 0) {
+      // If we made it here, then this row is all zeros. If there are
+      // any non-zero rows below it, we can swap them in
+      // instead and repeat the process
+      bool found_new_row = false;
+      for (size_t other = row + 1; other < e->eqns.rows; ++other) {
+        for (size_t col = row + 1; col < e->eqns.cols - 1; ++col) {
+          if (matrix_get(&e->eqns, other, col) != 0) {
+            matrix_swap_rows(&e->eqns, row, other);
+            found_new_row = true;
+            break;
+          }
+        }
+        if (found_new_row) break;
+      }
+      if (found_new_row) {
+        // restart the loop for this new row
+        --row;
+        continue;
+      }
+      // if we couldn't find a new non-zero row, then we're done!
+      return;
+    }
+
+    // ensure the diagonal is positive
+    if (diag < 0) {
+      matrix_scale_row(&e->eqns, row, -1);
+      diag *= -1;
+    }
+
+    // loop through the other rows to see if they're non-zero
+    for (size_t other = 0; other < e->eqns.rows; ++other) {
+      if (other == row) continue;
+      const int off_diag = matrix_get(&e->eqns, other, row);
+      if (off_diag != 0) {
+        // subtract to cancel
+        matrix_add_scaled_row(&e->eqns, row, (-1)*off_diag/diag, other);
+      }
+    }
+  }
+}
 
 static void press_button_joltage(const Button *b, joltage_t *state) {
   for (size_t i = 0; i < b->n_lights; ++i) {
@@ -422,6 +521,113 @@ static void press_buttons_joltage(const Machine *m, joltage_t *state, const int 
 static int find_fewest_buttons_joltage(const Machine *m) {
   // convert the machine to a system of linear equations
   LinEq eq = machine_to_lineq(m);
+  lineq_reduce(&eq);
+
+  for (size_t i = 0; i < eq.eqns.rows; ++i) {
+    for (size_t j = 0; j < eq.eqns.cols; ++j) {
+      printf("%2d ", matrix_get(&eq.eqns, i, j));
+    }
+    printf("\n");
+  }
+  for (size_t i = 0; i < eq.eqns.cols - 1; ++i) {
+    printf("%2d ", eq.max_presses[i]);
+  }
+  printf("\n");
+
+  // count how large the diagonal section is
+  size_t diagonal_length = 0;
+  bool is_diag = true;
+  for (size_t col = 0; col < eq.eqns.cols-1; ++col) {
+    for (size_t row = 0; row < eq.eqns.rows; ++row) {
+      const int val = matrix_get(&eq.eqns, row, col);
+      if (row == col && val == 0) {
+        is_diag = false;
+        break;
+      }
+      if (row != col && val != 0) {
+        is_diag = false;
+        break;
+      }
+    }
+    if (!is_diag) break;
+    ++diagonal_length;
+  }
+
+  printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length);
+  const size_t dof = eq.eqns.cols - 1 - diagonal_length;
+  printf("Have %zu degrees of freedom\n", dof);
+
+  // use a generator to brute force just the degrees of freedom
+  // first sum the maxima to find the highest amount they'll ever need
+  // to sum to
+  int N = 0;
+  for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
+    N += eq.max_presses[i];
+  }
+
+  int min_presses = INT32_MAX;
+  struct generator g;
+  for (int n = 0; n < N; ++n) {
+    generator_init(&g, n, eq.eqns.cols - 1);
+
+    while (generator_next(&g)) { // does this succeed for n=0?
+      // check if the generator values are valid (don't exceed their
+      // maxima)
+      bool is_valid = true;
+      int push_total = 0;
+      for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
+        int pushes = g.state[i - diagonal_length];
+        push_total += pushes;
+        if (pushes > eq.max_presses[i]) {
+          is_valid = false;
+          break;
+        }
+      }
+      if (!is_valid) continue;
+      if (push_total >= min_presses) continue;
+
+      // make a mutable copy of the lineq
+      static LinEq eq_tmp;
+      deep_copy_lineq(&eq, &eq_tmp);
+
+      // push the buttons specified by the generator, i.e., add the
+      // columns to the end column
+      for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
+        int pushes = g.state[i - diagonal_length];
+        matrix_add_scaled_col(&eq_tmp.eqns, i, -pushes, eq.eqns.cols-1);
+      }
+
+      // calculate how many times the remaining buttons need to be
+      // pressed -- don't forget to check whether it's actually
+      // possible to solve (e.g. if a button contributes an amount
+      // with magnitude greater than 1, the target value must be
+      // divisible
+      for (size_t col = 0; col < diagonal_length; ++col) {
+        int button_val = matrix_get(&eq_tmp.eqns, col, col);
+        if (button_val == 0) {
+          is_valid = false;
+          break;
+        }
+        int joltage_val = matrix_get(&eq_tmp.eqns, col, eq_tmp.eqns.cols-1);
+        if (joltage_val % button_val != 0) {
+          // no number of presses will solve this, so it's an invalid
+          // solution
+          is_valid = false;
+          break;
+        }
+        int pushes = joltage_val / button_val;
+        if (pushes < 0) {
+          is_valid = false;
+          break;
+        }
+        push_total += pushes;
+      }
+      if (!is_valid) continue;
+      if (push_total < min_presses) min_presses = push_total;
+    }
+  }
+
+  return min_presses;
 }
 
 int main() {
@@ -463,17 +669,18 @@ int main() {
   }
   printf("Part 1 Total: %ld\n", total);
 
-  LinEq m = machine_to_lineq(&machines[0]);
-  for (size_t i = 0; i < m.eqns.rows; ++i) {
-    for (size_t j = 0; j < m.eqns.cols; ++j) {
-      printf("%d ", matrix_get(&m.eqns, i, j));
-    }
-    printf("\n");
-  }
-  for (size_t i = 0; i < m.eqns.cols - 1; ++i) {
-    printf("%d ", m.max_presses[i]);
-  }
-  printf("\n");
+  /* for (size_t i = 0; i < 3; ++i) { */
+  /*   printf("Min %zu: %d\n", i, find_fewest_buttons_joltage(&machines[i])); */
+  /* } */
+  /* total = 0; */
+  /* for (size_t i = 0; i < n_machines; ++i) { */
+  /*   const int b = find_fewest_buttons_joltage(&machines[i]); */
+  /*   /\* printf("Machine %zu solveable with %d buttons\n", i+1, b); *\/ */
+  /*   total += b; */
+  /* } */
+  /* printf("Part 2 Total: %ld\n", total); */
+
+  find_fewest_buttons_joltage(&machines[1]);
 
   return 0;
 }
