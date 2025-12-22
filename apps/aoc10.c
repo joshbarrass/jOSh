@@ -517,35 +517,14 @@ static bool test_buttons_joltage(const Machine *m, const int *buttons) {
   return true;
 }
 
-static int find_fewest_buttons_joltage(const Machine *m) {
-  // convert the machine to a system of linear equations
-  LinEq eq;
-  size_t diagonal_length;
-  size_t dof;
-  int roll = 0;
-
-  // aim to get under 4 degrees of freedom, since that's about the
-  // limit of tractability. If we end up with a matrix with more dof
-  // than that, roll the rows and try again to see if we get something
-  // better
-  do {
-    eq = machine_to_lineq(m);
-    matrix_roll_rows(&eq.eqns, roll++);
+static size_t minimise_dof(const Machine *m, LinEq *out) {
+  size_t min_dof = m->n_buttons + 1;
+  for (size_t roll = 0; roll < m->n_lights; ++roll) {
+    LinEq eq = machine_to_lineq(m);
+    matrix_roll_rows(&eq.eqns, roll);
     lineq_reduce(&eq);
 
-    /* for (size_t i = 0; i < eq.eqns.rows; ++i) { */
-    /*   for (size_t j = 0; j < eq.eqns.cols; ++j) { */
-    /*     printf("%2d ", matrix_get(&eq.eqns, i, j)); */
-    /*   } */
-    /*   printf("\n"); */
-    /* } */
-    /* for (size_t i = 0; i < eq.eqns.cols - 1; ++i) { */
-    /*   printf("%2d ", eq.max_presses[i]); */
-    /* } */
-    /* printf("\n"); */
-
-    // count how large the diagonal section is
-    diagonal_length = 0;
+    size_t diagonal_length = 0;
     bool is_diag = true;
     for (size_t col = 0; col < eq.eqns.cols-1; ++col) {
       for (size_t row = 0; row < eq.eqns.rows; ++row) {
@@ -564,10 +543,21 @@ static int find_fewest_buttons_joltage(const Machine *m) {
       ++diagonal_length;
     }
 
-    /* printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length); */
-    dof = eq.eqns.cols - 1 - diagonal_length;
-    /* printf("Have %zu degrees of freedom\n", dof); */
-  } while (dof > 4 && roll < eq.eqns.rows);
+    
+    size_t dof = eq.eqns.cols - 1 - diagonal_length;
+    if (dof < min_dof) {
+      deep_copy_lineq(&eq, out);
+      min_dof = dof;
+    }
+  }
+  return min_dof;
+}
+
+static int find_fewest_buttons_joltage(const Machine *m) {
+  // convert the machine to a system of linear equations
+  LinEq eq;
+  const size_t dof = minimise_dof(m, &eq);
+  const size_t diagonal_length = (eq.eqns.cols-1) - dof;
 
   // use a generator to brute force just the degrees of freedom
   int min_presses = INT32_MAX;
