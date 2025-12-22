@@ -211,89 +211,35 @@ static int find_fewest_buttons(const Machine *m) {
 
 /* Part 2 */
 
-// stack frame for the generator to emulate the recursive generator
-// for the weak compositions
-struct generator_frame {
-  int n;
-  int k;
-  int v;
-  int i; // index into the state array
-};
-
-#define GENERATOR_STACK_SIZE (MAX_BUTTONS+1)
-#define ERR_STACK_OVERFLOW 1
-
 struct generator {
-  int N;
-  int n;
+  const int *max_vals;
   int k;
 
   int state[MAX_BUTTONS];
-  struct generator_frame stack[GENERATOR_STACK_SIZE];
-  size_t sp;
   bool started;
 };
 
-void generator_init(struct generator *g, int n, int k) {
-  g->N = n;
-  g->n = n;
+void generator_init(struct generator *g, const int *max_vals, const int k) {
+  g->max_vals = max_vals;
   g->k = k;
-  g->sp = 0;
   g->started = false;
+  for (size_t i = 0; i < MAX_BUTTONS; ++i) {
+    g->state[i] = 0;
+  }
 }
 
-// Based on https://stackoverflow.com/a/59131521
 bool generator_next(struct generator *g) {
   if (!g->started) {
-    // push initial frame
-    g->stack[0] = (struct generator_frame){ g->n, g->k, 0, 0 };
-    g->sp = 1;
     g->started = true;
+    return true;
   }
-
-  while (g->sp > 0) {
-    struct generator_frame *f = &g->stack[g->sp - 1];
-
-    // base case: no slots left
-    if (f->k == 0) {
-      if (f->n == 0) {
-        g->sp--;
-        return true;
-      }
-      g->sp--;
-      continue;
+  for (size_t i = 0; i < g->k; ++i) {
+    ++g->state[i];
+    if (g->state[i] <= g->max_vals[i]) {
+      return true;
     }
-
-    // skip solutions that will not satisfy the constraint
-    if (f->n < 0 || f->n > f->k * g->N) {
-      g->sp--;
-      continue;
-    }
-
-    // try next value
-    if (f->v <= g->N) {
-      int v = f->v++;
-      g->state[f->i] = v;
-
-      // check stack isn't full!
-      if (g->sp >= GENERATOR_STACK_SIZE) {
-        errno = ERR_STACK_OVERFLOW;
-        return false;
-      }
-
-      // push next stack frame
-      g->stack[g->sp++] = (struct generator_frame){
-        .n = f->n - v,
-        .k = f->k - 1,
-        .v = 0,
-        .i = f->i + 1
-      };
-    } else {
-      // hit maximum v -- end of loop
-      g->sp--;
-    }
+    g->state[i] = 0;
   }
-
   return false;
 }
 
@@ -354,6 +300,19 @@ static Matrix machine_to_matrix(const Machine *m) {
   return mat;
 }
 
+static void calculate_max_presses(LinEq *lineq) {
+  for (size_t button = 0; button < lineq->eqns.cols - 1; ++button) {
+    for (size_t row = 0; row < lineq->eqns.rows; ++row) {
+      int rowval = matrix_get(&lineq->eqns, row, button);
+      if (rowval == 1) {
+        int rowmax = matrix_get(&lineq->eqns, row, lineq->eqns.cols - 1);
+        if (rowmax < 0) continue;
+        if (rowmax < lineq->max_presses[button]) lineq->max_presses[button] = rowmax;
+      }
+    }
+  }
+}
+
 static LinEq machine_to_lineq(const Machine *m) {
   LinEq lineq = {
     .eqns = machine_to_matrix(m)
@@ -362,15 +321,7 @@ static LinEq machine_to_lineq(const Machine *m) {
     lineq.max_presses[i] = INT32_MAX;
   }
 
-  for (size_t button = 0; button < lineq.eqns.cols - 1; ++button) {
-    for (size_t row = 0; row < lineq.eqns.rows; ++row) {
-      int rowval = matrix_get(&lineq.eqns, row, button);
-      if (rowval == 1) {
-        int rowmax = matrix_get(&lineq.eqns, row, lineq.eqns.cols - 1);
-        if (rowmax < lineq.max_presses[button]) lineq.max_presses[button] = rowmax;
-      }
-    }
-  }
+  calculate_max_presses(&lineq);
 
   return lineq;
 }
@@ -486,6 +437,23 @@ static void lineq_reduce(LinEq *e) {
       return;
     }
 
+    // try to get a diagonal value with unit magnitude
+    int old_diag = diag;
+    if (diag != 1 && diag != -1) {
+      for (size_t col = row + 1; col < e->eqns.cols - 1; ++col) {
+        diag = matrix_get(&e->eqns, row, col);
+        if (diag == 1 || diag == -1) {
+          matrix_swap_cols(&(e->eqns), col, row);
+          // also swap the max_presses columns
+          int tmp = e->max_presses[col];
+          e->max_presses[col] = e->max_presses[row];
+          e->max_presses[row] = tmp;
+          break;
+        }
+      }
+      if (diag != 1 && diag != -1) diag = old_diag;
+    }
+
     // ensure the diagonal is positive
     if (diag < 0) {
       matrix_scale_row(&e->eqns, row, -1);
@@ -523,16 +491,16 @@ static int find_fewest_buttons_joltage(const Machine *m) {
   LinEq eq = machine_to_lineq(m);
   lineq_reduce(&eq);
 
-  for (size_t i = 0; i < eq.eqns.rows; ++i) {
-    for (size_t j = 0; j < eq.eqns.cols; ++j) {
-      printf("%2d ", matrix_get(&eq.eqns, i, j));
-    }
-    printf("\n");
-  }
-  for (size_t i = 0; i < eq.eqns.cols - 1; ++i) {
-    printf("%2d ", eq.max_presses[i]);
-  }
-  printf("\n");
+  /* for (size_t i = 0; i < eq.eqns.rows; ++i) { */
+  /*   for (size_t j = 0; j < eq.eqns.cols; ++j) { */
+  /*     printf("%2d ", matrix_get(&eq.eqns, i, j)); */
+  /*   } */
+  /*   printf("\n"); */
+  /* } */
+  /* for (size_t i = 0; i < eq.eqns.cols - 1; ++i) { */
+  /*   printf("%2d ", eq.max_presses[i]); */
+  /* } */
+  /* printf("\n"); */
 
   // count how large the diagonal section is
   size_t diagonal_length = 0;
@@ -553,77 +521,63 @@ static int find_fewest_buttons_joltage(const Machine *m) {
     ++diagonal_length;
   }
 
-  printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length);
+  /* printf("Diagonal segment is %zux%zu\n", diagonal_length, diagonal_length); */
   const size_t dof = eq.eqns.cols - 1 - diagonal_length;
-  printf("Have %zu degrees of freedom\n", dof);
+  /* printf("Have %zu degrees of freedom\n", dof); */
+
+  // recalculate max presses according to the new values
+  calculate_max_presses(&eq);
 
   // use a generator to brute force just the degrees of freedom
-  // first sum the maxima to find the highest amount they'll ever need
-  // to sum to
-  int N = 0;
-  for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
-    N += eq.max_presses[i];
-  }
-
   int min_presses = INT32_MAX;
   struct generator g;
-  for (int n = 0; n < N; ++n) {
-    generator_init(&g, n, eq.eqns.cols - 1);
+  generator_init(&g, &eq.max_presses[diagonal_length], dof);
 
-    while (generator_next(&g)) { // does this succeed for n=0?
-      // check if the generator values are valid (don't exceed their
-      // maxima)
-      bool is_valid = true;
-      int push_total = 0;
-      for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
-        int pushes = g.state[i - diagonal_length];
-        push_total += pushes;
-        if (pushes > eq.max_presses[i]) {
-          is_valid = false;
-          break;
-        }
+  while (generator_next(&g)) { // does this succeed for n=0?
+    // make a mutable copy of the lineq
+    static LinEq eq_tmp;
+    deep_copy_lineq(&eq, &eq_tmp);
+
+    // push the buttons specified by the generator, i.e., add the
+    // columns to the end column
+    int push_total = 0;
+    for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
+      int pushes = g.state[i - diagonal_length];
+      push_total += pushes;
+      matrix_add_scaled_col(&eq_tmp.eqns, i, -pushes, eq.eqns.cols-1);
+    }
+    if (push_total >= min_presses) continue;
+
+    // calculate how many times the remaining buttons need to be
+    // pressed -- don't forget to check whether it's actually
+    // possible to solve (e.g. if a button contributes an amount
+    // with magnitude greater than 1, the target value must be
+    // divisible
+    bool is_valid = true;
+    for (size_t col = 0; col < diagonal_length; ++col) {
+      int button_val = matrix_get(&eq_tmp.eqns, col, col);
+      if (button_val == 0) {
+        is_valid = false;
+        break;
       }
-      if (!is_valid) continue;
-      if (push_total >= min_presses) continue;
-
-      // make a mutable copy of the lineq
-      static LinEq eq_tmp;
-      deep_copy_lineq(&eq, &eq_tmp);
-
-      // push the buttons specified by the generator, i.e., add the
-      // columns to the end column
-      for (size_t i = diagonal_length; i < eq.eqns.cols - 1; ++i) {
-        int pushes = g.state[i - diagonal_length];
-        matrix_add_scaled_col(&eq_tmp.eqns, i, -pushes, eq.eqns.cols-1);
+      int joltage_val = matrix_get(&eq_tmp.eqns, col, eq_tmp.eqns.cols-1);
+      if (joltage_val % button_val != 0) {
+        // no number of presses will solve this, so it's an invalid
+        // solution
+        is_valid = false;
+        break;
       }
-
-      // calculate how many times the remaining buttons need to be
-      // pressed -- don't forget to check whether it's actually
-      // possible to solve (e.g. if a button contributes an amount
-      // with magnitude greater than 1, the target value must be
-      // divisible
-      for (size_t col = 0; col < diagonal_length; ++col) {
-        int button_val = matrix_get(&eq_tmp.eqns, col, col);
-        if (button_val == 0) {
-          is_valid = false;
-          break;
-        }
-        int joltage_val = matrix_get(&eq_tmp.eqns, col, eq_tmp.eqns.cols-1);
-        if (joltage_val % button_val != 0) {
-          // no number of presses will solve this, so it's an invalid
-          // solution
-          is_valid = false;
-          break;
-        }
-        int pushes = joltage_val / button_val;
-        if (pushes < 0) {
-          is_valid = false;
-          break;
-        }
-        push_total += pushes;
+      int pushes = joltage_val / button_val;
+      if (pushes < 0) {
+        is_valid = false;
+        break;
       }
-      if (!is_valid) continue;
-      if (push_total < min_presses) min_presses = push_total;
+      push_total += pushes;
+    }
+    if (!is_valid) continue;
+    if (push_total < min_presses) {
+      min_presses = push_total;
+      /* printf("Min now %d\n", min_presses); */
     }
   }
 
@@ -672,15 +626,28 @@ int main() {
   /* for (size_t i = 0; i < 3; ++i) { */
   /*   printf("Min %zu: %d\n", i, find_fewest_buttons_joltage(&machines[i])); */
   /* } */
-  /* total = 0; */
-  /* for (size_t i = 0; i < n_machines; ++i) { */
-  /*   const int b = find_fewest_buttons_joltage(&machines[i]); */
-  /*   /\* printf("Machine %zu solveable with %d buttons\n", i+1, b); *\/ */
-  /*   total += b; */
-  /* } */
-  /* printf("Part 2 Total: %ld\n", total); */
+  total = 0;
+  // add a progress bar
+  printf("%3d/%3zu[", 0, n_machines);
+  for (size_t i = 0; i < (30); ++i) {
+    printf("-");
+  }
+  printf("]");
+  for (size_t i = 0; i < n_machines; ++i) {
+    // print the progress bar
+    size_t n_segs = (i * (30)) / n_machines;
+    printf("\r%03zu/%03zu[", i, n_machines);
+    for (size_t j = 0; j < n_segs; ++j) {
+      printf("=");
+    }
+    
+    const int b = find_fewest_buttons_joltage(&machines[i]);
+    /* printf("Machine %zu solveable with %d buttons\n", i+1, b); */
+    total += b;
+  }
+  printf("\nPart 2 Total: %ld\n", total);
 
-  find_fewest_buttons_joltage(&machines[1]);
+  /* printf("Min: %d\n", find_fewest_buttons_joltage(&machines[24])); */
 
   return 0;
 }
