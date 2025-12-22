@@ -438,7 +438,7 @@ static void lineq_reduce(LinEq *e) {
     }
 
     // try to get a diagonal value with unit magnitude
-    int old_diag = diag;
+    /* int old_diag = diag; */
     if (diag != 1 && diag != -1) {
       for (size_t col = row + 1; col < e->eqns.cols - 1; ++col) {
         diag = matrix_get(&e->eqns, row, col);
@@ -451,7 +451,7 @@ static void lineq_reduce(LinEq *e) {
           break;
         }
       }
-      if (diag != 1 && diag != -1) diag = old_diag;
+      if (diag != 1 && diag != -1) return; // failed to simplify further -- hope for the best?
     }
 
     // ensure the diagonal is positive
@@ -486,7 +486,7 @@ static void press_buttons_joltage(const Machine *m, joltage_t *state, const int 
   }
 }
 
-static int find_fewest_buttons_joltage(const Machine *m) {
+static int find_fewest_buttons_joltage(const Machine *m, const bool recalc) {
   // convert the machine to a system of linear equations
   LinEq eq = machine_to_lineq(m);
   lineq_reduce(&eq);
@@ -526,7 +526,7 @@ static int find_fewest_buttons_joltage(const Machine *m) {
   /* printf("Have %zu degrees of freedom\n", dof); */
 
   // recalculate max presses according to the new values
-  calculate_max_presses(&eq);
+  if (recalc) calculate_max_presses(&eq);
 
   // use a generator to brute force just the degrees of freedom
   int min_presses = INT32_MAX;
@@ -580,6 +580,7 @@ static int find_fewest_buttons_joltage(const Machine *m) {
       /* printf("Min now %d\n", min_presses); */
     }
   }
+  if (min_presses == INT32_MAX && recalc) return find_fewest_buttons_joltage(m, false);
 
   return min_presses;
 }
@@ -641,13 +642,16 @@ int main() {
       printf("=");
     }
     
-    const int b = find_fewest_buttons_joltage(&machines[i]);
+    const int b = find_fewest_buttons_joltage(&machines[i], true);
+    if (b == INT32_MAX) {
+      printf("Failed on %zu\n", i);
+    }
     /* printf("Machine %zu solveable with %d buttons\n", i+1, b); */
     total += b;
   }
   printf("\nPart 2 Total: %ld\n", total);
 
-  /* printf("Min: %d\n", find_fewest_buttons_joltage(&machines[24])); */
+  /* printf("Min: %d\n", find_fewest_buttons_joltage(&machines[47], true)); */
 
   return 0;
 }
