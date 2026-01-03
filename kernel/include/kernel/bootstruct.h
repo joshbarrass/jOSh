@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <multiboot.h>
 #include <kernel/bootstruct_flags.h>
+#include <kernel/memory/types.h>
 
 #define BOOTSTRUCT_MAGIC (0x1B002ED1)
 
@@ -23,8 +24,8 @@ inline static const MIS *bs_get_MIS(const BootStruct *bs) {
   return (const MIS *)((uintptr_t)bs->MIS);
 }
 
-inline static void *bs_get_lowest_free_addr(const BootStruct *bs) {
-  return (void*)((uintptr_t)bs->lowest_free_addr);
+inline static phys_addr_t bs_get_lowest_free_addr(const BootStruct *bs) {
+  return (phys_addr_t)bs->lowest_free_addr;
 }
 
 void bs_init(BootStruct *bs);
