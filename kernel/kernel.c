@@ -24,6 +24,7 @@
 #include <archdef.h>
 #include <kernel/mmap.h>
 #include <kernel/interrupts.h>
+#include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
@@ -118,9 +119,9 @@ void kernel_main() {
   }
 
   // retrieve the first free address from the boot struct, if present
-  uintptr_t lowest_free_page;
+  phys_addr_t lowest_free_page;
   if (BS_IS_PRESENT && bootstruct->flags & BS_FLAG_FREEADDR) {
-    const void *lowest_free_addr = bs_get_lowest_free_addr(bootstruct);
+    const phys_addr_t lowest_free_addr = bs_get_lowest_free_addr(bootstruct);
     lowest_free_page = (uintptr_t)lowest_free_addr;
     const uintptr_t page_diff = lowest_free_page % 0x1000;
     if (page_diff != 0) {
@@ -139,7 +140,7 @@ void kernel_main() {
     return;
   }
 
-  pmm_init((void*)(uintptr_t)lowest_free_page, get_mmap(mis), mis->mmap_length);
+  pmm_init(lowest_free_page, get_mmap(mis), mis->mmap_length);
 
   return;
 }
