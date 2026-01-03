@@ -1,3 +1,4 @@
+#include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/x86_64/memory/paging.h>
 #include <kernel/x86_64/memory/recursive_pt.h>
@@ -6,9 +7,10 @@
 #include <stdio.h>
 #endif
 
-struct ptindices virt_addr_to_ptindices(uintptr_t addr) {
+struct ptindices virt_addr_to_ptindices(virt_addr_t a) {
   struct ptindices out;
 
+  uintptr_t addr = (uintptr_t)a;
   addr >>= 12;
   out.pt_i = addr & 511;
   addr >>= 9;
@@ -47,7 +49,7 @@ static void clear_pagetable(PageTableEntry *table) {
   }
 }
 
-void invlpg(void *addr) {
+void invlpg(const virt_addr_t addr) {
   __asm__ volatile (
                     "invlpg (%0)"
                     : : "r" (addr)
@@ -84,8 +86,8 @@ static void create_intermediate_entry(PageTableEntry *target,
 // If a new level (PageTableEntry[512]) must be created, the physical
 // memory will be taken directly from the PMM, and will be configured
 // via the recursive entry.
-bool create_page_table_entry(void *virt_addr, const PageTableEntry entry) {
-  const struct ptindices is = virt_addr_to_ptindices((uintptr_t)virt_addr);
+bool create_page_table_entry(virt_addr_t virt_addr, const PageTableEntry entry) {
+  const struct ptindices is = virt_addr_to_ptindices(virt_addr);
   PageTableEntry *pml4t = get_PML4T();
   if (!pml4t[is.pml4t_i].present) { // PDPT is missing
     create_intermediate_entry(&pml4t[is.pml4t_i], get_PDPT(is.pml4t_i), entry.user);

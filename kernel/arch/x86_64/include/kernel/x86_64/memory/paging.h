@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <kernel/memory/constants.h>
+#include <kernel/memory/types.h>
 
 #define ENTRIES_PER_PAGE_TABLE (511)
 
@@ -44,10 +45,10 @@ struct ptindices {
   ptindex_t pml4t_i, pdpt_i, pd_i, pt_i;
 };
 
-struct ptindices virt_addr_to_ptindices(uintptr_t addr);
+struct ptindices virt_addr_to_ptindices(virt_addr_t addr);
 
-bool create_page_table_entry(void *virt_addr, const PageTableEntry entry);
+bool create_page_table_entry(virt_addr_t virt_addr, const PageTableEntry entry);
 
-void invlpg(void *addr);
+void invlpg(const virt_addr_t addr);
 
 #endif

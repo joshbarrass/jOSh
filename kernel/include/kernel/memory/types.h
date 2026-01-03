@@ -6,5 +6,6 @@
 
 typedef size_t page_number_t;
 typedef uintptr_t phys_addr_t;
+typedef void* virt_addr_t;
 
 #endif
