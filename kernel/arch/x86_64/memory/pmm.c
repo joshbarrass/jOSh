@@ -29,13 +29,17 @@ static PMMEntry pmm_bitmap_4GB[PMM_4GB_BITMAP_LENGTH];
 // It should never be assumed that the page this points to is actually
 // free. You should always check the page is free before using it, and
 // be prepared to scan for a free page if it isn't.
-static size_t current_LRFPID = 0;
+static page_number_t current_LRFPID = 0;
 
-static inline size_t page_addr_to_ID(const void *const addr) {
-  return ((const uintptr_t)addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
+static inline page_number_t page_addr_to_ID(const phys_addr_t addr) {
+  return (addr & MEMORY_ADDRESS_MASK) / PAGE_SIZE;
 }
 
-static PageState pmm_get_page_state(const size_t i) {
+static inline phys_addr_t ID_to_page_addr(const page_number_t id) {
+  return (PAGE_SIZE * id);
+}
+
+static PageState pmm_get_page_state(const page_number_t i) {
   const size_t index = i / PMM_STATES_PER_ENTRY; // TODO: safety checks?
   const size_t entry = i % PMM_STATES_PER_ENTRY;
   // TODO: once we add in a second bitmap for the memory above 4GB,
@@ -71,12 +75,12 @@ static PageState pmm_get_page_state(const size_t i) {
   return state;
 }
 
-static inline PageState pmm_get_page_state_by_addr(const void *addr) {
-  const size_t i = page_addr_to_ID(addr);
+static inline PageState pmm_get_page_state_by_addr(const phys_addr_t addr) {
+  const page_number_t i = page_addr_to_ID(addr);
   return pmm_get_page_state(i);
 }
 
-static void pmm_set_page_state(const size_t i, const PageState state) {
+static void pmm_set_page_state(const page_number_t i, const PageState state) {
   const size_t index = i / PMM_STATES_PER_ENTRY; // TODO: safety checks?
   const size_t entry = i % PMM_STATES_PER_ENTRY;
   // TODO: once we add in a second bitmap for the memory above 4GB,
@@ -111,8 +115,8 @@ static void pmm_set_page_state(const size_t i, const PageState state) {
   return;
 }
 
-static inline void pmm_set_page_state_by_addr(const void *addr, const PageState state) {
-  const size_t i = page_addr_to_ID(addr);
+static inline void pmm_set_page_state_by_addr(const phys_addr_t addr, const PageState state) {
+  const page_number_t i = page_addr_to_ID(addr);
   return pmm_set_page_state(i, state);
 }
 
@@ -134,7 +138,7 @@ static void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
   }
 }
 
-void pmm_init(const void *first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
+void pmm_init(const phys_addr_t first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
   #ifdef VERBOSE_PMM
   printf("[*] Initialising PMM...\n");
   #endif
@@ -154,9 +158,9 @@ void pmm_init(const void *first_free_page, const mmap *memory_map, const uint32_
     }
 
     // loop through every page in this entry and set it
-    for (void *addr = (void *)entry->base_addr;
-         addr < (void *)(entry->base_addr + entry->length) &&
-         addr < (void *)(PMM_4GB_CONSTANT);
+    for (phys_addr_t addr = (phys_addr_t)entry->base_addr;
+         addr < (phys_addr_t)(entry->base_addr + entry->length) &&
+         addr < (phys_addr_t)(PMM_4GB_CONSTANT);
          addr += PAGE_SIZE) {
       pmm_set_page_state_by_addr(addr, state);
     }
@@ -167,8 +171,8 @@ void pmm_init(const void *first_free_page, const mmap *memory_map, const uint32_
   #endif
   
   // reserve any memory that's already in use
-  const size_t first_free_page_ID = page_addr_to_ID(first_free_page);
-  for (size_t id = 0; id < first_free_page_ID; ++id) {
+  const page_number_t first_free_page_ID = page_addr_to_ID(first_free_page);
+  for (page_number_t id = 0; id < first_free_page_ID; ++id) {
     pmm_set_page_state(id, PAGE_USED);
   }
   #ifdef VERBOSE_PMM
@@ -184,17 +188,17 @@ void pmm_init(const void *first_free_page, const mmap *memory_map, const uint32_
   #endif
 }
 
-static void __pmm_free_pages(const size_t id, const size_t count) {
+static void __pmm_free_pages(const page_number_t id, const size_t count) {
   // update the lowest free page pointer if this page is lower than
   // the current value
   current_LRFPID = (id < current_LRFPID) ? id : current_LRFPID;
-  for (size_t i = 0; i < count; ++i) {
+  for (page_number_t i = 0; i < count; ++i) {
     pmm_set_page_state(id + i, PAGE_FREE);
   }
 }
 
-void pmm_free_pages(const void *addr, const size_t count) {
-  const size_t id = page_addr_to_ID(addr);
+void pmm_free_pages(const phys_addr_t addr, const size_t count) {
+  const page_number_t id = page_addr_to_ID(addr);
   return __pmm_free_pages(id, count);
 }
 
@@ -202,7 +206,7 @@ void pmm_free_pages(const void *addr, const size_t count) {
 // page it allocates, intended for quickly getting a single page
 // without contraints
 #if PAGE_STATE_WIDTH == 1
-static const size_t find_one_free_page() {
+static const page_number_t find_one_free_page() {
   if (pmm_get_page_state(current_LRFPID) == PAGE_FREE) {
     return current_LRFPID++;
   }
@@ -227,7 +231,7 @@ static const size_t find_one_free_page() {
   // [2] https://stackoverflow.com/a/73780500
   // [3] https://cs61.seas.harvard.edu/site/pdf/x86-64-abi-20210928.pdf
   const uint64_t *b = (const uint64_t*)pmm_bitmap_4GB;
-  const size_t page_number = current_LRFPID;
+  const page_number_t page_number = current_LRFPID;
   #ifdef VERBOSE_PMM
   printf("Starting from page number %zu", page_number);
   #endif
@@ -249,7 +253,7 @@ static const size_t find_one_free_page() {
     #endif
 
     const size_t bitmap_index = i * sizeof(uint64_t) / sizeof(PMMEntry);
-    const size_t page_number_to_return = bitmap_index * PMM_STATES_PER_ENTRY + leading_zeroes;
+    const page_number_t page_number_to_return = bitmap_index * PMM_STATES_PER_ENTRY + leading_zeroes;
     #ifdef VERBOSE_PMM
     printf(" = page number %zu\n", page_number_to_return);
     #endif
@@ -280,7 +284,7 @@ static const size_t find_one_free_page() {
 
 // This function is probably slower than the function for finding a
 // single page because we need to find several contiguous pages.
-static const size_t find_N_free_pages(const size_t N) {
+static const page_number_t find_N_free_pages(const size_t N) {
   // Order of bitfields is determined by the ABI [1]. x86-64 uses
   // System-V, which states that bit-fields are allocated from right
   // to left [2][3], i.e., LSB to MSB. This means if we cast the
@@ -294,7 +298,7 @@ static const size_t find_N_free_pages(const size_t N) {
   // [2] https://stackoverflow.com/a/73780500
   // [3] https://cs61.seas.harvard.edu/site/pdf/x86-64-abi-20210928.pdf
   const uint64_t *b = (const uint64_t*)pmm_bitmap_4GB;
-  const size_t page_number = current_LRFPID;
+  const page_number_t page_number = current_LRFPID;
   #ifdef VERBOSE_PMM
   printf("Starting from page number %zu", page_number);
   #endif
@@ -308,7 +312,7 @@ static const size_t find_N_free_pages(const size_t N) {
   #endif
   
   size_t contiguous_pages = 0;
-  size_t page_number_to_return = 0;
+  page_number_t page_number_to_return = 0;
   bool run_started = false;
   for (size_t i = start_index; i < sizeof(pmm_bitmap_4GB) / (sizeof(uint64_t)); ++i) {
     if (b[i] == 0) {
@@ -369,16 +373,16 @@ static const size_t find_N_free_pages(const size_t N) {
   return 0;
 }
 
-static inline const size_t find_free_pages(const size_t count) {
+static inline const page_number_t find_free_pages(const size_t count) {
   if (count > 1) {
     return find_N_free_pages(count);
   }
   return find_one_free_page();
 }
 
-const void *pmm_alloc_pages(const size_t count) {
-  const size_t id = find_free_pages(count);
-  const void* addr = (const void*)(PAGE_SIZE * id);
+const phys_addr_t pmm_alloc_pages(const size_t count) {
+  const page_number_t id = find_free_pages(count);
+  const phys_addr_t addr = ID_to_page_addr(id);
   for (size_t i = 0; i < count; ++i) {
     pmm_set_page_state(id + i, PAGE_USED);
   }
