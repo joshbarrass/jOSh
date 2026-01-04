@@ -37,7 +37,7 @@ typedef struct __attribute__((packed)) {
   bool execute_disable : 1;
 } PageTableEntry;
 
-__attribute__((always_inline)) static inline uintptr_t PTE_get_addr(PageTableEntry pte) {
+__attribute__((always_inline)) static inline phys_addr_t PTE_get_addr(PageTableEntry pte) {
   return pte.addr_shr_12 << 12;
 }
 

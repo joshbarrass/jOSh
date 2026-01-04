@@ -22,7 +22,7 @@ virt_addr_t vmm_kmap(phys_addr_t phys_addr, const size_t size, const virt_addr_t
 // Args:
 //   - virt_addr: virtual address to unmap.
 //   - size: size in bytes to unmap
-void vmm_kunmap(const virt_addr_t virt_addr, const size_t size);
+void vmm_kunmap(const virt_addr_t virt_addr, const size_t size); 
 
 // mmap/munmap -- user-space memory
 // Args are mostly the same as the kspace equivalents, but accepts an
@@ -32,5 +32,10 @@ void vmm_kunmap(const virt_addr_t virt_addr, const size_t size);
 // memory.
 virt_addr_t vmm_mmap(VAddressSpace *addrspace, phys_addr_t phys_addr, const size_t size, virt_addr_t virt_addr, flags_t flags);
 void vmm_munmap(VAddressSpace *addrspace, virt_addr_t virt_addr, const size_t size);
+
+// translate a virtual address in the current CR3 to a physical
+// address. Returns -1 if the address is not mapped (which should be
+// an invalid on basically any real computer).
+phys_addr_t vmm_get_phys(const virt_addr_t virt_addr);
 
 #endif

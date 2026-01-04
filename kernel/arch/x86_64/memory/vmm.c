@@ -43,23 +43,37 @@ static inline size_t pages_needed_for_size(const size_t size) {
   return pages + 1;
 }
 
+// vmm_get_phys is implemented via a static inline function so that
+// the code can be reused without the overhead of a function call in
+// is_virt_addr_used
+static inline __attribute__((always_inline)) phys_addr_t _vmm_get_phys(const virt_addr_t virt_addr) {
+  const struct ptindices is = virt_addr_to_ptindices(virt_addr);
+  const PageTableEntry *pml4t = get_PML4T();
+  if (!pml4t[is.pml4t_i].present) return (phys_addr_t)(-1);
+  const PageTableEntry *pdpt = get_PDPT(is.pml4t_i);
+  if (!pdpt[is.pdpt_i].present) return (phys_addr_t)(-1);
+  if (pdpt[is.pdpt_i].page_size) return PTE_get_addr(pdpt[is.pdpt_i]);
+  const PageTableEntry *pd = get_PD(is.pml4t_i, is.pdpt_i);
+  if (!pd[is.pd_i].present) return (phys_addr_t)(-1);
+  if (pd[is.pd_i].page_size) return PTE_get_addr(pd[is.pd_i]);
+  const PageTableEntry *pt = get_PT(is.pml4t_i, is.pdpt_i, is.pd_i);
+  if (!pt[is.pt_i].present) return (phys_addr_t)(-1);
+  return PTE_get_addr(pt[is.pt_i]);
+}
+
+phys_addr_t vmm_get_phys(const virt_addr_t virt_addr) {
+  return _vmm_get_phys(virt_addr);
+}
+
 // is_virt_addr_used is used for finding free virtual address ranges
 // for mapping. It's designed to be used independently of how free
 // addresses are tracked -- whether that's just the presence of a
 // mapped page, or whether the kernel permits lazy mapping via
 // VMAs. The implementation must be updated to match.
 static bool is_virt_addr_used(const virt_addr_t virt_addr) {
-  const struct ptindices is = virt_addr_to_ptindices(virt_addr);
-  const PageTableEntry *pml4t = get_PML4T();
-  if (!pml4t[is.pml4t_i].present) return false;
-  const PageTableEntry *pdpt = get_PDPT(is.pml4t_i);
-  if (!pdpt[is.pdpt_i].present) return false;
-  if (pdpt[is.pdpt_i].page_size) return true;
-  const PageTableEntry *pd = get_PD(is.pml4t_i, is.pdpt_i);
-  if (!pd[is.pd_i].present) return false;
-  if (pd[is.pd_i].page_size) return true;
-  const PageTableEntry *pt = get_PT(is.pml4t_i, is.pdpt_i, is.pd_i);
-  return pt[is.pt_i].present;
+  // currently, we can just reuse the code underlying vmm_get_phys; if
+  // vmm_get_phys reports -1, then we know the address isn't mapped
+  return _vmm_get_phys(virt_addr) != (phys_addr_t)(-1);
 }
 
 virt_addr_t vmm_kmap(phys_addr_t phys_addr, const size_t size, virt_addr_t virt_addr,
