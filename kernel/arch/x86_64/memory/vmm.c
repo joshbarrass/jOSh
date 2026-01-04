@@ -52,13 +52,13 @@ static inline __attribute__((always_inline)) phys_addr_t _vmm_get_phys(const vir
   if (!pml4t[is.pml4t_i].present) return (phys_addr_t)(-1);
   const PageTableEntry *pdpt = get_PDPT(is.pml4t_i);
   if (!pdpt[is.pdpt_i].present) return (phys_addr_t)(-1);
-  if (pdpt[is.pdpt_i].page_size) return PTE_get_addr(pdpt[is.pdpt_i]);
+  if (pdpt[is.pdpt_i].page_size) return PTE_get_addr(pdpt[is.pdpt_i]) + ((uintptr_t)virt_addr & 0x3fffffff);
   const PageTableEntry *pd = get_PD(is.pml4t_i, is.pdpt_i);
   if (!pd[is.pd_i].present) return (phys_addr_t)(-1);
-  if (pd[is.pd_i].page_size) return PTE_get_addr(pd[is.pd_i]);
+  if (pd[is.pd_i].page_size) return PTE_get_addr(pd[is.pd_i]) + ((uintptr_t)virt_addr & 0x1fffff);
   const PageTableEntry *pt = get_PT(is.pml4t_i, is.pdpt_i, is.pd_i);
   if (!pt[is.pt_i].present) return (phys_addr_t)(-1);
-  return PTE_get_addr(pt[is.pt_i]);
+  return PTE_get_addr(pt[is.pt_i]) + ((uintptr_t)virt_addr & 0xfff);
 }
 
 phys_addr_t vmm_get_phys(const virt_addr_t virt_addr) {
