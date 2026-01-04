@@ -1,18 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <kernel/memory/constants.h>
-#include <kernel/memory/pmm.h>
-#include <kernel/memory/vmm.h>
 #include "aoc_common.h"
-
-#define array_malloc(T) static T *malloc_##T##_array (const size_t n) { \
-  const size_t bytes = sizeof(T) * n; \
-  size_t pages_needed = bytes / PAGE_SIZE; \
-  const size_t remainder = bytes % PAGE_SIZE; \
-  if (remainder != 0) ++pages_needed; \
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed); \
-  return (T*)vmm_kmap(phys_page, bytes, 0, 0); \
-}
 
 typedef int coord_t;
 typedef unsigned long int  area_t;

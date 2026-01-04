@@ -2,9 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <kernel/memory/constants.h>
-#include <kernel/memory/pmm.h>
-#include <kernel/memory/vmm.h>
 #include "aoc_common.h"
 
 typedef unsigned long long int   val_t;
@@ -20,24 +17,13 @@ static size_t count_lines(const char *input, bool *last_line_empty) {
   return lines;
 }
 
-static char **malloc_array(const size_t n) {
-  const size_t bytes = sizeof(char*) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
+typedef char* string;
 
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (char**)vmm_kmap(phys_page, bytes, 0, 0);
-}
+array_malloc(string);
+array_malloc(char);
 
 static char *malloc_string(const size_t n) {
-  const size_t bytes = sizeof(char) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
-
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (char*)vmm_kmap(phys_page, bytes, 0, 0);
+  return malloc_char_array(n);
 }
 
 static bool is_just_spaces(const char *s) {
@@ -61,7 +47,7 @@ int main() {
   printf("Problem size: %zu\n", problem_size);
 
   // allocate an array to store the pointers to the starts of the lines
-  const char **lines = malloc_array(n_lines);
+  const char **lines = malloc_string_array(n_lines);
   {
     size_t i = 1;
     lines[0] = input;

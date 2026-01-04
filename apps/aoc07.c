@@ -2,9 +2,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <kernel/vgadef.h>
-#include <kernel/memory/constants.h>
-#include <kernel/memory/pmm.h>
-#include <kernel/memory/vmm.h>
 #include "aoc_common.h"
 
 #define SOURCE_CHAR 'S'
@@ -77,21 +74,13 @@ static const Grid new_grid(char *input) {
   return g;
 }
 
-static count_t *malloc_array(const size_t n) {
-  const size_t bytes = sizeof(count_t) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
-
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (count_t*)vmm_kmap(phys_page, bytes, 0, 0);
-}
+array_malloc(count_t);
 
 static const CountGrid new_cgrid(const Grid *g) {
   CountGrid cg = {g->width, g->height, NULL};
 
   // allocate the buffer
-  cg.buf = malloc_array(cg.width * cg.height);
+  cg.buf = malloc_count_t_array(cg.width * cg.height);
 
   // zero it
   for (size_t y = 0; y < cg.height; ++y) {

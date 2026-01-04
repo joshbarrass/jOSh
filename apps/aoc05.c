@@ -2,9 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <kernel/memory/constants.h>
-#include <kernel/memory/pmm.h>
-#include <kernel/memory/vmm.h>
 #include "aoc_common.h"
 
 typedef struct Range {
@@ -30,15 +27,7 @@ static Range parse_range(const char *buf, const char **endptr) {
   return r;
 }
 
-static Range *malloc_array(const size_t n) {
-  const size_t bytes = sizeof(Range) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
-
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (Range*)vmm_kmap(phys_page, bytes, 0, 0);
-}
+array_malloc(Range);
 
 static size_t count_ranges(const char *input) {
   size_t lines = 0;
@@ -101,7 +90,7 @@ static unsigned long long int range_length(const Range r) {
 int main() {
   const char *input = get_input();
   const size_t n_ranges = count_ranges(input);
-  Range *ranges = malloc_array(n_ranges);
+  Range *ranges = malloc_Range_array(n_ranges);
 
   for (size_t i = 0; i < n_ranges; ++i) {
     ranges[i] = parse_range(input, &input);

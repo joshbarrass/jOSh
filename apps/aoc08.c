@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <kernel/memory/constants.h>
-#include <kernel/memory/pmm.h>
-#include <kernel/memory/vmm.h>
 #include "aoc_common.h"
 
 typedef int coord_t;
@@ -14,35 +11,9 @@ typedef struct Vec3 {
   coord_t z;
 } Vec3;
 
-static Vec3 *malloc_vec3_array(const size_t n) {
-  const size_t bytes = sizeof(Vec3) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
-
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (Vec3*)vmm_kmap(phys_page, bytes, 0, 0);
-}
-
-static dist_t *malloc_dist_array(const size_t n) {
-  const size_t bytes = sizeof(dist_t) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
-
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (dist_t*)vmm_kmap(phys_page, bytes, 0, 0);
-}
-
-static size_t *malloc_sizet_array(const size_t n) {
-  const size_t bytes = sizeof(size_t) * n;
-  size_t pages_needed = bytes / PAGE_SIZE;
-  const size_t remainder = bytes % PAGE_SIZE;
-  if (remainder != 0) ++pages_needed;
-
-  const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(pages_needed);
-  return (size_t*)vmm_kmap(phys_page, bytes, 0, 0);
-}
+array_malloc(Vec3);
+array_malloc(dist_t);
+array_malloc(size_t);
 
 static size_t count_lines(const char *input, bool ignore_empty_last_line) {
   if (input[0] == 0) return 0;
@@ -122,7 +93,7 @@ int main() {
   const size_t n_lights = count_lines(input, true);
   printf("Input contains %zu lights\n", n_lights);
 
-  Vec3 *coords = malloc_vec3_array(n_lights);
+  Vec3 *coords = malloc_Vec3_array(n_lights);
   for (size_t i = 0; i < n_lights; ++i) {
     coords[i] = parse_coord(input, &input);
   }
@@ -130,7 +101,7 @@ int main() {
 
   // compute the reduced distance array
   const size_t combinations = n_lights*(n_lights-1)/2;
-  dist_t *distances = malloc_dist_array(combinations);
+  dist_t *distances = malloc_dist_t_array(combinations);
   size_t z = 0;
   for (size_t i = 0; i < n_lights; ++i) {
     for (size_t j = i + 1; j < n_lights; ++j) {
@@ -140,7 +111,7 @@ int main() {
   printf("Calculated distance matrix\n");
 
   // allocate and initialise the connection array
-  size_t *group = malloc_sizet_array(n_lights);
+  size_t *group = malloc_size_t_array(n_lights);
   for (size_t i = 0; i < n_lights; ++i) {
     group[i] = i;
   }
