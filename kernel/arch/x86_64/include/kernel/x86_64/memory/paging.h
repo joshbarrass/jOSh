@@ -45,10 +45,10 @@ struct ptindices {
   ptindex_t pml4t_i, pdpt_i, pd_i, pt_i;
 };
 
-struct ptindices virt_addr_to_ptindices(virt_addr_t addr);
+struct ptindices virt_addr_to_ptindices(const virt_addr_t addr);
 
-bool create_page_table_entry(virt_addr_t virt_addr, const PageTableEntry entry);
+bool create_page_table_entry(const virt_addr_t virt_addr, const PageTableEntry entry);
 
-void invlpg(const virt_addr_t addr);
+void invlpg(virt_addr_t addr);
 
 #endif

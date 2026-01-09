@@ -7,10 +7,10 @@
 #include <stdio.h>
 #endif
 
-struct ptindices virt_addr_to_ptindices(virt_addr_t a) {
+struct ptindices virt_addr_to_ptindices(const virt_addr_t a) {
   struct ptindices out;
-
   uintptr_t addr = (uintptr_t)a;
+  
   addr >>= 12;
   out.pt_i = addr & 511;
   addr >>= 9;
@@ -86,7 +86,7 @@ static void create_intermediate_entry(PageTableEntry *target,
 // If a new level (PageTableEntry[512]) must be created, the physical
 // memory will be taken directly from the PMM, and will be configured
 // via the recursive entry.
-bool create_page_table_entry(virt_addr_t virt_addr, const PageTableEntry entry) {
+bool create_page_table_entry(const virt_addr_t virt_addr, const PageTableEntry entry) {
   const struct ptindices is = virt_addr_to_ptindices(virt_addr);
   PageTableEntry *pml4t = get_PML4T();
   if (!pml4t[is.pml4t_i].present) { // PDPT is missing
