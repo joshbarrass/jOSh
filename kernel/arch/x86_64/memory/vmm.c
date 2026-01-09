@@ -9,10 +9,11 @@
 #include <stdio.h>
 #endif
 
+// convert the k-space start address to an index in the PML4T
 static const ptindex_t KSPACE_PML4T_INDEX = (KERNEL_VADDR_START & (511ULL << 39)) >> 39;
 static const uintptr_t KSPACE_END = KERNEL_VADDR_START + (ENTRIES_PER_PAGE_TABLE * ENTRIES_PER_PAGE_TABLE * ENTRIES_PER_PAGE_TABLE * PAGE_SIZE);
 
-static uintptr_t KSPACE_PDPT_PHYS_ADDR;
+static phys_addr_t KSPACE_PDPT_PHYS_ADDR;
 
 void vmm_init() {
   // We must fetch and store the physical address of the kernel-space
@@ -22,7 +23,6 @@ void vmm_init() {
   // Kernel-space in x86_64 lives in a single PDPT (a single 512GB
   // block), so we need to save the address of this single PDPT.
   const PageTableEntry *PML4T = get_PML4T();
-  // convert the kernel start address to an index
   KSPACE_PDPT_PHYS_ADDR = PTE_get_addr(PML4T[KSPACE_PML4T_INDEX]);
 }
 
