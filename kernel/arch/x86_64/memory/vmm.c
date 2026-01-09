@@ -83,7 +83,7 @@ virt_addr_t vmm_kmap(phys_addr_t phys_addr, const size_t size, virt_addr_t virt_
   uintptr_t vaddr = (uintptr_t)virt_addr;
   
   // adjust the target address to get page-aligned starting point
-  vaddr = round_up_addr(vaddr);
+  vaddr = round_up_addr(vaddr - (phys_addr % PAGE_SIZE));
   if (vaddr < KERNEL_VADDR_START) {
     vaddr = KERNEL_VADDR_START;
   }
