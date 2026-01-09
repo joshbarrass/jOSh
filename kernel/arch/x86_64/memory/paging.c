@@ -59,6 +59,23 @@ void invlpg(const virt_addr_t addr) {
   #endif
 }
 
+// Args:
+//          target: Pointer to the PageTableEntry that our new
+//                  intermediate entry should be referenced by. E.g.,
+//                  if we need to map an address which lies within a
+//                  page table that has not yet been allocated, this
+//                  should be the corresponding PageTableEntry in the
+//                  page directory.
+//  recursive_addr: The address, via the recursive entry, of the
+//                  newly-allocated intermediate entry. This is used
+//                  to invalidate the recursive page in the TLB so
+//                  that the recursive entry points to the correct
+//                  physical address.
+//            user: The value of the user field (i.e. user vs
+//                  supervisor) that the new entry should have. This
+//                  needs to be set appropriately for the memory
+//                  space, as a e.g. PDPT marked supervisor cannot
+//                  contain userspace pages.
 static void create_intermediate_entry(PageTableEntry *target,
                                       PageTableEntry *recursive_addr, const bool user) {
   const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(1);
