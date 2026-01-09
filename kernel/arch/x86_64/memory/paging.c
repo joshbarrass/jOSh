@@ -63,7 +63,7 @@ static void create_intermediate_entry(PageTableEntry *target,
                                       PageTableEntry *recursive_addr, const bool user) {
   const uintptr_t phys_page = (uintptr_t)pmm_alloc_pages(1);
   clear_pagetableentry(target);
-  target->addr_shr_12 = phys_page >> 12;
+  PTE_set_addr(target, (phys_addr_t)phys_page);
   target->writeable = true;
   target->user = user;
   target->present = true;
