@@ -30,8 +30,8 @@ void vmm_kunmap(virt_addr_t virt_addr, const size_t size);
 // since kernel space is held in the address space of all processes,
 // but it is needed to manipulate an individual process's userspace
 // memory.
-virt_addr_t vmm_mmap(VAddressSpace *addrspace, uintptr_t phys_addr, const size_t size, uintptr_t virt_addr, flags_t flags);
-void vmm_munmap(VAddressSpace *addrspace, uintptr_t virt_addr, const size_t size);
+virt_addr_t vmm_mmap(VAddressSpace *addrspace, phys_addr_t phys_addr, const size_t size, virt_addr_t virt_addr, flags_t flags);
+void vmm_munmap(VAddressSpace *addrspace, virt_addr_t virt_addr, const size_t size);
 
 // translate a virtual address in the current CR3 to a physical
 // address. Returns -1 if the address is not mapped (which should be
