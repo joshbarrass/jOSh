@@ -1,6 +1,7 @@
 #include <string.h>
 #include <multiboot.h>
 #include <kernel/memory/constants.h>
+#include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
 
@@ -24,7 +25,7 @@ char *get_input() {
   const size_t required_len = mod_len + 1;
   size_t pages_required = required_len / PAGE_SIZE;
   if (required_len % PAGE_SIZE != 0) ++pages_required;
-  char *new_page = vmm_kmap((uintptr_t)pmm_alloc_pages(pages_required), required_len, 0, 0);
+  char *new_page = vmm_kmap(pmm_alloc_pages(pages_required), required_len, 0, 0);
   memmove(new_page, (void*)(uintptr_t)input_mod->mod_start, mod_len);
   new_page[mod_len] = 0;
   return new_page;
