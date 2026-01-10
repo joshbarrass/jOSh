@@ -34,6 +34,11 @@ install-headers: kernel_install-headers libc_install-headers
 test: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -gdb tcp::9000
 
+UEFI_FIRMWARE_PATH?=/usr/share/ovmf/OVMF.fd
+.PHONY: test
+test-uefi: jOSh.iso
+	qemu-system-$(TARGET_ARCH) -bios '$(UEFI_FIRMWARE_PATH)' -cdrom '$<' -boot order=d -gdb tcp::9000
+
 .PHONY: debug
 debug: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -s -S
