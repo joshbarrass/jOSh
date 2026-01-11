@@ -18,7 +18,8 @@ bump_alloc.o \
 paging.o \
 bootstruct.o \
 strcmp.o \
-strlen.o
+strlen.o \
+ega.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc
@@ -45,6 +46,9 @@ bootstruct.o: ../../../bootstruct.c
 
 errno.o: ../../../../libc/errno/errno.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+
+ega.o: ../../../drivers/ega/ega.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 %.o: %.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
