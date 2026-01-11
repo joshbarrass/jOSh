@@ -1,8 +1,17 @@
 #ifndef __CONSOLE_DRIVER_H
 #define __CONSOLE_DRIVER_H
 
-#include <kernel/tty.h>
 #include <stddef.h>
+
+typedef struct {
+  unsigned char fg : 4;
+  unsigned char bg : 4;
+} CharColor;
+
+typedef struct {
+  unsigned char character;
+  CharColor color;
+} ScreenChar;
 
 typedef struct ConsoleDriver {
   int (*putchar)(struct ConsoleDriver *drv, const char c);

@@ -5,7 +5,7 @@
 
 int putchar(char c) {
   ConsoleDriver *drv = get_kernel_console_driver();
-  drv->putchar(drv, c);
+  return drv->putchar(drv, c);
 }
 
 #endif

@@ -67,14 +67,14 @@ static size_t ega_putchar_at(ConsoleDriver *console, const char c, const int x, 
   row[x].character = c;
   row[x].color.fg = console->terminal_color.fg;
   row[x].color.bg = console->terminal_color.bg;
-  return console->width * y + x;
+  return console->width * y + x + 1;
 }
 
 static void ega_new_line(ConsoleDriver *console) {
   console->x = 0;
   ++console->y;
   if (console->y == console->height) {
-    term_scroll();
+    ega_scroll(console);
     --console->y;
   }
 }
@@ -92,8 +92,8 @@ static int ega_putchar(ConsoleDriver *console, const char c) {
   }
   
   const size_t new_pos = ega_putchar_at(console, c, console->x, console->y);
-  console->x = new_pos / console->width;
-  console->y = new_pos % console->width;
+  console->y = new_pos / console->width;
+  console->x = new_pos % console->width;
   while (console->y >= console->height) {
     ega_scroll(console);
     --console->y;

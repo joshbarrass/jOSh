@@ -3,9 +3,9 @@
 #ifdef __is_libk
 #include <kernel/tty.h>
 
-int putcs(char *s) {
+int puts(char *s) {
   ConsoleDriver *drv = get_kernel_console_driver();
-  drv->puts(drv, s);
+  return drv->puts(drv, s);
 }
 
 #endif

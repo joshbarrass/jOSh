@@ -11,16 +11,6 @@
 extern "C" {
 #endif
 
-typedef struct {
-  unsigned char fg : 4;
-  unsigned char bg : 4;
-} CharColor;
-
-typedef struct {
-  unsigned char character;
-  CharColor color;
-} ScreenChar;
-
   ConsoleDriver *get_kernel_console_driver();
   void set_kernel_console_driver(ConsoleDriver drv);
 
