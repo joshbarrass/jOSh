@@ -1,7 +1,7 @@
 #ifndef ADDR_CHECKER_H
 #define ADDR_CHECKER_H 1
 
-#include <multiboot.h>
+#include "multiboot.h"
 #include <multiboot2.h>
 #include "stdbool.h"
 #include "stddef.h"
