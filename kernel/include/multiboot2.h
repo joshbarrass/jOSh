@@ -55,7 +55,7 @@ typedef struct __attribute__((packed)) m2is_tag {
 typedef struct __attribute__((packed)) M2IS {
   uint32_t size;
   uint32_t reserved;
-  const m2is_tag *tags;
+  const m2is_tag tags;
 } M2IS;
 
 typedef struct {
@@ -65,16 +65,20 @@ typedef struct {
 } m2is_tag_iterator;
 
 static m2is_tag_iterator new_m2is_iterator(const M2IS *M2IS) {
-  m2is_tag_iterator iter = { M2IS->tags, M2IS->size - 2 * sizeof(uint32_t), 0 };
+  m2is_tag_iterator iter = { &M2IS->tags, M2IS->size - 2 * sizeof(uint32_t), 0 };
   return iter;
 }
 
-static m2is_tag *m2is_iterator_next(m2is_tag_iterator *iter) {
-  if (iter->offset >= iter->length) return NULL;
-  m2is_tag *tag = (m2is_tag*)(iter->tags_start + iter->offset);
+static const m2is_tag *m2is_iterator_next(m2is_tag_iterator *iter) {
+  const m2is_tag *tag = (m2is_tag*)(iter->tags_start + iter->offset);
+  if (iter->offset >= iter->length || tag->type == M2IS_TYPE_NULL) return NULL;
   iter->offset += tag->size;
+  if (iter->offset % 8 != 0) {
+    iter->offset += 8 - (iter->offset % 8);
+  }
   return tag;
 }
+
 #endif
 
 #endif
