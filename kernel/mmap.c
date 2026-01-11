@@ -25,7 +25,9 @@ const char *const get_mmap_type_string(uint32_t type) {
 mmap_iterator new_mmap_iterator(const m2is_mmap *mmap) {
   mmap_iterator iter = {
     .first_entry = mmap->entries,
-    .length = mmap->tag.size - sizeof(uint32_t)*2,
+    // subtract the offset to the entries from the size to get the
+    // length of the mmap
+    .length = mmap->tag.size - ((uintptr_t)&(mmap->entries) - (uintptr_t)mmap),
     .entry_size = mmap->entry_size,
     .offset = 0,
   };
