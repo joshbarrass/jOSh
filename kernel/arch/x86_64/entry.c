@@ -1,8 +1,8 @@
-#include <multiboot.h>
+#include <multiboot2.h>
 #include <kernel/bootstruct.h>
 
 extern const BootStruct *bootstruct;
-extern const MIS *mis;
+extern const M2IS *mis;
 extern void kernel_main();
 
 __attribute__((noreturn,sysv_abi)) void _entry_c(uint32_t rax, uint32_t *rbx) {
@@ -11,10 +11,10 @@ __attribute__((noreturn,sysv_abi)) void _entry_c(uint32_t rax, uint32_t *rbx) {
   mis = NULL;
   bootstruct = NULL;
 
-  // if we were booted directly by a multiboot-compliant bootloader,
-  // we can save the pointer to the MIS
-  if ((uint32_t)rax == (uint32_t)0x2BADB002) {
-    mis = (MIS*)rbx;
+  // if we were booted directly by a multiboot2-compliant bootloader,
+  // we can save the pointer to the M2IS
+  if ((uint32_t)rax == (uint32_t)0x36d76289) {
+    mis = (M2IS*)rbx;
   }
   // if we were booted by a custom jOSh loader, we can load the custom
   // bootstruct and extract the MIS from it (if present)
