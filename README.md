@@ -4,7 +4,7 @@ jOSh is a monolithic hobby kernel predominantly written in C. At present, it tar
 
 ## Features
 
- - Multiboot 1 (`2BADB002`) support via a custom long mode loader application.
+ - Multiboot 2 support via a custom long mode loader application.
  - Higher half kernel
  - Paging
  - Interrupt handlers
