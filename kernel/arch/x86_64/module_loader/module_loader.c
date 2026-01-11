@@ -146,14 +146,14 @@ void module_loader_main() {
     }
     printf("[+] Building boot struct...\n");
     bs_init(&bootstruct);
-    bootstruct.MIS = (bs_ptr_t)((uintptr_t)mis);
+    bootstruct.M2IS = (bs_ptr_t)((uintptr_t)mis);
     bootstruct.flags |= BS_FLAG_MIS;
     bootstruct.lowest_free_addr = (bs_ptr_t)((uintptr_t)bump_malloc(0));
     bootstruct.flags |= BS_FLAG_FREEADDR;
     bs_set_checksum(&bootstruct);
     printf("      Flags: %#x\n"
            "      MIS: %#lx\n"
-           "      Checksum: %#x\n", bootstruct.flags, bootstruct.MIS, bootstruct.checksum);
+           "      Checksum: %#x\n", bootstruct.flags, bootstruct.M2IS, bootstruct.checksum);
     if (bs_verify_checksum(&bootstruct)) {
       printf("      Valid!\n");
     } else {
