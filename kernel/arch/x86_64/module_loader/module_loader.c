@@ -55,7 +55,7 @@ void module_loader_main() {
   /* term_clear_screen(); */
   /* term_set_fg(10); */
 
-  printf("[+] Entered module loader\n");
+  printf("\f[+] Entered module loader\n");
   if (mis == 0) {
     /* term_set_fg(4); */
     printf("[!] Multiboot2 information struct missing!\n");

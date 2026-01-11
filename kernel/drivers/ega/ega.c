@@ -89,6 +89,8 @@ static int ega_putchar(ConsoleDriver *console, const char c) {
     ega_new_line(console); return c;
   case '\r':
     ega_carriage_return(console); return c;
+  case '\f':
+    ega_clear(console); return c;
   }
   
   const size_t new_pos = ega_putchar_at(console, c, console->x, console->y);

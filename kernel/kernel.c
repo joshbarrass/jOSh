@@ -43,7 +43,7 @@ static const m2is_mmap *mis_mmap = NULL;
   }
 
 static void print_welcome_message() {
-  printf("Welcome to jOSh! (%s)\n",
+  printf("\fWelcome to jOSh! (%s)\n",
 #ifdef ARCH_64
          "64-bit"
 #elif ARCH_32
