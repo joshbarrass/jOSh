@@ -79,6 +79,13 @@ static const m2is_tag *m2is_iterator_next(m2is_tag_iterator *iter) {
   return tag;
 }
 
+typedef struct __attribute__((packed)) m2is_module {
+  m2is_tag tag;
+  uint32_t mod_start;
+  uint32_t mod_end;
+  char string[0];
+} m2is_module;
+
 #endif
 
 #endif
