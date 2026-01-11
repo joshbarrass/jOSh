@@ -18,6 +18,10 @@ typedef struct ConsoleDriver {
   int (*puts)(struct ConsoleDriver *drv, const char *s);
   void (*draw_bitmap)(struct ConsoleDriver *drv, const ScreenChar *bitmap, const size_t x, const size_t y,
                      const size_t w, const size_t h);
+  void (*set_color)(struct ConsoleDriver *drv, const CharColor color);
+  void (*set_bg)(struct ConsoleDriver *drv, const int bg);
+  void (*set_fg)(struct ConsoleDriver *drv, const int fg);
+  void (*clear)(struct ConsoleDriver *drv);
   ScreenChar *framebuffer;
   size_t width;
   size_t height;

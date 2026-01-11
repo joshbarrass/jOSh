@@ -9,16 +9,15 @@ static size_t ega_get_pos_y(ConsoleDriver *console) {
   return console->y;
 }
 
-static void ega_set_color(ConsoleDriver *console, const unsigned char fg, const unsigned char bg) {
-  console->terminal_color.fg = fg;
-  console->terminal_color.bg = bg;
+static void ega_set_color(ConsoleDriver *console, const CharColor color) {
+  console->terminal_color = color;
 }
 
-static void ega_set_fg(ConsoleDriver *console, const unsigned char fg) {
+static void ega_set_fg(ConsoleDriver *console, const int fg) {
   console->terminal_color.fg = fg;
 }
 
-static void ega_set_bg(ConsoleDriver *console, const unsigned char bg) {
+static void ega_set_bg(ConsoleDriver *console, const int bg) {
   console->terminal_color.bg = bg;
 }
 
@@ -36,11 +35,6 @@ static void ega_clear_color(ConsoleDriver *console, const CharColor color) {
   }
   console->x = 0;
   console->y = 0;
-}
-
-static void ega_clear_bgfg(ConsoleDriver *console, const int bg, const int fg) {
-  const CharColor color = { fg, bg };
-  ega_clear_color(console, color);
 }
 
 static void ega_clear(ConsoleDriver *console) {
@@ -128,6 +122,10 @@ ConsoleDriver ega_driver_init(void * const framebuffer, const size_t width,
     .putchar = &ega_putchar,
     .puts = &ega_puts,
     .draw_bitmap = &ega_draw_bitmap,
+    .set_color = &ega_set_color,
+    .set_fg = &ega_set_fg,
+    .set_bg = &ega_set_bg,
+    .clear = &ega_clear,
     .framebuffer = (ScreenChar *)framebuffer,
     .width = width,
     .height = height,
