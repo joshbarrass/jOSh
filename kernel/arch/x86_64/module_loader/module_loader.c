@@ -59,7 +59,6 @@ void module_loader_main() {
     printf("[!] Multiboot2 information struct missing!\n");
     return;
   }
-  printf("    MIS: Size %u, Rsvd: %u\n", mis->size, mis->reserved);
 
   // scan through the M2IS for a module called KERNEL.ELF
   m2is_tag_iterator iter = new_m2is_iterator(mis);
@@ -69,7 +68,6 @@ void module_loader_main() {
   while (tag != NULL) {
     if (tag->type == M2IS_TYPE_MODULE) {
       const m2is_module *modtag = (const m2is_module *)tag;
-      printf("%s\n", modtag->string);
       if (strcmp("KERNEL.ELF", modtag->string) == 0) {
         printf("[+] Found KERNEL.ELF!\n");
         mod = (char*)(uintptr_t)(modtag->mod_start);
