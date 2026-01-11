@@ -64,13 +64,16 @@ typedef struct {
   size_t offset;
 } m2is_tag_iterator;
 
-static m2is_tag_iterator new_m2is_iterator(const void *M2IS,
-                                           const uint32_t length) {
-  
+static m2is_tag_iterator new_m2is_iterator(const M2IS *M2IS) {
+  m2is_tag_iterator iter = { M2IS->tags, M2IS->size - 2 * sizeof(uint32_t), 0 };
+  return iter;
 }
 
 static m2is_tag *m2is_iterator_next(m2is_tag_iterator *iter) {
-
+  if (iter->offset >= iter->length) return NULL;
+  m2is_tag *tag = (m2is_tag*)(iter->tags_start + iter->offset);
+  iter->offset += tag->size;
+  return tag;
 }
 #endif
 
