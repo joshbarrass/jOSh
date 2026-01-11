@@ -1,7 +1,7 @@
 #ifndef __MEMORY_PMM_H
 #define __MEMORY_PMM_H 1
 
-#include <multiboot.h>
+#include <multiboot2.h>
 #include <kernel/memory/types.h>
 
 // width of a page state in *bits*
@@ -24,7 +24,7 @@ typedef struct __attribute__((packed)) {
 
 #define PMM_STATES_PER_ENTRY (sizeof(PMMEntry)*8ULL/PAGE_STATE_WIDTH)
 
-void pmm_init(const phys_addr_t first_free_page, const mmap *memory_map, const uint32_t mmap_length);
+void pmm_init(const phys_addr_t first_free_page, const m2is_mmap *memory_map);
 void pmm_free_pages(const phys_addr_t addr, const size_t count);
 const phys_addr_t pmm_alloc_pages(const size_t count);
 

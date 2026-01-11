@@ -1,6 +1,7 @@
 OBJS=\
 bootstrap.o \
 module_loader.o \
+multiboot_header.o \
 elf.o \
 elf_paged.o \
 addr_checker.o \
@@ -15,12 +16,14 @@ strto.o \
 isspace.o \
 bump_alloc.o \
 paging.o \
-bootstruct.o
+bootstruct.o \
+strcmp.o \
+strlen.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc
 	$(STRIP) --strip-unneeded '$@'
-	grub-file --is-x86-multiboot '$@'
+	grub-file --is-x86-multiboot2 '$@'
 
 tty.o: ../../../tty.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
@@ -35,6 +38,9 @@ bootstruct.o: ../../../bootstruct.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
 
 %.o: ../../../../libc/ctype/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+
+%.o: ../../../../libc/string/%.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
 
 errno.o: ../../../../libc/errno/errno.c

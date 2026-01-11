@@ -1,6 +1,7 @@
 #include <kernel/memory/pmm.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <kernel/mmap.h>
 #include <kernel/memory/constants.h>
 #include <kernel/panic.h>
@@ -138,7 +139,7 @@ static void initialise_bitmap(PMMEntry *bitmap, const size_t n) {
   }
 }
 
-void pmm_init(const phys_addr_t first_free_page, const mmap *memory_map, const uint32_t mmap_length) {
+void pmm_init(const phys_addr_t first_free_page, const m2is_mmap *memory_map) {
   #ifdef VERBOSE_PMM
   printf("[*] Initialising PMM...\n");
   #endif
@@ -147,11 +148,11 @@ void pmm_init(const phys_addr_t first_free_page, const mmap *memory_map, const u
   initialise_bitmap(pmm_bitmap_4GB, PMM_4GB_BITMAP_LENGTH);
 
   // start filling in the bitmap from the mmap
-  mmap_iterator iter = new_mmap_iterator(memory_map, mmap_length);
-  mmap *entry = mmap_iterator_next(&iter);
+  mmap_iterator iter = new_mmap_iterator(memory_map);
+  mmap_entry *entry = mmap_iterator_next(&iter);
   while (entry != NULL) {
     PageState state;
-    if (entry->type == MULTIBOOT_MMAP_TYPE_FREE) {
+    if (entry->type == MULTIBOOT2_MMAP_TYPE_FREE) {
       state = PAGE_FREE;
     } else {
       state = PAGE_USED;

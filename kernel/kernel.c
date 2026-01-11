@@ -19,7 +19,7 @@
 #include <kernel/tty.h>
 #include <kernel/vga.h>
 #include <kernel/bootstruct.h>
-#include <multiboot.h>
+#include <multiboot2.h>
 #include <kernel/panic.h>
 #include <archdef.h>
 #include <kernel/mmap.h>
@@ -30,7 +30,15 @@
 #define BS_IS_PRESENT (bootstruct != NULL)
 
 const BootStruct *bootstruct = NULL;
-const MIS *mis = NULL;
+const M2IS *mis = NULL;
+static const m2is_meminfo *mis_meminfo = NULL;
+static const m2is_mmap *mis_mmap = NULL;
+#define M2IS_CHECK(var)                                                        \
+  if (var == NULL) {                                                           \
+    term_error_color();                                                        \
+    printf("[!] Could not find " #var "\n");                                    \
+    return;                                                                    \
+  }
 
 static void print_welcome_message() {
   printf("Welcome to jOSh! (%s)\n",
@@ -82,40 +90,45 @@ void kernel_main() {
   printf("[+] Loaded interrupts\n");
   term_info_color();
 
-  printf("[*] Checking required multiboot flags...\n");
-  if (mis->FLAGS & MULTIBOOT_FLAG_FULL_MMAP) {
-    term_good_color();
-    printf("[+] Memory map is available!\n");
-    term_info_color();
-  } else {
-    term_error_color();
-    printf("[!] Memory map unavailable!\n");
-    return;
-  }
+  printf("[*] Searching for required multiboot2 tags...\n");
+  {
+    m2is_tag_iterator iter = new_m2is_iterator(mis);
+    const m2is_tag *tag = m2is_iterator_next(&iter);
+    while (tag != NULL) {
+      switch (tag->type) {
+      case M2IS_TYPE_MEMINFO:
+        mis_meminfo = (const m2is_meminfo *)tag;
+        break;
+      case M2IS_TYPE_MEMMAP:
+        mis_mmap = (const m2is_mmap *)tag;
+        break;
+      default:
+      }
 
-  // ensure the memory map has not been corrupted
-  // if below 2MB, none of our loaded data could have collided with it
-  if (mis->mmap >= 2 * 1024 * 1024 || mis->mmap + mis->mmap_length >= 2 * 1024 * 1024) { 
-    term_error_color();
-    printf("[!] Memory map corrupted!\n");
-    return;
-  } else {
-    term_good_color();
-    printf("[+] Intact mmap found at %#018zx\n", (size_t)mis->mmap);
-    term_info_color();
+      tag = m2is_iterator_next(&iter);
+    }
   }
+  // check that we found everything
+  M2IS_CHECK(mis_meminfo);
+  M2IS_CHECK(mis_mmap);
 
   // print total available memory
-  const size_t total_memory = mis->mem_lower + mis->mem_upper; // KiB
+  const size_t total_memory = mis_meminfo->mem_lower + mis_meminfo->mem_upper; // KiB
   printf("[*] Total available memory: %zuKiB\n", total_memory);
-  printf("    * Low memory:  %zuKiB\n", (size_t)mis->mem_lower);
-  printf("    * High memory: %zuKiB\n", (size_t)mis->mem_upper);
+  printf("    * Low memory:  %zuKiB\n", (size_t)mis_meminfo->mem_lower);
+  printf("    * High memory: %zuKiB\n", (size_t)mis_meminfo->mem_upper);
 
   // print the memory map
   printf("    "VERTLINE"       start       -         end       "VERTLINE"type"VERTLINE" raw"VERTLINE"\n");
-  mmap_iterator iter = new_mmap_iterator(get_mmap(mis), mis->mmap_length);
-  for (mmap *entry = mmap_iterator_next(&iter); entry != NULL ; entry = mmap_iterator_next(&iter)) {
-    printf("    "VERTLINE"0x%016zX - 0x%016zX"VERTLINE"%s"VERTLINE"0x%02x"VERTLINE"\n", entry->base_addr, entry->base_addr+entry->length-1, get_mmap_type_string(entry->type), entry->type);
+  {
+    mmap_iterator iter = new_mmap_iterator(mis_mmap);
+    for (mmap_entry *entry = mmap_iterator_next(&iter); entry != NULL;
+         entry = mmap_iterator_next(&iter)) {
+      printf("    " VERTLINE "0x%016zX - 0x%016zX" VERTLINE "%s" VERTLINE
+             "0x%02x" VERTLINE "\n",
+             entry->base_addr, entry->base_addr + entry->length - 1,
+             get_mmap_type_string(entry->type), entry->type);
+    }
   }
 
   // retrieve the first free address from the boot struct, if present
@@ -140,7 +153,7 @@ void kernel_main() {
     return;
   }
 
-  pmm_init(lowest_free_page, get_mmap(mis), mis->mmap_length);
+  pmm_init(lowest_free_page, mis_mmap);
 
   return;
 }

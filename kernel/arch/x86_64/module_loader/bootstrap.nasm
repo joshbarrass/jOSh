@@ -1,17 +1,5 @@
         BITS 32
-        MULTIBOOT_FLAG_4K_ALIGN equ (1 << 0)
-        MULTIBOOT_FLAG_MEMINFO equ (1 << 1)
-        MULTIBOOT_FLAGS equ MULTIBOOT_FLAG_4K_ALIGN | MULTIBOOT_FLAG_MEMINFO
-        MULTIBOOT_MAGIC equ 0x1BADB002
-        MULTIBOOT_LOADER_MAGIC equ 0x2BADB002
-        MULTIBOOT_CHECKSUM equ -(MULTIBOOT_FLAGS + MULTIBOOT_MAGIC)
-
-        section .multiboot
-        align 4
-        dd MULTIBOOT_MAGIC
-        dd MULTIBOOT_FLAGS
-        dd MULTIBOOT_CHECKSUM
-
+        MULTIBOOT_LOADER_MAGIC equ 0x36d76289
 ;;; Multiboot does not provide a stack for us, so we have to create
 ;;; our own. We put it in the .bss section because this is left
 ;;; uninitialised in the ELF file, storing only the size of the

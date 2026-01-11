@@ -4,7 +4,7 @@
 void bs_init(BootStruct *bs) {
   bs->flags = 0;
   bs->checksum = 0;
-  bs->MIS = 0;
+  bs->M2IS = 0;
   bs->lowest_free_addr = 0;
 }
 
