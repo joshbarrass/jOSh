@@ -7,7 +7,8 @@
 #endif
 
 #include <stdio.h>
-#include <multiboot.h>
+#include <string.h>
+#include <multiboot2.h>
 #include <kernel/bootstruct.h>
 #include <kernel/tty.h>
 #include "elf_paged.h"
@@ -37,7 +38,7 @@ static uint64_t page_dir[LEN_PAGE_TABLE] PT_ATTRS;
 // PML4T[509]: Kernel space
 static uint64_t ks_pdpt[LEN_PAGE_TABLE] PT_ATTRS;
 
-const MIS *mis;
+const M2IS *mis;
 typedef union {
   uint64_t entry64;
   uint32_t entry32;
@@ -53,18 +54,38 @@ void module_loader_main() {
   term_set_fg(10);
 
   printf("[+] Entered module loader\n");
-
-  if (mis->FLAGS & (1 << 3) && mis->mods_count > 0) {
-    printf("[+] Modules are available. Testing module 0...\n");
-  } else {
+  if (mis == 0) {
     term_set_fg(4);
-    printf("[E] Modules are unavailable. Exiting...\n");
+    printf("[!] Multiboot2 information struct missing!\n");
+    return;
+  }
+  printf("    MIS: Size %u, Rsvd: %u\n", mis->size, mis->reserved);
+
+  // scan through the M2IS for a module called KERNEL.ELF
+  m2is_tag_iterator iter = new_m2is_iterator(mis);
+  const m2is_tag *tag = m2is_iterator_next(&iter);
+  const char *mod = NULL;
+  size_t i = 0;
+  while (tag != NULL) {
+    if (tag->type == M2IS_TYPE_MODULE) {
+      const m2is_module *modtag = (const m2is_module *)tag;
+      printf("%s\n", modtag->string);
+      if (strcmp("KERNEL.ELF", modtag->string) == 0) {
+        printf("[+] Found KERNEL.ELF!\n");
+        mod = (char*)(uintptr_t)(modtag->mod_start);
+        break;
+      }
+    }
+    tag = m2is_iterator_next(&iter);
+  }
+
+  if (mod == NULL) {
+    term_set_fg(4);
+    printf("KERNEL.ELF not found!\n");
     return;
   }
 
   // verify that the first module in the list is an ELF file
-  const char *mod = (char*)mis->mods[0].mod_start;
-  printf("    * %s\n", mis->mods[0].string);
   if (!is_ELF(mod)) {
     term_set_fg(4);
     printf("      Unknown format\n");
@@ -81,11 +102,13 @@ void module_loader_main() {
     return;
   }
 
+  return;
+
   // find the first free address and set up the bump allocator
-  const size_t mis_max_addr = (size_t)get_MIS_max_addr(mis);
-  const size_t highest_addr = mis_max_addr > (size_t)loader_end ? mis_max_addr : (size_t)loader_end;
-  bump_init(highest_addr + 1);
-  printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0));
+  /* const size_t mis_max_addr = (size_t)get_MIS_max_addr(mis); */
+  /* const size_t highest_addr = mis_max_addr > (size_t)loader_end ? mis_max_addr : (size_t)loader_end; */
+  /* bump_init(highest_addr + 1); */
+  /* printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0)); */
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {

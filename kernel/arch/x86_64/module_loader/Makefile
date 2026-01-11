@@ -16,7 +16,8 @@ strto.o \
 isspace.o \
 bump_alloc.o \
 paging.o \
-bootstruct.o
+bootstruct.o \
+strcmp.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc
@@ -36,6 +37,9 @@ bootstruct.o: ../../../bootstruct.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
 
 %.o: ../../../../libc/ctype/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+
+%.o: ../../../../libc/string/%.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
 
 errno.o: ../../../../libc/errno/errno.c
