@@ -17,7 +17,8 @@ isspace.o \
 bump_alloc.o \
 paging.o \
 bootstruct.o \
-strcmp.o
+strcmp.o \
+strlen.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc
