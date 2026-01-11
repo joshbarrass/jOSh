@@ -26,6 +26,7 @@
 #include <kernel/interrupts.h>
 #include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
+#include <kernel/memory/vmm.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
 
@@ -154,6 +155,7 @@ void kernel_main() {
   }
 
   pmm_init(lowest_free_page, mis_mmap);
+  vmm_init();
 
   return;
 }
