@@ -83,7 +83,7 @@ void module_loader_main() {
     return;
   }
 
-  // verify that the first module in the list is an ELF file
+  // verify that the module is an ELF file
   if (!is_ELF(mod)) {
     term_set_fg(4);
     printf("      Unknown format\n");
