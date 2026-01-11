@@ -86,6 +86,31 @@ typedef struct __attribute__((packed)) m2is_module {
   char string[0];
 } m2is_module;
 
+typedef struct __attribute__((packed)) m2is_meminfo {
+  m2is_tag tag;
+  uint32_t mem_lower;
+  uint32_t mem_upper;
+} m2is_meminfo;
+
+#define MULTIBOOT2_MMAP_TYPE_FREE 1
+#define MULTIBOOT2_MMAP_TYPE_ACPI 3
+#define MULTIBOOT2_MMAP_TYPE_HIBERNATION 4
+#define MULTIBOOT2_MMAP_TYPE_BAD 5
+
+typedef struct __attribute__((packed)) mmap_entry {
+  uint64_t base_addr;
+  uint64_t length;
+  uint32_t type;
+  uint32_t __reserved;
+} mmap_entry;
+
+typedef struct __attribute__((packed)) m2is_mmap {
+  m2is_tag tag;
+  uint32_t entry_size;
+  uint32_t entry_version;
+  mmap_entry entries[0];
+} m2is_mmap;
+
 #endif
 
 #endif

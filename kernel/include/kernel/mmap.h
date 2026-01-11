@@ -3,16 +3,17 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <multiboot.h>
+#include <multiboot2.h>
 
 typedef struct {
-  const void *mmap;
+  const void *first_entry;
   const uint32_t length;
+  const uint32_t entry_size;
   size_t offset;
 } mmap_iterator;
 
 const char *const get_mmap_type_string(uint32_t type);
-mmap_iterator new_mmap_iterator(const void *mmap, const uint32_t length);
-mmap *mmap_iterator_next(mmap_iterator *iter);
+mmap_iterator new_mmap_iterator(const m2is_mmap *mmap);
+mmap_entry *mmap_iterator_next(mmap_iterator *iter);
 
 #endif
