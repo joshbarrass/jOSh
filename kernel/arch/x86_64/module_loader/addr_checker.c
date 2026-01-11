@@ -1,3 +1,5 @@
+#include <multiboot.h>
+#include <multiboot2.h>
 #include "stdbool.h"
 #include "stddef.h"
 #include "stdint.h"
@@ -95,4 +97,12 @@ uint64_t get_MIS_max_addr(const MIS *mis) {
 // overwrite any other data loaded by GRUB.
 bool check_all(const uint64_t load_addr, const MIS *mis) {
   return load_addr > get_MIS_max_addr(mis);
+}
+
+// One advantage of the multiboot2 information struct is that every
+// tag is completely self-contained; it should not reference any
+// memory outside of itself. The maximum address is therefore just the
+// address of the MIS + its total size
+uint64_t get_M2IS_max_addr(const M2IS *mis) {
+  return (uint64_t)(uintptr_t)((char*)mis + mis->size);
 }

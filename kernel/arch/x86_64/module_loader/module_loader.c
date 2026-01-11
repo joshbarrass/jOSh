@@ -102,13 +102,11 @@ void module_loader_main() {
     return;
   }
 
-  return;
-
   // find the first free address and set up the bump allocator
-  /* const size_t mis_max_addr = (size_t)get_MIS_max_addr(mis); */
-  /* const size_t highest_addr = mis_max_addr > (size_t)loader_end ? mis_max_addr : (size_t)loader_end; */
-  /* bump_init(highest_addr + 1); */
-  /* printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0)); */
+  const size_t mis_max_addr = (size_t)get_M2IS_max_addr(mis);
+  const size_t highest_addr = mis_max_addr > (size_t)loader_end ? mis_max_addr : (size_t)loader_end;
+  bump_init(highest_addr + 1);
+  printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0));
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
