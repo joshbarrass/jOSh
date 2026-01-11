@@ -65,7 +65,10 @@ typedef struct {
 } m2is_tag_iterator;
 
 static m2is_tag_iterator new_m2is_iterator(const M2IS *M2IS) {
-  m2is_tag_iterator iter = { &M2IS->tags, M2IS->size - 2 * sizeof(uint32_t), 0 };
+  m2is_tag_iterator iter = {
+    .tags_start = &M2IS->tags,
+    .length = M2IS->size - ((uintptr_t)&(M2IS->tags) - (uintptr_t)M2IS),
+    .offset = 0 };
   return iter;
 }
 
