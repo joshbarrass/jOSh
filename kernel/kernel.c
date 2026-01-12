@@ -43,7 +43,7 @@ static const m2is_mmap *mis_mmap = NULL;
   }
 
 static void print_welcome_message() {
-  printf("\fWelcome to jOSh! (%s)\n",
+  printf("Welcome to jOSh! (%s)\n",
 #ifdef ARCH_64
          "64-bit"
 #elif ARCH_32
@@ -55,22 +55,22 @@ static void print_welcome_message() {
 }
 
 inline static void term_info_color() {
-  /* term_set_fg(VGA_COLOR_LIGHT_GREY); */
+  term_set_fg(VGA_COLOR_LIGHT_GREY);
 }
 
 inline static void term_good_color() {
-  /* term_set_fg(VGA_COLOR_LIGHT_GREEN); */
+  term_set_fg(VGA_COLOR_LIGHT_GREEN);
 }
 
 inline static void term_error_color() {
-  /* term_set_fg(VGA_COLOR_RED); */
+  term_set_fg(VGA_COLOR_RED);
 }
 
 void kernel_main() {
   VGA_set_blink(false);
   set_kernel_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
   term_info_color();
-  /* term_clear_screen(); */
+  term_clear();
   print_welcome_message();
   if (BS_IS_PRESENT) {
     term_good_color();

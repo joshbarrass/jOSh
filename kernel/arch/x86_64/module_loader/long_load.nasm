@@ -5,12 +5,12 @@
 
 %macro call_print_str 1
         push dword %1
-        ;call term_println
+        call term_println
         add esp, 4
 %endmacro
 %macro set_fg 1
         push byte %1
-        ;call term_set_fg
+        call term_set_fg
         add esp, 1
 %endmacro
 

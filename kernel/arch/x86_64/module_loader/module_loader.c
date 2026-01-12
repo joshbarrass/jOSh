@@ -50,14 +50,21 @@ BootStruct bootstruct;
 
 static void setup_page_tables();
 
+static ConsoleDriver *console_driver = NULL;
+
+void term_println(char *s) {
+  printf("%s\n", s);
+}
+
 void module_loader_main() {
   set_kernel_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
-  /* term_clear_screen(); */
-  /* term_set_fg(10); */
+  console_driver = get_kernel_console_driver();
+  console_driver->clear(console_driver);
+  term_set_fg(10);
 
-  printf("\f[+] Entered module loader\n");
+  printf("[+] Entered module loader\n");
   if (mis == 0) {
-    /* term_set_fg(4); */
+    term_set_fg(4);
     printf("[!] Multiboot2 information struct missing!\n");
     return;
   }
@@ -80,14 +87,14 @@ void module_loader_main() {
   }
 
   if (mod == NULL) {
-    /* term_set_fg(4); */
+    term_set_fg(4);
     printf("KERNEL.ELF not found!\n");
     return;
   }
 
   // verify that the module is an ELF file
   if (!is_ELF(mod)) {
-    /* term_set_fg(4); */
+    term_set_fg(4);
     printf("      Unknown format\n");
     return;
   }
@@ -97,7 +104,7 @@ void module_loader_main() {
          (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) ? "LE" : (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG ? "BE" : "?""?")
   );
   if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
-    /* term_set_fg(4); */
+    term_set_fg(4);
     /* term_print_string_at("BE", 17, PREV_LINE); */
     return;
   }
@@ -110,7 +117,7 @@ void module_loader_main() {
 
   // load the module
   if (get_ELF_class(mod) == EI_CLASS_32BIT) {
-    /* term_set_fg(4); */
+    term_set_fg(4);
     printf("[E] Module loader does not support 32-bit ELFs\n");
     return;
   } else {
@@ -122,7 +129,7 @@ void module_loader_main() {
     if (map_err == 0) {
       printf("Done!\n");
     } else {
-      /* term_set_fg(4); */
+      term_set_fg(4);
       printf("Err!\n      ");
       switch (map_err) {
       case -1:
@@ -157,7 +164,7 @@ void module_loader_main() {
     if (bs_verify_checksum(&bootstruct)) {
       printf("      Valid!\n");
     } else {
-      /* term_set_fg(4); */
+      term_set_fg(4);
       printf("      Invalid!\n");
       return;
     }
@@ -165,6 +172,7 @@ void module_loader_main() {
     printf("[+] Jumping to long loader...\n");
     
     entry.entry64 = get_elf64_entrypoint(mod);
+
     asm ("call switch_to_long" : : : );
   }
 }

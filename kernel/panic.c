@@ -16,9 +16,10 @@ __attribute__((noreturn)) __attribute__((naked)) static void kpanic_halt() {
 
 void kpanic(const char* fmt, ...){
   ConsoleDriver *drv = get_kernel_console_driver();
-  /* term_set_color(VGA_COLOR_WHITE, VGA_COLOR_RED); */
-  /* term_clear_screen(); */
-  drv->draw_bitmap(drv, skull, VGA_WIDTH-SKULL_WIDTH, 0, SKULL_WIDTH, SKULL_HEIGHT);
+  term_set_fg(VGA_COLOR_WHITE);
+  term_set_bg(VGA_COLOR_RED);
+  term_clear();
+  term_draw_bitmap(skull, VGA_WIDTH-SKULL_WIDTH, 0, SKULL_WIDTH, SKULL_HEIGHT);
   printf("KERNEL PANIC\n\n");
 
   va_list args;
