@@ -15,7 +15,7 @@ typedef struct {
 
 typedef struct ConsoleDriver {
   void (*put_char_at)(struct ConsoleDriver *drv, const ScreenChar c, const size_t x, const size_t y);
-  void (*clear)(struct ConsoleDriver *drv);
+  void (*clear)(struct ConsoleDriver *drv, const CharColor color);
   size_t width;
   size_t height;
   size_t pitch;
