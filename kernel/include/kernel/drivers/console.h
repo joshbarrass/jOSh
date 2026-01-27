@@ -14,21 +14,12 @@ typedef struct {
 } ScreenChar;
 
 typedef struct ConsoleDriver {
-  int (*putchar)(struct ConsoleDriver *drv, const char c);
-  int (*puts)(struct ConsoleDriver *drv, const char *s);
-  void (*draw_bitmap)(struct ConsoleDriver *drv, const ScreenChar *bitmap, const size_t x, const size_t y,
-                     const size_t w, const size_t h);
-  void (*set_color)(struct ConsoleDriver *drv, const CharColor color);
-  void (*set_bg)(struct ConsoleDriver *drv, const int bg);
-  void (*set_fg)(struct ConsoleDriver *drv, const int fg);
+  void (*put_char_at)(struct ConsoleDriver *drv, const ScreenChar c, const size_t x, const size_t y);
   void (*clear)(struct ConsoleDriver *drv);
-  ScreenChar *framebuffer;
   size_t width;
   size_t height;
   size_t pitch;
-  CharColor terminal_color;
-  size_t x;
-  size_t y;
+  void *framebuffer;
 } ConsoleDriver;
 
 #endif
