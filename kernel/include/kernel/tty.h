@@ -11,8 +11,8 @@
 extern "C" {
 #endif
 
-  ConsoleDriver *get_kernel_console_driver();
-  void set_kernel_console_driver(ConsoleDriver drv);
+  void init_default_term();
+  void set_default_console_driver(ConsoleDriver drv);
 
   void term_set_color(const CharColor color);
   void term_set_fg(const int fg);
@@ -20,6 +20,8 @@ extern "C" {
   void term_clear();
   void term_draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
                         const size_t w, const size_t h);
+  int term_putchar(const char c);
+  int term_puts(const char *s);
 
 #ifdef __cplusplus
 }
