@@ -1,13 +1,6 @@
 #include <kernel/tty.h>
 #include <kernel/drivers/console.h>
 
-struct Terminal {
-  ConsoleDriver *drv;
-  size_t pos_x;
-  size_t pos_y;
-  CharColor color;
-};
-
 static ConsoleDriver default_driver;
 static struct Terminal default_term;
 
@@ -21,6 +14,10 @@ void init_default_term() {
 
 void set_default_console_driver(ConsoleDriver drv) {
   default_driver = drv;
+}
+
+struct Terminal *get_default_term() {
+  return &default_term;
 }
 
 static void term_new_line() {
@@ -70,16 +67,6 @@ int term_puts(const char *s) {
   }
   return n;
 }
-
-/* static void ega_draw_bitmap(ConsoleDriver *console, const ScreenChar *bitmap, const size_t x, const size_t y, */
-/*                  const size_t w, const size_t h) { */
-/*   for (size_t i = 0; i < h; ++i) { */
-/*     ScreenChar *row = ega_get_row(console, y+i); */
-/*     for (size_t j = 0; j < w; ++j) { */
-/*       row[x+j] = bitmap[w*i+j]; */
-/*     } */
-/*   } */
-/* } */
 
 void term_set_color(const CharColor color) {
   default_term.color = color;

@@ -11,15 +11,21 @@
 extern "C" {
 #endif
 
+  struct Terminal {
+    ConsoleDriver *drv;
+    size_t pos_x;
+    size_t pos_y;
+    CharColor color;
+  };
+
   void init_default_term();
+  struct Terminal *get_default_term();
   void set_default_console_driver(ConsoleDriver drv);
 
   void term_set_color(const CharColor color);
   void term_set_fg(const int fg);
   void term_set_bg(const int bg);
   void term_clear();
-  void term_draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
-                        const size_t w, const size_t h);
   int term_putchar(const char c);
   int term_puts(const char *s);
 
