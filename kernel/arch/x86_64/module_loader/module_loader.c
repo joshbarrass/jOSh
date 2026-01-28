@@ -57,9 +57,9 @@ void term_println(char *s) {
 }
 
 void module_loader_main() {
-  set_kernel_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
-  console_driver = get_kernel_console_driver();
-  console_driver->clear(console_driver);
+  set_default_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
+  init_default_term();
+  term_clear();
   term_set_fg(10);
 
   printf("[+] Entered module loader\n");

@@ -69,7 +69,8 @@ inline static void term_error_color() {
 
 void kernel_main() {
   VGA_set_blink(false);
-  set_kernel_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
+  set_default_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
+  init_default_term();
   term_info_color();
   term_clear();
   print_welcome_message();
