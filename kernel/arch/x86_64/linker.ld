@@ -24,8 +24,8 @@ SECTIONS
                 *(.rodata*)
                 /* Pad out the section to the next page boundary */
                 FILL(0x00);
-                . = ALIGN(4K) - 1;
-                BYTE(0x00);
+                . = ALIGN(4K)/* - 1*/;
+                /*BYTE(0x00);*/
 	}
 
 	/* Read-write data (initialized) */
@@ -34,8 +34,8 @@ SECTIONS
 		*(.data)
                 /* Pad out the section to the next page boundary */
                 FILL(0x00);
-                . = ALIGN(4K) - 1;
-                BYTE(0x00);
+                . = ALIGN(4K)/* - 1*/;
+                /*BYTE(0x00);*/
 	}
 
 	/* Read-write data (uninitialized) and stack */
