@@ -50,8 +50,6 @@ BootStruct bootstruct;
 
 static void setup_page_tables();
 
-static ConsoleDriver *console_driver = NULL;
-
 void term_println(char *s) {
   printf("%s\n", s);
 }
