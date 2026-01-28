@@ -82,6 +82,8 @@ void term_set_bg(const int bg) {
 
 void term_clear() {
   default_term.drv->clear(default_term.drv, default_term.color);
+  default_term.pos_x = 0;
+  default_term.pos_y = 0;
 }
 
 /* void term_draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y, */
