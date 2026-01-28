@@ -14,8 +14,18 @@ __attribute__((noreturn)) __attribute__((naked)) static void kpanic_halt() {
                 );
 }
 
+static void term_draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
+                 const size_t w, const size_t h) {
+  struct Terminal *term = get_default_term();
+
+  for (size_t i = 0; i < h; ++i) {
+    for (size_t j = 0; j < w; ++j) {
+      term->drv->put_char_at(term->drv, bitmap[w*i+j], x+j, y+i);
+    }
+  }
+}
+
 void kpanic(const char* fmt, ...){
-  ConsoleDriver *drv = get_kernel_console_driver();
   term_set_fg(VGA_COLOR_WHITE);
   term_set_bg(VGA_COLOR_RED);
   term_clear();

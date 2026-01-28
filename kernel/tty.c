@@ -85,9 +85,3 @@ void term_clear() {
   default_term.pos_x = 0;
   default_term.pos_y = 0;
 }
-
-/* void term_draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y, */
-/*                       const size_t w, const size_t h) { */
-/*   return console_driver.draw_bitmap(&console_driver, bitmap, x, y, w, h); */
-/* } */
-
