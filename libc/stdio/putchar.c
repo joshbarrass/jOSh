@@ -4,8 +4,7 @@
 #include <kernel/tty.h>
 
 int putchar(char c) {
-  ConsoleDriver *drv = get_kernel_console_driver();
-  return drv->putchar(drv, c);
+  return term_putchar(c);
 }
 
 #endif
