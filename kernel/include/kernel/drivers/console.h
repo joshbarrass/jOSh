@@ -13,7 +13,7 @@ typedef struct {
   CharColor color;
 } ScreenChar;
 
-typedef struct ConsoleDriver {
+typedef struct __attribute__((packed)) ConsoleDriver {
   void (*put_char_at)(struct ConsoleDriver *drv, const ScreenChar c, const size_t x, const size_t y);
   void (*line_feed)(struct ConsoleDriver *drv, const CharColor color);
   void (*clear)(struct ConsoleDriver *drv, const CharColor color);
