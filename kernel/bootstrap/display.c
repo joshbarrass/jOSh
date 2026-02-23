@@ -9,8 +9,8 @@ static StaticBumper bumper = STATIC_BUMP_ALLOCATOR(buf);
 
 // TODO: What arguments should this function want? The M2IS?
 ConsoleDriver *bootstrap_console_driver() {
-  ConsoleDriver * const drv = SB_ALLOC_ALIGNED(&bumper, ConsoleDriver);
+  EGAConsole * const drv = SB_ALLOC_ALIGNED(&bumper, EGAConsole);
   // TODO: figure this out from the bootloader information
   ega_driver_init(drv, (void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160);
-  return drv;
+  return (ConsoleDriver*)drv;
 }

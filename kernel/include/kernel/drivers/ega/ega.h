@@ -3,7 +3,15 @@
 
 #include <kernel/drivers/console.h>
 
-void ega_driver_init(ConsoleDriver *drv, void * const framebuffer, const size_t width,
-                              const size_t height, const size_t pitch);
+// shadows ConsoleDriver to permit passing the pointer to anything
+// that needs a ConsoleDriver
+typedef struct __attribute__((packed)) {
+  ConsoleDriver drv;
+  size_t pitch;
+  void *framebuffer;
+} EGAConsole;
+
+void ega_driver_init(EGAConsole *drv, void * const framebuffer, const size_t width,
+                     const size_t height, const size_t pitch);
 
 #endif

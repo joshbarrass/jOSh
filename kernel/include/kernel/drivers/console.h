@@ -19,8 +19,6 @@ typedef struct ConsoleDriver {
   void (*clear)(struct ConsoleDriver *drv, const CharColor color);
   size_t width;
   size_t height;
-  size_t pitch;
-  void *framebuffer;
 } ConsoleDriver;
 
 #endif
