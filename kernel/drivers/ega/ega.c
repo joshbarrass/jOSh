@@ -35,16 +35,13 @@ static void ega_putchar_at(ConsoleDriver *console, const ScreenChar c, const siz
   row[x] = c;
 }
 
-ConsoleDriver ega_driver_init(void * const framebuffer, const size_t width,
-                                 const size_t height, const size_t pitch) {
-  ConsoleDriver drv = {
-    .put_char_at = &ega_putchar_at,
-    .line_feed = &ega_scroll,
-    .clear = &ega_clear_color,
-    .width = width,
-    .height = height,
-    .pitch = pitch,
-    .framebuffer = framebuffer,
-  };
-  return drv;
+void ega_driver_init(ConsoleDriver *drv, void * const framebuffer, const size_t width,
+                     const size_t height, const size_t pitch) {
+  drv->put_char_at = &ega_putchar_at;
+  drv->line_feed = &ega_scroll;
+  drv->clear = &ega_clear_color;
+  drv->width = width;
+  drv->height = height;
+  drv->pitch = pitch;
+  drv->framebuffer = framebuffer;
 }
