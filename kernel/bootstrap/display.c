@@ -2,15 +2,33 @@
 #include <kernel/bootstrap/static_bump.h>
 #include <kernel/drivers/console.h>
 #include <kernel/drivers/ega/ega.h>
-#include <kernel/vgadef.h>
+#include <multiboot2.h>
 
 static _Alignas(uint64_t) uint8_t buf[256];
 static StaticBumper bumper = STATIC_BUMP_ALLOCATOR(buf);
 
-// TODO: What arguments should this function want? The M2IS?
-ConsoleDriver *bootstrap_console_driver() {
+static const m2is_framebuffer_info *get_fbinfo(const M2IS *m2is) {
+  m2is_tag_iterator iter = new_m2is_iterator(m2is);
+  const m2is_tag *tag = m2is_iterator_next(&iter);
+  while (tag != NULL) {
+    if (tag->type == M2IS_TYPE_FRAMEBUFFER) return (m2is_framebuffer_info *)tag;
+    tag = m2is_iterator_next(&iter);
+  }
+  return NULL;
+}
+
+static ConsoleDriver *bootstrap_ega_driver(const m2is_framebuffer_info *fbinfo) {
   EGAConsole * const drv = SB_ALLOC_ALIGNED(&bumper, EGAConsole);
-  // TODO: figure this out from the bootloader information
-  ega_driver_init(drv, (void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160);
+  ega_driver_init(drv, (void*)(uintptr_t)fbinfo->addr, fbinfo->width, fbinfo->height, fbinfo->pitch);
   return (ConsoleDriver*)drv;
+}
+
+ConsoleDriver *bootstrap_console_driver(const M2IS *m2is) {
+  const m2is_framebuffer_info *fbinfo = get_fbinfo(m2is);
+  if (fbinfo == NULL) return NULL; // TODO: maybe return a null driver instead?
+  switch (fbinfo->type) {
+  case 2:
+    return bootstrap_ega_driver(fbinfo);
+  }
+  return NULL;
 }
