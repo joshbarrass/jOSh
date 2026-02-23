@@ -2,6 +2,7 @@
 #include <kernel/bootstrap/static_bump.h>
 #include <kernel/drivers/console.h>
 #include <kernel/drivers/ega/ega.h>
+#include <kernel/drivers/null_console/null_console.h>
 #include <multiboot2.h>
 
 static _Alignas(uint64_t) uint8_t buf[256];
@@ -26,10 +27,10 @@ static ConsoleDriver *bootstrap_ega_driver(const m2is_framebuffer_info *fbinfo) 
 
 ConsoleDriver *bootstrap_console_driver(const M2IS *m2is) {
   const m2is_framebuffer_info *fbinfo = get_fbinfo(m2is);
-  if (fbinfo == NULL) return NULL; // TODO: maybe return a null driver instead?
+  if (fbinfo == NULL) return get_null_console();
   switch (fbinfo->type) {
   case 2:
     return bootstrap_ega_driver(fbinfo);
   }
-  return NULL;
+  return get_null_console();
 }

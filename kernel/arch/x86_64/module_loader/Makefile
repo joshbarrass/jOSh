@@ -19,7 +19,8 @@ paging.o \
 bootstruct.o \
 strcmp.o \
 strlen.o \
-ega.o \
+ega_driver.o \
+null_console_driver.o \
 bootstrap_display.o \
 bootstrap_static_bump.o
 
@@ -49,7 +50,10 @@ bootstruct.o: ../../../bootstruct.c
 errno.o: ../../../../libc/errno/errno.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
 
-ega.o: ../../../drivers/ega/ega.c
+ega_driver.o: ../../../drivers/ega/ega.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+
+null_console_driver.o: ../../../drivers/null_console/null.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
 
 bootstrap_%.o: ../../../bootstrap/%.c

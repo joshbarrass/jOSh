@@ -13,6 +13,7 @@ $(KERNEL_DIR)/panic.o \
 $(KERNEL_DIR)/mmap.o \
 $(KERNEL_DIR)/bootstruct.o \
 $(KERNEL_DIR)/drivers/ega/ega.o \
+$(KERNEL_DIR)/drivers/null_console/null.o \
 $(KERNEL_DIR)/bootstrap/static_bump.o \
 $(KERNEL_DIR)/bootstrap/display.o
 
