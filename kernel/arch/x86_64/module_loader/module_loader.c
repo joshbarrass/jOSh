@@ -64,7 +64,6 @@ void module_loader_main() {
   m2is_tag_iterator iter = new_m2is_iterator(mis);
   const m2is_tag *tag = m2is_iterator_next(&iter);
   const char *mod = NULL;
-  size_t i = 0;
   while (tag != NULL) {
     if (tag->type == M2IS_TYPE_MODULE) {
       const m2is_module *modtag = (const m2is_module *)tag;
