@@ -3,7 +3,7 @@
 
 #include <kernel/drivers/console.h>
 
-ConsoleDriver ega_driver_init(ConsoleDriver *drv, void * const framebuffer, const size_t width,
+void ega_driver_init(ConsoleDriver *drv, void * const framebuffer, const size_t width,
                               const size_t height, const size_t pitch);
 
 #endif

@@ -12,7 +12,9 @@ $(KERNEL_DIR)/tty.o \
 $(KERNEL_DIR)/panic.o \
 $(KERNEL_DIR)/mmap.o \
 $(KERNEL_DIR)/bootstruct.o \
-$(KERNEL_DIR)/drivers/ega/ega.o
+$(KERNEL_DIR)/drivers/ega/ega.o \
+$(KERNEL_DIR)/bootstrap/static_bump.o \
+$(KERNEL_DIR)/bootstrap/display.o
 
 KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR)/include/*.h)
 

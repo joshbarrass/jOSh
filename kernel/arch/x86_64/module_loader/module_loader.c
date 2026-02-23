@@ -11,7 +11,7 @@
 #include <multiboot2.h>
 #include <kernel/bootstruct.h>
 #include <kernel/tty.h>
-#include <kernel/drivers/ega/ega.h>
+#include <kernel/bootstrap/display.h>
 #include "elf_paged.h"
 #include "addr_checker.h"
 #include "bump_alloc.h"
@@ -55,7 +55,7 @@ void term_println(char *s) {
 }
 
 void module_loader_main() {
-  set_default_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
+  set_default_console_driver(bootstrap_console_driver());
   init_default_term();
   term_clear();
   term_set_fg(10);

@@ -17,7 +17,7 @@
 #include <stdio.h>
 
 #include <kernel/tty.h>
-#include <kernel/drivers/ega/ega.h>
+#include <kernel/bootstrap/display.h>
 #include <kernel/vga.h>
 #include <kernel/bootstruct.h>
 #include <multiboot2.h>
@@ -69,7 +69,7 @@ inline static void term_error_color() {
 
 void kernel_main() {
   VGA_set_blink(false);
-  set_default_console_driver(ega_driver_init((void*)VGA_FRAMEBUFFER_ADDR, 80, 25, 160));
+  set_default_console_driver(bootstrap_console_driver());
   init_default_term();
   term_info_color();
   term_clear();

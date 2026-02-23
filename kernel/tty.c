@@ -1,18 +1,18 @@
 #include <kernel/tty.h>
 #include <kernel/drivers/console.h>
 
-static ConsoleDriver default_driver;
+static ConsoleDriver* default_driver;
 static struct Terminal default_term;
 
 void init_default_term() {
-  default_term.drv = &default_driver;
+  default_term.drv = default_driver;
   default_term.pos_x = 0;
   default_term.pos_y = 0;
   default_term.color.fg = VGA_COLOR_LIGHT_GREY;
   default_term.color.bg = VGA_COLOR_BLACK;
 }
 
-void set_default_console_driver(ConsoleDriver drv) {
+void set_default_console_driver(ConsoleDriver *drv) {
   default_driver = drv;
 }
 
