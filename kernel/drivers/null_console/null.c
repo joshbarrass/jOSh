@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <kernel/drivers/null_console/null_console.h>
 #include <kernel/drivers/console.h>
 
@@ -19,4 +18,8 @@ ConsoleDriver *get_null_console() {
     null_console.height = 1;
   }
   return &null_console;
+}
+
+bool is_null_console(ConsoleDriver *drv) {
+  return drv == &null_console;
 }
