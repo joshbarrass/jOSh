@@ -8,6 +8,7 @@ static _Alignas(uint64_t) uint8_t buf[256];
 static StaticBumper bumper = STATIC_BUMP_ALLOCATOR(buf);
 
 static const m2is_framebuffer_info *get_fbinfo(const M2IS *m2is) {
+  if (m2is == NULL) return NULL;
   m2is_tag_iterator iter = new_m2is_iterator(m2is);
   const m2is_tag *tag = m2is_iterator_next(&iter);
   while (tag != NULL) {
