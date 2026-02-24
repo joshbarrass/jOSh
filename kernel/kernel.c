@@ -69,8 +69,7 @@ inline static void term_error_color() {
 
 void kernel_main() {
   VGA_set_blink(false);
-  set_default_console_driver(bootstrap_console_driver(mis));
-  init_default_term();
+  init_default_term(bootstrap_console_driver(mis));
   term_info_color();
   term_clear();
   print_welcome_message();

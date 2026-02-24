@@ -18,9 +18,8 @@ extern "C" {
     CharColor color;
   };
 
-  void init_default_term();
+  void init_default_term(ConsoleDriver *drv);
   struct Terminal *get_default_term();
-  void set_default_console_driver(ConsoleDriver *drv);
 
   void term_set_color(const CharColor color);
   void term_set_fg(const int fg);

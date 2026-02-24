@@ -55,8 +55,7 @@ void term_println(char *s) {
 }
 
 void module_loader_main() {
-  set_default_console_driver(bootstrap_console_driver(mis));
-  init_default_term();
+  init_default_term(bootstrap_console_driver(mis));
   term_clear();
   term_set_fg(10);
 
