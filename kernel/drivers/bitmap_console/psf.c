@@ -1,0 +1,10 @@
+#include <kernel/drivers/bitmap_console/psf.h>
+
+bool is_PSF1_font(const void *buf) {
+  const PSF1 *psf = (const PSF1*)buf;
+  return psf->magic == PSF1_FONT_MAGIC;
+}
+
+const uint8_t *PSF1_get_glyph(const PSF1 *psf, size_t glyph) {
+  return psf->data + glyph * psf->characterSize;
+}
