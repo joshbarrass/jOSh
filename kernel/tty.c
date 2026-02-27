@@ -1,134 +1,82 @@
 #include <kernel/tty.h>
+#include <kernel/drivers/console.h>
 
-volatile ScreenChar * const screen = (ScreenChar*)VGA_FRAMEBUFFER_ADDR;
-static CharColor terminal_color = {VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK};
-// TODO: optimise this out to just a single index
-//       realistically, we don't need to track x and y separately, and
-//       this would optimise other functions later down the line,
-//       e.g. the print char function
-static size_t pos_x = 0;
-static size_t pos_y = 0;
+static struct Terminal default_term;
 
-size_t term_get_pos_x() {
-  return pos_x;
+void init_default_term(ConsoleDriver *drv) {
+  default_term.drv = drv;
+  default_term.pos_x = 0;
+  default_term.pos_y = 0;
+  default_term.color.fg = VGA_COLOR_LIGHT_GREY;
+  default_term.color.bg = VGA_COLOR_BLACK;
 }
 
-size_t term_get_pos_y() {
-  return pos_y;
+struct Terminal *get_default_term() {
+  return &default_term;
 }
 
-void term_set_color(const unsigned char fg, const unsigned char bg) {
-  terminal_color.fg = fg;
-  terminal_color.bg = bg;
-}
-
-void term_set_fg(const unsigned char fg) {
-  terminal_color.fg = fg;
-}
-
-void term_set_bg(const unsigned char bg) {
-  terminal_color.bg = bg;
-}
-
-void term_clear_screen_color(const CharColor color) {
-  for (size_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; ++i) {
-    screen[i].character = 0;
-    screen[i].color = color;
-  }
-  pos_x = 0;
-  pos_y = 0;
-}
-
-void term_clear_screen_bgfg(const int bg, const int fg) {
-  const CharColor color = {fg, bg};
-  term_clear_screen_color(color);
-}
-
-void term_clear_screen() {
-  term_clear_screen_color(terminal_color);
-}
-
-size_t term_print_char_at(const char c, const int x, const int y) {
-  const size_t pos = VGA_WIDTH*y+x;
-  screen[pos].character = c;
-  screen[pos].color.fg = terminal_color.fg;
-  screen[pos].color.bg = terminal_color.bg;
-  return pos+1;
-}
-
-void term_print_char(const char c) {
-  const size_t new_pos = term_print_char_at(c, pos_x, pos_y);
-  pos_y = new_pos / VGA_WIDTH;
-  pos_x = new_pos % VGA_WIDTH;
-  while (pos_y >= VGA_HEIGHT) {
-    term_scroll();
-    --pos_y;
+static void term_new_line() {
+  default_term.pos_x = 0;
+  ++default_term.pos_y;
+  if (default_term.pos_y == default_term.drv->height) {
+    default_term.drv->line_feed(default_term.drv, default_term.color);
+    --default_term.pos_y;
   }
 }
 
-size_t term_print_string_at(const char *s, const int x, const int y) {
-  size_t pos = VGA_WIDTH*y+x;
-  for (size_t i = 0; s[i] != 0; ++i) {
-    while (pos >= VGA_WIDTH * VGA_HEIGHT) {
-      pos -= VGA_WIDTH;
-      term_scroll();
-    }
-    screen[pos].character = s[i];
-    screen[pos].color.fg = terminal_color.fg;
-    screen[pos].color.bg = terminal_color.bg;
-    ++pos;
+static void term_carriage_return() {
+  default_term.pos_x = 0;
+}
+
+int term_putchar(const char c) {
+  switch (c) {
+  case '\n':
+    term_new_line(); return c;
+  case '\r':
+    term_carriage_return(); return c;
+  case '\f':
+    term_clear(); return c;
   }
-  return pos;
-}
 
-void term_print_string(const char *s) {
-  const size_t new_pos = term_print_string_at(s, pos_x, pos_y);
-  pos_y = new_pos / VGA_WIDTH;
-  pos_x = new_pos % VGA_WIDTH;
-}
+  const ScreenChar sc = {.character=c, .color=default_term.color};
+  default_term.drv->put_char_at(default_term.drv, sc, default_term.pos_x, default_term.pos_y);
 
-void term_println(const char *s) {
-  term_print_string(s);
-  term_new_line();
-}
-
-void term_scroll() {
-  for (size_t row = 1; row < VGA_HEIGHT; ++row) {
-    for (size_t col = 0; col < VGA_WIDTH; ++col) {
-      screen[(row-1)*VGA_WIDTH+col] = screen[row*VGA_WIDTH+col];
-    }
+  ++default_term.pos_x;
+  if (default_term.pos_x == default_term.drv->width) {
+    default_term.pos_x = 0;
+    ++default_term.pos_y;
   }
-  for (size_t col = 0; col < VGA_WIDTH; ++col) {
-    screen[(VGA_HEIGHT-1)*VGA_WIDTH+col].character = 0;
-    screen[(VGA_HEIGHT-1)*VGA_WIDTH+col].color = terminal_color;
+  
+  if (default_term.pos_y == default_term.drv->height) {
+    default_term.drv->line_feed(default_term.drv, default_term.color);
+    --default_term.pos_y;
   }
+  return (int)c;
 }
 
-void term_scroll_n(const unsigned char n) {
-  for (unsigned char i = 0; i < n; ++i) {
-    term_scroll();
+int term_puts(const char *s) {
+  int n = 0;
+  while (*s != 0) {
+    term_putchar(*(s++));
+    ++n;
   }
+  return n;
 }
 
-void term_new_line() {
-  pos_x = 0;
-  ++pos_y;
-  if (pos_y == VGA_HEIGHT) {
-    term_scroll();
-    --pos_y;
-  }
+void term_set_color(const CharColor color) {
+  default_term.color = color;
 }
 
-void term_carriage_return() {
-  pos_x = 0;
+void term_set_fg(const int fg) {
+  default_term.color.fg = fg;
 }
 
-void draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
-                 const size_t w, const size_t h) {
-  for (size_t i = 0; i < h; ++i) {
-    for (size_t j = 0; j < w; ++j) {
-      const size_t pos = VGA_WIDTH*(y+i) + x + j;
-      screen[pos] = bitmap[w*i+j];
-    }
-  }
+void term_set_bg(const int bg) {
+  default_term.color.bg = bg;
+}
+
+void term_clear() {
+  default_term.drv->clear(default_term.drv, default_term.color);
+  default_term.pos_x = 0;
+  default_term.pos_y = 0;
 }

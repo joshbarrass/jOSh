@@ -4,11 +4,7 @@
 #include <kernel/tty.h>
 
 int puts(char *s) {
-  int i = 0;
-  for (; s[i] != '\0'; ++i) {
-    putchar(s[i]);
-  }
-  return i;
+  return term_puts(s);
 }
 
 #endif

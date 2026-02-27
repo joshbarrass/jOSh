@@ -114,6 +114,18 @@ typedef struct __attribute__((packed)) m2is_mmap {
   mmap_entry entries[0];
 } m2is_mmap;
 
+typedef struct __attribute__((packed)) m2is_framebuffer_info {
+  m2is_tag tag;
+  uint64_t addr;
+  uint32_t pitch;
+  uint32_t width;
+  uint32_t height;
+  uint8_t bpp;
+  uint8_t type;
+  uint8_t __reserved;
+  char color_info[0];
+} m2is_framebuffer_info;
+
 #endif
 
 #endif

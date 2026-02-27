@@ -14,12 +14,23 @@ __attribute__((noreturn)) __attribute__((naked)) static void kpanic_halt() {
                 );
 }
 
+static void term_draw_bitmap(const ScreenChar *bitmap, const size_t x, const size_t y,
+                 const size_t w, const size_t h) {
+  struct Terminal *term = get_default_term();
+
+  for (size_t i = 0; i < h; ++i) {
+    for (size_t j = 0; j < w; ++j) {
+      term->drv->put_char_at(term->drv, bitmap[w*i+j], x+j, y+i);
+    }
+  }
+}
+
 void kpanic(const char* fmt, ...){
-  term_set_color(VGA_COLOR_WHITE, VGA_COLOR_RED);
-  term_clear_screen();
-  draw_bitmap(skull, VGA_WIDTH-SKULL_WIDTH, 0, SKULL_WIDTH, SKULL_HEIGHT);
-  term_println("KERNEL PANIC");
-  term_new_line();
+  term_set_fg(VGA_COLOR_WHITE);
+  term_set_bg(VGA_COLOR_RED);
+  term_clear();
+  term_draw_bitmap(skull, VGA_WIDTH-SKULL_WIDTH, 0, SKULL_WIDTH, SKULL_HEIGHT);
+  printf("KERNEL PANIC\n\n");
 
   va_list args;
   va_start(args, fmt);

@@ -35,7 +35,7 @@ test: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -cdrom '$<' -boot order=d -gdb tcp::9000
 
 UEFI_FIRMWARE_PATH?=/usr/share/ovmf/OVMF.fd
-.PHONY: test
+.PHONY: test-uefi
 test-uefi: jOSh.iso
 	qemu-system-$(TARGET_ARCH) -bios '$(UEFI_FIRMWARE_PATH)' -cdrom '$<' -boot order=d -gdb tcp::9000
 

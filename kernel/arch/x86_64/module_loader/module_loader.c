@@ -11,6 +11,7 @@
 #include <multiboot2.h>
 #include <kernel/bootstruct.h>
 #include <kernel/tty.h>
+#include <kernel/bootstrap/display.h>
 #include "elf_paged.h"
 #include "addr_checker.h"
 #include "bump_alloc.h"
@@ -49,8 +50,13 @@ BootStruct bootstruct;
 
 static void setup_page_tables();
 
+void term_println(char *s) {
+  printf("%s\n", s);
+}
+
 void module_loader_main() {
-  term_clear_screen();
+  init_default_term(bootstrap_console_driver(mis));
+  term_clear();
   term_set_fg(10);
 
   printf("[+] Entered module loader\n");
@@ -95,7 +101,7 @@ void module_loader_main() {
   );
   if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
     term_set_fg(4);
-    term_print_string_at("BE", 17, PREV_LINE);
+    /* term_print_string_at("BE", 17, PREV_LINE); */
     return;
   }
 
@@ -160,8 +166,9 @@ void module_loader_main() {
     }
 
     printf("[+] Jumping to long loader...\n");
-
+    
     entry.entry64 = get_elf64_entrypoint(mod);
+
     asm ("call switch_to_long" : : : );
   }
 }

@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 #include <kernel/tty.h>
+#include <kernel/bootstrap/display.h>
 #include <kernel/vga.h>
 #include <kernel/bootstruct.h>
 #include <multiboot2.h>
@@ -34,6 +35,7 @@ const BootStruct *bootstruct = NULL;
 const M2IS *mis = NULL;
 static const m2is_meminfo *mis_meminfo = NULL;
 static const m2is_mmap *mis_mmap = NULL;
+static const m2is_framebuffer_info *mis_framebuffer = NULL;
 #define M2IS_CHECK(var)                                                        \
   if (var == NULL) {                                                           \
     term_error_color();                                                        \
@@ -67,8 +69,9 @@ inline static void term_error_color() {
 
 void kernel_main() {
   VGA_set_blink(false);
+  init_default_term(bootstrap_console_driver(mis));
   term_info_color();
-  term_clear_screen();
+  term_clear();
   print_welcome_message();
   if (BS_IS_PRESENT) {
     term_good_color();
@@ -103,6 +106,9 @@ void kernel_main() {
       case M2IS_TYPE_MEMMAP:
         mis_mmap = (const m2is_mmap *)tag;
         break;
+      case M2IS_TYPE_FRAMEBUFFER:
+        mis_framebuffer = (const m2is_framebuffer_info *)tag;
+        break;
       default:
       }
 
@@ -112,6 +118,7 @@ void kernel_main() {
   // check that we found everything
   M2IS_CHECK(mis_meminfo);
   M2IS_CHECK(mis_mmap);
+  M2IS_CHECK(mis_framebuffer);
 
   // print total available memory
   const size_t total_memory = mis_meminfo->mem_lower + mis_meminfo->mem_upper; // KiB
@@ -156,6 +163,11 @@ void kernel_main() {
 
   pmm_init(lowest_free_page, mis_mmap);
   vmm_init();
+
+  // print framebuffer info
+  printf("Framebuffer type: %d\n", mis_framebuffer->type);
+  printf("Framebuffer dims: %dx%d\n", mis_framebuffer->width, mis_framebuffer->height);
+  printf("Framebuffer pitch: %d\n", mis_framebuffer->pitch);
 
   return;
 }
