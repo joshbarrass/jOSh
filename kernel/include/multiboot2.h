@@ -123,8 +123,28 @@ typedef struct __attribute__((packed)) m2is_framebuffer_info {
   uint8_t bpp;
   uint8_t type;
   uint8_t __reserved;
-  char color_info[0];
+  uint8_t color_info[];
 } m2is_framebuffer_info;
+
+typedef struct __attribute__((packed)) {
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+} m2is_palette_entry;
+
+typedef struct __attribute__((packed)) {
+  uint32_t num_colors;
+  m2is_palette_entry palette[];
+} m2is_color_info_indexed;
+
+typedef struct __attribute__((packed)) {
+  uint8_t red_offset;
+  uint8_t red_bits;
+  uint8_t green_offset;
+  uint8_t green_bits;
+  uint8_t blue_offset;
+  uint8_t blue_bits;
+} m2is_color_info_direct;
 
 #endif
 
