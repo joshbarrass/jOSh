@@ -10,6 +10,7 @@ typedef struct __attribute__((packed)) {
   uint8_t *addr;
   size_t width_px;
   size_t height_px;
+  uint8_t bpp;
   m2is_color_info_direct color_info;
 } BitmapConsole;
 

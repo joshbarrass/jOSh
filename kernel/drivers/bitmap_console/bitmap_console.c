@@ -18,9 +18,11 @@ void bitmap_console_init(BitmapConsole *drv, m2is_framebuffer_info *fbinfo) {
   drv->drv.line_feed = &line_feed;
   drv->drv.clear = &clear;
   drv->addr = (uint8_t*)(uintptr_t)fbinfo->addr;
+  drv->pitch = fbinfo->pitch;
   drv->width_px = fbinfo->width;
   drv->drv.width = fbinfo->width / 8; // PSF1 has fixed width of 8 pixels
   drv->height_px = fbinfo->height;
   drv->drv.height = fbinfo->height / default_font->characterSize;
-  drv->color_info = *(m2is_color_info_direct*)fbinfo->color_info;
+  drv->bpp = fbinfo->bpp;
+  drv->color_info = fbinfo->color_info.direct;
 }
