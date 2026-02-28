@@ -114,18 +114,6 @@ typedef struct __attribute__((packed)) m2is_mmap {
   mmap_entry entries[0];
 } m2is_mmap;
 
-typedef struct __attribute__((packed)) m2is_framebuffer_info {
-  m2is_tag tag;
-  uint64_t addr;
-  uint32_t pitch;
-  uint32_t width;
-  uint32_t height;
-  uint8_t bpp;
-  uint8_t type;
-  uint8_t __reserved;
-  uint8_t color_info[];
-} m2is_framebuffer_info;
-
 typedef struct __attribute__((packed)) {
   uint8_t red;
   uint8_t green;
@@ -145,6 +133,23 @@ typedef struct __attribute__((packed)) {
   uint8_t blue_offset;
   uint8_t blue_bits;
 } m2is_color_info_direct;
+
+typedef struct __attribute__((packed)) m2is_framebuffer_info {
+  m2is_tag tag;
+  uint64_t addr;
+  uint32_t pitch;
+  uint32_t width;
+  uint32_t height;
+  uint8_t bpp;
+  uint8_t type;
+  // https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html
+  // says the reserved field is 8 bits, but this is not correct!
+  uint16_t __reserved;
+  union {
+    m2is_color_info_indexed indexed;
+    m2is_color_info_direct direct;
+  } color_info;
+} m2is_framebuffer_info;
 
 #endif
 
