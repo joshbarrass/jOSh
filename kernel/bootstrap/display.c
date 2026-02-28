@@ -2,6 +2,7 @@
 #include <kernel/bootstrap/static_bump.h>
 #include <kernel/drivers/console.h>
 #include <kernel/drivers/ega/ega.h>
+#include <kernel/drivers/bitmap_console/bitmap_console.h>
 #include <kernel/drivers/null_console/null_console.h>
 #include <multiboot2.h>
 
@@ -25,12 +26,20 @@ static ConsoleDriver *bootstrap_ega_driver(const m2is_framebuffer_info *fbinfo) 
   return (ConsoleDriver*)drv;
 }
 
+static ConsoleDriver *bootstrap_bitmap_driver(const m2is_framebuffer_info *fbinfo) {
+  BitmapConsole * const drv = SB_ALLOC_ALIGNED(&bumper, BitmapConsole);
+  bitmap_console_init(drv, fbinfo);
+  return (ConsoleDriver*)drv;
+}
+
 ConsoleDriver *bootstrap_console_driver(const M2IS *m2is) {
   const m2is_framebuffer_info *fbinfo = get_fbinfo(m2is);
   if (fbinfo == NULL) return get_null_console();
   switch (fbinfo->type) {
   case 2:
     return bootstrap_ega_driver(fbinfo);
+  case 1:
+    return bootstrap_bitmap_driver(fbinfo);
   }
   return get_null_console();
 }
