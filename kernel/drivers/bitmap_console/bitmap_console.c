@@ -1,3 +1,4 @@
+#include <string.h>
 #include <kernel/drivers/bitmap_console/bitmap_console.h>
 #include <kernel/drivers/bitmap_console/psf.h>
 #include <kernel/drivers/null_console/null_console.h>
@@ -36,22 +37,36 @@ static void putch_32bpp(ConsoleDriver * console, const ScreenChar c, const size_
   const uint8_t *glyph = &default_font->data[c.character * default_font->characterSize];
   for (size_t i = 0; i < default_font->characterSize; ++i) {
     const uint8_t glyph_row = glyph[i];
+    uint32_t * const row = get_row_32bpp(drv, y*default_font->characterSize + i);
     for (size_t j = 0; j < 8; ++j) {
       const uint8_t glyph_pix = glyph_row & (128 >> j);
       const uint32_t color = (glyph_pix == 0) ? c.color.bg : c.color.fg;
-      uint32_t *row = get_row_32bpp(drv, y*default_font->characterSize + i);
       row[x*8 + j] = drv->palette_32bpp[color];
     }
   }
 }
 
-static void line_feed_32bpp(ConsoleDriver *console, const CharColor c) {}
+static void line_feed_32bpp(ConsoleDriver *console, const CharColor c) {
+  BitmapConsole *drv = (BitmapConsole*)console;
+  for (size_t y = default_font->characterSize; y < drv->height_px; ++y) {
+    uint32_t * const row = get_row_32bpp(drv, y);
+    uint32_t * const shifted_row = get_row_32bpp(drv, y-default_font->characterSize);
+    memmove(shifted_row, row, sizeof(uint32_t)*drv->width_px);
+  }
+  for (size_t y = (drv->drv.height - 1) * default_font->characterSize;
+       y < drv->height_px; ++y) {
+    uint32_t * const row = get_row_32bpp(drv, y);
+    for (size_t x = 0; x < drv->width_px; ++x) {
+      row[x] = drv->palette_32bpp[c.bg];
+    }
+  }
+}
 
 static void clear_32bpp(ConsoleDriver *console, const CharColor color) {
   BitmapConsole *drv = (BitmapConsole*)console;
   for (size_t y = 0; y < drv->height_px; ++y) {
+    uint32_t * const row = get_row_32bpp(drv, y);
     for (size_t x = 0; x < drv->width_px; ++x) {
-      uint32_t * row = get_row_32bpp(drv, y);
       row[x] = drv->palette_32bpp[color.bg];
     }
   }
