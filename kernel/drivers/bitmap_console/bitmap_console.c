@@ -72,6 +72,45 @@ static void clear_32bpp(ConsoleDriver *console, const CharColor color) {
   }
 }
 
+inline static uint8_t *get_row_generic(BitmapConsole *drv, const size_t y) {
+  return (uint8_t*)(drv->addr + y*drv->pitch);
+}
+
+static inline void set_pixel_channel_generic(BitmapConsole *drv,
+                                             const size_t RGB_chan_val,
+                                             const size_t x,
+                                             const size_t y,
+                                             const size_t chan_offset,
+                                             const size_t chan_size) {
+  uint8_t * const row = get_row_generic(drv, y);
+  const size_t chan_val = (RGB_chan_val * ((1 << chan_size) - 1)) / 255;
+  for (size_t bit = 0; bit < chan_size; ++bit) {
+    const size_t target_bit = x * drv->bpp + chan_offset + bit;
+    const size_t target_byte = target_bit / 8;
+    const size_t target_offset = target_bit % 8;
+
+    // clear the bit
+    row[target_byte] ^= row[target_byte] & (1 << target_offset);
+
+    // Find the value (1 or 0) of the appropriate bit in the channel
+    // value. We right shift to crop off the lower <bit> bits, then &
+    // 1 to get the LSB
+    const size_t mask = (chan_val >> bit) & 1;
+
+    // set the bit
+    row[target_byte] |= (mask << target_offset);
+  }
+}
+
+// Method for setting a single pixel's colour bit-by-bit. Slower than
+// bpp-optimised routines, but works for any value of bpp.
+static inline void set_pixel_generic(BitmapConsole *drv, const size_t color,
+                                     const size_t x, const size_t y) {
+  set_pixel_channel_generic(drv, VGA_palette_RGB[3*color+0], x, y, drv->color_info.red_offset, drv->color_info.red_bits);
+  set_pixel_channel_generic(drv, VGA_palette_RGB[3*color+1], x, y, drv->color_info.green_offset, drv->color_info.green_bits);
+  set_pixel_channel_generic(drv, VGA_palette_RGB[3*color+2], x, y, drv->color_info.blue_offset, drv->color_info.blue_bits);
+}
+
 void bitmap_console_init(BitmapConsole *drv, m2is_framebuffer_info *fbinfo) {
   drv->addr = (uint8_t*)(uintptr_t)fbinfo->addr;
   drv->pitch = fbinfo->pitch;
