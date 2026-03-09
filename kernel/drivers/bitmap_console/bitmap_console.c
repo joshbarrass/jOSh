@@ -28,6 +28,40 @@ static uint8_t VGA_palette_RGB[16 * 3] =
       255, 255, 255
     };
 
+#define _putch_body(SET_PIXEL_FN)                                        \
+  BitmapConsole *drv = (BitmapConsole*)console;                         \
+  const uint8_t *glyph = &default_font->data[c.character * default_font->characterSize]; \
+  for (size_t i = 0; i < default_font->characterSize; ++i) {            \
+    const uint8_t glyph_row = glyph[i];                                 \
+    for (size_t j = 0; j < 8; ++j) {                                    \
+      const uint8_t glyph_pix = glyph_row & (128 >> j);                 \
+      const uint32_t color = (glyph_pix == 0) ? c.color.bg : c.color.fg; \
+      SET_PIXEL_FN(drv, color, x*8 + j, y*default_font->characterSize + i); \
+    }                                                                   \
+  }
+
+#define _line_feed_body(SET_PIXEL_FN, GET_ROW_FN)                       \
+  BitmapConsole *drv = (BitmapConsole*)console;                         \
+  for (size_t y = default_font->characterSize; y < drv->height_px; ++y) { \
+    uint32_t * const row = GET_ROW_FN(drv, y);                       \
+    uint32_t * const shifted_row = GET_ROW_FN(drv, y-default_font->characterSize); \
+    memmove(shifted_row, row, sizeof(uint32_t)*drv->width_px);          \
+  }                                                                     \
+  for (size_t y = (drv->drv.height - 1) * default_font->characterSize;  \
+  y < drv->height_px; ++y) {                                            \
+    for (size_t x = 0; x < drv->width_px; ++x) {                        \
+      set_pixel_32bpp(drv, c.bg, x, y);                                 \
+    }                                                                   \
+  }
+
+#define _clear_body(SET_PIXEL_FN)               \
+  BitmapConsole *drv = (BitmapConsole*)console; \
+  for (size_t y = 0; y < drv->height_px; ++y) {         \
+    for (size_t x = 0; x < drv->width_px; ++x) {        \
+      set_pixel_32bpp(drv, color.bg, x, y);             \
+    }                                                   \
+  }
+
 inline static uint32_t *get_row_32bpp(BitmapConsole *drv, const size_t y) {
   return (uint32_t*)(drv->addr + y*drv->pitch);
 }
@@ -39,40 +73,15 @@ inline static void set_pixel_32bpp(BitmapConsole *drv, const size_t color,
 }
 
 static void putch_32bpp(ConsoleDriver * console, const ScreenChar c, const size_t x, const size_t y) {
-  BitmapConsole *drv = (BitmapConsole*)console;
-  const uint8_t *glyph = &default_font->data[c.character * default_font->characterSize];
-  for (size_t i = 0; i < default_font->characterSize; ++i) {
-    const uint8_t glyph_row = glyph[i];
-    for (size_t j = 0; j < 8; ++j) {
-      const uint8_t glyph_pix = glyph_row & (128 >> j);
-      const uint32_t color = (glyph_pix == 0) ? c.color.bg : c.color.fg;
-      set_pixel_32bpp(drv, color, x*8 + j, y*default_font->characterSize + i);
-    }
-  }
+  _putch_body(set_pixel_32bpp);
 }
 
 static void line_feed_32bpp(ConsoleDriver *console, const CharColor c) {
-  BitmapConsole *drv = (BitmapConsole*)console;
-  for (size_t y = default_font->characterSize; y < drv->height_px; ++y) {
-    uint32_t * const row = get_row_32bpp(drv, y);
-    uint32_t * const shifted_row = get_row_32bpp(drv, y-default_font->characterSize);
-    memmove(shifted_row, row, sizeof(uint32_t)*drv->width_px);
-  }
-  for (size_t y = (drv->drv.height - 1) * default_font->characterSize;
-       y < drv->height_px; ++y) {
-    for (size_t x = 0; x < drv->width_px; ++x) {
-      set_pixel_32bpp(drv, c.bg, x, y);
-    }
-  }
+  _line_feed_body(set_pixel_32bpp, get_row_32bpp);
 }
 
 static void clear_32bpp(ConsoleDriver *console, const CharColor color) {
-  BitmapConsole *drv = (BitmapConsole*)console;
-  for (size_t y = 0; y < drv->height_px; ++y) {
-    for (size_t x = 0; x < drv->width_px; ++x) {
-      set_pixel_32bpp(drv, color.bg, x, y);
-    }
-  }
+  _clear_body(set_pixel_32bpp);
 }
 
 inline static uint8_t *get_row_generic(BitmapConsole *drv, const size_t y) {
