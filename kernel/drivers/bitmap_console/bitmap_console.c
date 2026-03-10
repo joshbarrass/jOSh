@@ -43,8 +43,8 @@ static uint8_t VGA_palette_RGB[16 * 3] =
 #define _line_feed_body(SET_PIXEL_FN, GET_ROW_FN)                       \
   BitmapConsole *drv = (BitmapConsole*)console;                         \
   for (size_t y = default_font->characterSize; y < drv->height_px; ++y) { \
-    uint32_t * const row = GET_ROW_FN(drv, y);                       \
-    uint32_t * const shifted_row = GET_ROW_FN(drv, y-default_font->characterSize); \
+    void * const row = GET_ROW_FN(drv, y);                       \
+    void * const shifted_row = GET_ROW_FN(drv, y-default_font->characterSize); \
     memmove(shifted_row, row, sizeof(uint32_t)*drv->width_px);          \
   }                                                                     \
   for (size_t y = (drv->drv.height - 1) * default_font->characterSize;  \
@@ -123,6 +123,18 @@ static inline void set_pixel_generic(BitmapConsole *drv, const size_t color,
   set_pixel_channel_generic(drv, VGA_palette_RGB[3*color+2], x, y, drv->color_info.blue_offset, drv->color_info.blue_bits);
 }
 
+static void putch_generic(ConsoleDriver * console, const ScreenChar c, const size_t x, const size_t y) {
+  _putch_body(set_pixel_generic);
+}
+
+static void line_feed_generic(ConsoleDriver *console, const CharColor c) {
+  _line_feed_body(set_pixel_generic, get_row_generic);
+}
+
+static void clear_generic(ConsoleDriver *console, const CharColor color) {
+  _clear_body(set_pixel_generic);
+}
+
 void bitmap_console_init(BitmapConsole *drv, m2is_framebuffer_info *fbinfo) {
   drv->addr = (uint8_t*)(uintptr_t)fbinfo->addr;
   drv->pitch = fbinfo->pitch;
@@ -151,8 +163,9 @@ void bitmap_console_init(BitmapConsole *drv, m2is_framebuffer_info *fbinfo) {
         (green << drv->color_info.green_offset) |
         (blue << drv->color_info.blue_offset);
     }
-  } else { // unhandled bpp -- TODO: use unoptimised generic routines
-    // (for now, just use the null driver)
-    drv->drv = *get_null_console();
+  } else { // unhandled bpp -- use generic routines
+    drv->drv.put_char_at = &putch_generic;
+    drv->drv.line_feed = &line_feed_generic;
+    drv->drv.clear = &clear_generic;
   }
 }
