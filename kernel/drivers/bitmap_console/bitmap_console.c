@@ -102,7 +102,7 @@ static inline void set_pixel_channel_generic(BitmapConsole *drv,
     const size_t target_offset = target_bit % 8;
 
     // clear the bit
-    row[target_byte] ^= row[target_byte] & (1 << target_offset);
+    row[target_byte] &= ~(1 << target_offset);
 
     // Find the value (1 or 0) of the appropriate bit in the channel
     // value. We right shift to crop off the lower <bit> bits, then &
