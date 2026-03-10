@@ -3,7 +3,7 @@
 #include <kernel/drivers/bitmap_console/psf.h>
 #include <kernel/drivers/null_console/null_console.h>
 
-extern const char _binary_default_font_psf_start;
+extern const char _binary_default_font_psf_start[];
 static const PSF1* default_font = (const PSF1*)(&_binary_default_font_psf_start);
 
 // RGB representation of the VGA palette
