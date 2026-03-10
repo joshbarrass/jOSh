@@ -155,7 +155,7 @@ void module_loader_main() {
     bootstruct.flags |= BS_FLAG_FREEADDR;
     bs_set_checksum(&bootstruct);
     printf("      Flags: %#x\n"
-           "      MIS: %#lx\n"
+           "      MIS: %#llx\n"
            "      Checksum: %#x\n", bootstruct.flags, bootstruct.M2IS, bootstruct.checksum);
     if (bs_verify_checksum(&bootstruct)) {
       printf("      Valid!\n");
