@@ -40,11 +40,11 @@ static uint8_t VGA_palette_RGB[16 * 3] =
     }                                                                   \
   }
 
-#define _line_feed_body(SET_PIXEL_FN, GET_ROW_FN)                       \
+#define _line_feed_body(SET_PIXEL_FN)                                   \
   BitmapConsole *drv = (BitmapConsole*)console;                         \
   for (size_t y = default_font->characterSize; y < drv->height_px; ++y) { \
-    void * const row = GET_ROW_FN(drv, y);                       \
-    void * const shifted_row = GET_ROW_FN(drv, y-default_font->characterSize); \
+    void * const row = (drv->addr + y*drv->pitch);                      \
+    void * const shifted_row = (drv->addr + (y-default_font->characterSize)*drv->pitch); \
     memmove(shifted_row, row, sizeof(uint32_t)*drv->width_px);          \
   }                                                                     \
   for (size_t y = (drv->drv.height - 1) * default_font->characterSize;  \
@@ -77,7 +77,7 @@ static void putch_32bpp(ConsoleDriver * console, const ScreenChar c, const size_
 }
 
 static void line_feed_32bpp(ConsoleDriver *console, const CharColor c) {
-  _line_feed_body(set_pixel_32bpp, get_row_32bpp);
+  _line_feed_body(set_pixel_32bpp);
 }
 
 static void clear_32bpp(ConsoleDriver *console, const CharColor color) {
@@ -131,7 +131,7 @@ static void putch_generic(ConsoleDriver * console, const ScreenChar c, const siz
 }
 
 static void line_feed_generic(ConsoleDriver *console, const CharColor c) {
-  _line_feed_body(set_pixel_generic, get_row_generic);
+  _line_feed_body(set_pixel_generic);
 }
 
 static void clear_generic(ConsoleDriver *console, const CharColor color) {
