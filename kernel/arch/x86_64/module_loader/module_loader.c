@@ -57,7 +57,20 @@ void term_println(char *s) {
 void module_loader_main() {
   init_default_term(bootstrap_console_driver(mis));
   term_clear();
+  // print the palette test lines
   term_set_fg(10);
+  for (int i = 0; i < 16; ++i) {
+    term_set_bg(i);
+    printf(" ");
+  }
+  term_set_bg(0);
+  printf("\n");
+  for (int i = 0; i < 16; ++i) {
+    term_set_fg(i);
+    printf("#");
+  }
+  term_set_fg(10);
+  printf("\n");
 
   printf("[+] Entered module loader\n");
   if (mis == 0) {
