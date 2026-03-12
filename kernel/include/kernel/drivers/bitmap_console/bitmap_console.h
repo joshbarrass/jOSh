@@ -11,6 +11,7 @@ typedef struct __attribute__((packed)) {
   size_t width_px;
   size_t height_px;
   uint8_t bpp;
+  uint8_t phys_bpp;
   m2is_color_info_direct color_info;
 
   // for direct colour, 32-bit indexing is most common. Since we're

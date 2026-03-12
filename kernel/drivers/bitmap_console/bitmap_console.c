@@ -100,7 +100,7 @@ static inline void set_pixel_channel_generic(BitmapConsole *drv,
   uint8_t * const row = get_row_generic(drv, y);
   const size_t chan_val = (RGB_chan_val * ((1 << chan_size) - 1)) / 255;
   for (size_t bit = 0; bit < chan_size; ++bit) {
-    const size_t target_bit = x * drv->bpp + chan_offset + bit;
+    const size_t target_bit = x * drv->phys_bpp + chan_offset + bit;
     const size_t target_byte = target_bit / 8;
     const size_t target_offset = target_bit % 8;
 
@@ -146,19 +146,15 @@ void bitmap_console_init(BitmapConsole *drv, m2is_framebuffer_info *fbinfo) {
   drv->height_px = fbinfo->height;
   drv->drv.height = fbinfo->height / default_font->characterSize;
   drv->bpp = fbinfo->bpp;
+  // The number of used bits per pixel doesn't need to be a multiple
+  // of 8 (e.g. 15bpp modes), but (other than 4bpp palette modes that
+  // store two pixels per byte) the hardware prefers the start of each
+  // pixel to be byte-aligned because reading/writing a when not
+  // byte-aligned becomes awkward very quickly. phys_bpp gives us
+  // the stride to the next pixel instead of the number of pixels
+  // actually used for image data.
+  drv->phys_bpp = (drv->bpp + 7) & ~7;
   drv->color_info = fbinfo->color_info.direct;
-
-  // 15bpp modes almost always use 16-bit alignment because of the
-  // awkwardness of writing across byte boundaries. We don't
-  // (currently) have an optimised routine for either case, so it'll
-  // just use the generic pixel code, which uses the information in
-  // the color_info struct directly. However, the generic pixel code
-  // does not assume any alignment. To avoid alignment issues, pad the
-  // bpp out to 16 bits -- the generic code doesn't use it except for
-  // ensuring correct alignment.
-  if (drv->bpp == 15) {
-    drv->bpp = 16;
-  }
 
   // if we're 32bpp, pre-generate the palette and use the functions
   // optimised for 32bpp
