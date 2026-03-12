@@ -66,7 +66,7 @@ inline static uint32_t *get_row_32bpp(BitmapConsole *drv, const size_t y) {
   return (uint32_t*)(drv->addr + y*drv->pitch);
 }
 
-inline static void set_pixel_32bpp(BitmapConsole *drv, const size_t color,
+inline static __attribute__((always_inline)) void set_pixel_32bpp(BitmapConsole *drv, const size_t color,
                             const size_t x, const size_t y) {
   uint32_t * const row = get_row_32bpp(drv, y);
   row[x] = drv->palette_32bpp[color];
