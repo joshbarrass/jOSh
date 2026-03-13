@@ -30,7 +30,7 @@ static uint8_t VGA_palette_RGB[16 * 3] =
 
 #define _putch_body(SET_PIXEL_FN)                                        \
   BitmapConsole *drv = (BitmapConsole*)console;                         \
-  const uint8_t *glyph = &default_font->data[c.character * default_font->characterSize]; \
+  const uint8_t *glyph = PSF1_get_glyph(default_font, c.character); \
   for (size_t i = 0; i < default_font->characterSize; ++i) {            \
     const uint8_t glyph_row = glyph[i];                                 \
     for (size_t j = 0; j < 8; ++j) {                                    \
