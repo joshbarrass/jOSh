@@ -16,7 +16,6 @@ $(KERNEL_DIR)/drivers/ega/ega.o \
 $(KERNEL_DIR)/drivers/null_console/null.o \
 $(KERNEL_DIR)/bootstrap/static_bump.o \
 $(KERNEL_DIR)/bootstrap/display.o \
-$(KERNEL_DIR)/drivers/bitmap_console/psf.o \
 $(KERNEL_DIR)/drivers/bitmap_console/default_font.o \
 $(KERNEL_DIR)/drivers/bitmap_console/bitmap_console.o
 
