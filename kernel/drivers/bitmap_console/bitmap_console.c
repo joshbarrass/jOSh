@@ -138,7 +138,7 @@ static void clear_generic(ConsoleDriver *console, const CharColor color) {
   _clear_body(set_pixel_generic);
 }
 
-void bitmap_console_init(BitmapConsole *drv, m2is_framebuffer_info *fbinfo) {
+void bitmap_console_init(BitmapConsole *drv, const m2is_framebuffer_info *fbinfo) {
   drv->addr = (uint8_t*)(uintptr_t)fbinfo->addr;
   drv->pitch = fbinfo->pitch;
   drv->width_px = fbinfo->width;
