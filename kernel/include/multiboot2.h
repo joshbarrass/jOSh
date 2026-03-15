@@ -46,6 +46,12 @@ typedef enum m2is_type : uint32_t {
     M2IS_TYPE_LOAD_ADDR = 21,
 } m2is_type;
 
+typedef enum m2is_framebuffer_type : uint8_t {
+    M2IS_FB_TYPE_INDEXED = 0,
+    M2IS_FB_TYPE_DIRECT = 1,
+    M2IS_FB_TYPE_TEXT = 2,
+} m2is_framebuffer_type;
+
 #ifndef MB2_ENUMS_ONLY
 typedef struct __attribute__((packed)) m2is_tag {
   m2is_type type;
@@ -114,6 +120,26 @@ typedef struct __attribute__((packed)) m2is_mmap {
   mmap_entry entries[0];
 } m2is_mmap;
 
+typedef struct __attribute__((packed)) {
+  uint8_t red;
+  uint8_t green;
+  uint8_t blue;
+} m2is_palette_entry;
+
+typedef struct __attribute__((packed)) {
+  uint32_t num_colors;
+  m2is_palette_entry palette[];
+} m2is_color_info_indexed;
+
+typedef struct __attribute__((packed)) {
+  uint8_t red_offset;
+  uint8_t red_bits;
+  uint8_t green_offset;
+  uint8_t green_bits;
+  uint8_t blue_offset;
+  uint8_t blue_bits;
+} m2is_color_info_direct;
+
 typedef struct __attribute__((packed)) m2is_framebuffer_info {
   m2is_tag tag;
   uint64_t addr;
@@ -121,9 +147,14 @@ typedef struct __attribute__((packed)) m2is_framebuffer_info {
   uint32_t width;
   uint32_t height;
   uint8_t bpp;
-  uint8_t type;
-  uint8_t __reserved;
-  char color_info[0];
+  m2is_framebuffer_type type;
+  // https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html
+  // says the reserved field is 8 bits, but this is not correct!
+  uint16_t __reserved;
+  union {
+    m2is_color_info_indexed indexed;
+    m2is_color_info_direct direct;
+  } color_info;
 } m2is_framebuffer_info;
 
 #endif

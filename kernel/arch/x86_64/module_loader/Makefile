@@ -20,6 +20,8 @@ bootstruct.o \
 strcmp.o \
 strlen.o \
 ega_driver.o \
+bitmap_console_driver.o \
+bitmap_console_font.o \
 null_console_driver.o \
 bootstrap_display.o \
 bootstrap_static_bump.o
@@ -52,6 +54,12 @@ errno.o: ../../../../libc/errno/errno.c
 
 ega_driver.o: ../../../drivers/ega/ega.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+
+bitmap_console_driver.o: ../../../drivers/bitmap_console/bitmap_console.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+
+bitmap_console_font.o: ../../../drivers/bitmap_console/default_font.psf
+	cd '$(dir $(abspath $<))' && $(OBJCOPY) -O elf32-i386 -I binary '$(notdir $<)' '$(abspath $@)'
 
 null_console_driver.o: ../../../drivers/null_console/null.c
 	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)

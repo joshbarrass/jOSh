@@ -15,7 +15,9 @@ $(KERNEL_DIR)/bootstruct.o \
 $(KERNEL_DIR)/drivers/ega/ega.o \
 $(KERNEL_DIR)/drivers/null_console/null.o \
 $(KERNEL_DIR)/bootstrap/static_bump.o \
-$(KERNEL_DIR)/bootstrap/display.o
+$(KERNEL_DIR)/bootstrap/display.o \
+$(KERNEL_DIR)/drivers/bitmap_console/default_font.o \
+$(KERNEL_DIR)/drivers/bitmap_console/bitmap_console.o
 
 KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR)/include/*.h)
 
@@ -26,6 +28,9 @@ $(KERNEL_DIR)/%.o: $(KERNEL_DIR)/%.c
 
 $(KERNEL_DIR)/kernel.elf: $(KERNEL_ARCH_DIR)/linker.ld $(KERNEL_OBJS) $(KERNEL_ARCH_OBJS) $(LIBC_DIR)/libk.a
 	$(CC) -T '$<' -o '$@' -ffreestanding -nostdlib -static-libgcc $(CFLAGS) $(KERNEL_CFLAGS) $(filter-out $<,$^) -lgcc
+
+$(KERNEL_DIR)/drivers/bitmap_console/default_font.o: $(KERNEL_DIR)/drivers/bitmap_console/default_font.psf
+	cd '$(dir $(abspath $<))' && $(OBJCOPY) -O elf64-x86-64 -I binary '$(notdir $<)' '$(abspath $@)'
 
 .PHONY: kernel_clean
 kernel_clean:
