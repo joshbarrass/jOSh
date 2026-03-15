@@ -26,7 +26,7 @@ typedef struct {
 /* ---------- */
 
 bool is_PSF1_font(const void *);
-static inline const uint8_t *PSF1_get_glyph(const PSF1 *psf, size_t glyph) {
+static inline const uint8_t *PSF1_get_glyph(const PSF1 *psf, size_t glyph) { // should glyph be a char?
   return psf->data + glyph * psf->characterSize;
 }
 
