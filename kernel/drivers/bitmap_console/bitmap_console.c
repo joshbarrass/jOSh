@@ -1,6 +1,6 @@
 #include <string.h>
+#include <kernel/psf.h>
 #include <kernel/drivers/bitmap_console/bitmap_console.h>
-#include <kernel/drivers/bitmap_console/psf.h>
 #include <kernel/drivers/null_console/null_console.h>
 
 extern const char _binary_default_font_psf_start[];
