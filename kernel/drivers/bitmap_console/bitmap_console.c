@@ -50,7 +50,7 @@ static uint8_t VGA_palette_RGB[16 * 3] =
   for (size_t y = (drv->drv.height - 1) * default_font->characterSize;  \
   y < drv->height_px; ++y) {                                            \
     for (size_t x = 0; x < drv->width_px; ++x) {                        \
-      set_pixel_32bpp(drv, c.bg, x, y);                                 \
+      SET_PIXEL_FN(drv, c.bg, x, y);                                 \
     }                                                                   \
   }
 
@@ -58,7 +58,7 @@ static uint8_t VGA_palette_RGB[16 * 3] =
   BitmapConsole *drv = (BitmapConsole*)console;                         \
   for (size_t y = 0; y < drv->height_px; ++y) {                         \
     for (size_t x = 0; x < drv->width_px; ++x) {                        \
-      set_pixel_32bpp(drv, color.bg, x, y);                             \
+      SET_PIXEL_FN(drv, color.bg, x, y);                             \
     }                                                                   \
   }
 
