@@ -36,9 +36,9 @@ ConsoleDriver *bootstrap_console_driver(const M2IS *m2is) {
   const m2is_framebuffer_info *fbinfo = get_fbinfo(m2is);
   if (fbinfo == NULL) return get_null_console();
   switch (fbinfo->type) {
-  case 2:
+  case M2IS_FB_TYPE_TEXT:
     return bootstrap_ega_driver(fbinfo);
-  case 1:
+  case M2IS_FB_TYPE_DIRECT:
     return bootstrap_bitmap_driver(fbinfo);
   }
   return get_null_console();

@@ -46,6 +46,12 @@ typedef enum m2is_type : uint32_t {
     M2IS_TYPE_LOAD_ADDR = 21,
 } m2is_type;
 
+typedef enum m2is_framebuffer_type : uint8_t {
+    M2IS_FB_TYPE_INDEXED = 0,
+    M2IS_FB_TYPE_DIRECT = 1,
+    M2IS_FB_TYPE_TEXT = 2,
+} m2is_framebuffer_type;
+
 #ifndef MB2_ENUMS_ONLY
 typedef struct __attribute__((packed)) m2is_tag {
   m2is_type type;
@@ -141,7 +147,7 @@ typedef struct __attribute__((packed)) m2is_framebuffer_info {
   uint32_t width;
   uint32_t height;
   uint8_t bpp;
-  uint8_t type;
+  m2is_framebuffer_type type;
   // https://www.gnu.org/software/grub/manual/multiboot2/multiboot.html
   // says the reserved field is 8 bits, but this is not correct!
   uint16_t __reserved;
