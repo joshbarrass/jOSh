@@ -28,9 +28,9 @@ static uint8_t VGA_palette_RGB[16 * 3] =
       255, 255, 255
     };
 
-#define _putch_body(SET_PIXEL_FN)                                        \
+#define _putch_body(SET_PIXEL_FN)                                       \
   BitmapConsole *drv = (BitmapConsole*)console;                         \
-  const uint8_t *glyph = PSF1_get_glyph(default_font, c.character); \
+  const uint8_t *glyph = PSF1_get_glyph(default_font, c.character);     \
   for (size_t i = 0; i < default_font->characterSize; ++i) {            \
     const uint8_t glyph_row = glyph[i];                                 \
     for (size_t j = 0; j < 8; ++j) {                                    \
@@ -54,12 +54,12 @@ static uint8_t VGA_palette_RGB[16 * 3] =
     }                                                                   \
   }
 
-#define _clear_body(SET_PIXEL_FN)               \
-  BitmapConsole *drv = (BitmapConsole*)console; \
-  for (size_t y = 0; y < drv->height_px; ++y) {         \
-    for (size_t x = 0; x < drv->width_px; ++x) {        \
-      set_pixel_32bpp(drv, color.bg, x, y);             \
-    }                                                   \
+#define _clear_body(SET_PIXEL_FN)                                       \
+  BitmapConsole *drv = (BitmapConsole*)console;                         \
+  for (size_t y = 0; y < drv->height_px; ++y) {                         \
+    for (size_t x = 0; x < drv->width_px; ++x) {                        \
+      set_pixel_32bpp(drv, color.bg, x, y);                             \
+    }                                                                   \
   }
 
 inline static uint32_t *get_row_32bpp(BitmapConsole *drv, const size_t y) {
