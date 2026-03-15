@@ -15,5 +15,6 @@ int virtual_to_page_table_indices(uint64_t addr, size_t *pml4t_i,
                                    size_t *pt_i);
 
 uint64_t *fetch_page_table(uint64_t *table, const size_t i);
+uint64_t *get_or_create_page_table(uint64_t * const pml4t, const uint64_t virt_addr, size_t * const i);
 
 #endif
