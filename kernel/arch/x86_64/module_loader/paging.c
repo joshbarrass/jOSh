@@ -35,6 +35,12 @@ static uint64_t *bump_malloc_pt() {
   return addr;
 }
 
+// Returns the address of the page table for the supplied virtual
+// address under the supplied PML4T. If any of the intermediate
+// structures (PDPT, PD, or the PT itself) do not exist, they are
+// created with the bump allocator and added to the parent
+// structure. If i is a non-null pointer, the index of the page table
+// entry for the supplied virtual address will be stored in i.
 uint64_t *get_or_create_page_table(uint64_t * const pml4t, const uint64_t virt_addr, size_t * const i) {
   // get the page table indices corresponding to the virtual address
   size_t i0, i1, i2, i3;
@@ -61,4 +67,19 @@ uint64_t *get_or_create_page_table(uint64_t * const pml4t, const uint64_t virt_a
     zero_page_table(pt);
   }
   return pt;
+}
+
+// Returns the address of the page table entry for the supplied
+// virtual address under the supplied PML4T. If any of the
+// intermediate structures (PDPT, PD, or the PT itself) do not exist,
+// they are created with the bump allocator and added to the parent
+// structure. The returned address is for a specific entry in the PT,
+// not the PT itself, and so should be used directly rather than
+// indexed.
+uint64_t *get_or_create_page_table_entry(uint64_t *const pml4t,
+                                         const uint64_t virt_addr) {
+  size_t i3;
+  uint64_t *pt = get_or_create_page_table(pml4t, virt_addr, &i3);
+  if (pt == NULL) return NULL;
+  return &pt[i3];
 }

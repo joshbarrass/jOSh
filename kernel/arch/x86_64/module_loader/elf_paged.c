@@ -41,20 +41,19 @@ int elf64_map_program_image(const char *const elf, uint64_t *const pml4t) {
     if (msize % PAGE_ALIGNMENT != 0) return ERR_MSIZE_NOT_PAGE;
 
     // map the contents of the file into memory one page at a time
-    size_t i3;
     for (uint64_t j = 0; j < msize; j += PAGE_SIZE) {
-      uint64_t * const pt = get_or_create_page_table(pml4t, virt_addr + j, &i3);
-      if (pt == NULL) return ERR_OTHER;
+      uint64_t * const pte = get_or_create_page_table_entry(pml4t, virt_addr + j);
+      if (pte == NULL) return ERR_OTHER;
 
       if (j < fsize) { // still inside the real file
         // point the table to the physical address of the real ELF
         // content
-        pt[i3] = (uint64_t)(segment_start + j) | 3;
+        *pte = (uint64_t)(segment_start + j) | 3;
       } else { // nobits data
         // allocate an empty page to store the data and point the
         // table to it
         bump_align(PAGE_ALIGNMENT);
-        pt[i3] = (uint64_t)(bump_malloc(PAGE_SIZE)) | 3;
+        *pte = (uint64_t)(bump_malloc(PAGE_SIZE)) | 3;
       }
     }
   }
