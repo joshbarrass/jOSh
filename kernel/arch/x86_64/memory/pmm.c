@@ -18,7 +18,7 @@
 // above that, and stitch the two together behind the scenes.
 #define PMM_4GB_CONSTANT (4ULL*1024ULL*1024ULL*1024ULL)
 #define PMM_4GB_BITMAP_LENGTH (PMM_4GB_CONSTANT / PAGE_SIZE / PMM_STATES_PER_ENTRY)
-static PMMEntry pmm_bitmap_4GB[PMM_4GB_BITMAP_LENGTH];
+_Alignas(uint64_t) static PMMEntry pmm_bitmap_4GB[PMM_4GB_BITMAP_LENGTH];
 
 // Keep track of the lowest recently freed page (LRFP). If we go to do
 // an allocation, we use this as a starting point for finding free
