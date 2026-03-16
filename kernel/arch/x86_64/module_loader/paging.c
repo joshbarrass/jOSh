@@ -83,3 +83,23 @@ uint64_t *get_or_create_page_table_entry(uint64_t *const pml4t,
   if (pt == NULL) return NULL;
   return &pt[i3];
 }
+
+// Returns the address of the page table entry for the supplied
+// virtual address under the supplied PML4T. If any of the
+// intermediate structures or the PT itself does not exist, then NULL
+// is returned.
+uint64_t *get_page_table(uint64_t * const pml4t, const uint64_t virt_addr, size_t * const i) {
+  // get the page table indices corresponding to the virtual address
+  size_t i0, i1, i2, i3;
+  if (virtual_to_page_table_indices(virt_addr, &i0, &i1, &i2, &i3) != 0) return NULL;
+  if (i != NULL) *i = i3;
+
+  // check whether the table exists
+  uint64_t *pdpt = fetch_page_table(pml4t, i0);
+  if (pdpt == NULL) return NULL;
+  uint64_t *pd = fetch_page_table(pdpt, i1);
+  if (pd == NULL) return NULL;
+  uint64_t *pt = fetch_page_table(pd, i2);
+  if (pt == NULL) return NULL;
+  return pt;
+}
