@@ -168,6 +168,7 @@ void kernel_main() {
   printf("Framebuffer type: %d\n", mis_framebuffer->type);
   printf("Framebuffer dims: %dx%d\n", mis_framebuffer->width, mis_framebuffer->height);
   printf("Framebuffer pitch: %d\n", mis_framebuffer->pitch);
+  printf("Framebuffer addr: %#lx\n", mis_framebuffer->addr);
 
   return;
 }
