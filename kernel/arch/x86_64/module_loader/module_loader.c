@@ -186,11 +186,14 @@ void module_loader_main() {
         bootstruct.fb_virt_addr = kmap(page_level_4_tab, fbinfo->addr, fb_size);
         // patch the M2IS entry to use the virtual address
         fbinfo->addr = bootstruct.fb_virt_addr;
+        printf("[+] Framebuffer mapped to: %#llx\n", bootstruct.fb_virt_addr);
+        printf("    Size: %zu B\n", fb_size);
         // enable the bootstruct framebuffer tag
         bootstruct.flags |= BS_FLAG_FRAMEBUFFER;
       }
     }
     bs_set_checksum(&bootstruct);
+    printf("[+] Bootstruct built!\n");
     printf("      Flags: %#x\n"
            "      MIS: %#llx\n"
            "      Checksum: %#x\n", bootstruct.flags, bootstruct.M2IS, bootstruct.checksum);
