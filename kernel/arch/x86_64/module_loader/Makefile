@@ -24,7 +24,8 @@ bitmap_console_driver.o \
 bitmap_console_font.o \
 null_console_driver.o \
 bootstrap_display.o \
-bootstrap_static_bump.o
+bootstrap_static_bump.o \
+kmap.o
 
 loader.elf: module_loader.ld $(OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc

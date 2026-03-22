@@ -16,6 +16,7 @@
 #include "addr_checker.h"
 #include "bump_alloc.h"
 #include "paging.h"
+#include "kmap.h"
 
 extern const char __loader_end;
 const void *loader_end = &__loader_end;
@@ -166,7 +167,33 @@ void module_loader_main() {
     bootstruct.flags |= BS_FLAG_MIS;
     bootstruct.lowest_free_addr = (bs_ptr_t)((uintptr_t)bump_malloc(0));
     bootstruct.flags |= BS_FLAG_FREEADDR;
+
+    // search for the framebuffer info in the M2IS
+    {
+      m2is_tag_iterator iter = new_m2is_iterator(mis);
+      const m2is_tag *tag = m2is_iterator_next(&iter);
+      const char *mod = NULL;
+      while (tag != NULL) {
+        if (tag->type == M2IS_TYPE_FRAMEBUFFER) {
+          break;
+        }
+        tag = m2is_iterator_next(&iter);
+      }
+      if (tag != NULL) {
+        m2is_framebuffer_info *fbinfo = (m2is_framebuffer_info*)tag;
+        // map the framebuffer into kspace
+        size_t fb_size = fbinfo->height * fbinfo->pitch;
+        bootstruct.fb_virt_addr = kmap(page_level_4_tab, fbinfo->addr, fb_size);
+        // patch the M2IS entry to use the virtual address
+        fbinfo->addr = bootstruct.fb_virt_addr;
+        printf("[+] Framebuffer mapped to: %#llx\n", bootstruct.fb_virt_addr);
+        printf("    Size: %zu B\n", fb_size);
+        // enable the bootstruct framebuffer tag
+        bootstruct.flags |= BS_FLAG_FRAMEBUFFER;
+      }
+    }
     bs_set_checksum(&bootstruct);
+    printf("[+] Bootstruct built!\n");
     printf("      Flags: %#x\n"
            "      MIS: %#llx\n"
            "      Checksum: %#x\n", bootstruct.flags, bootstruct.M2IS, bootstruct.checksum);

@@ -73,7 +73,6 @@ switch_to_long:
         ;; enabled long mode paging. However, our GDT is still set up
         ;; for protected mode. The CPU is therefore running in 32-bit
         ;; compatibility mode, rather than true long mode.
-        call_print_str STR_ENTERED_COMPAT
         ;; To get into true long mode, we need to load a GDT with a
         ;; long mode code segment, then make a far jump to 64-bit code
         lgdt [GDTR]
@@ -145,11 +144,6 @@ long_mode:
         mov gs, rax
         mov ss, rax
 
-        ;; Place a red L in the top left as a test that we finally
-        ;; made it to long mode. This will swiftly be overwritten by
-        ;; the kernel, but it's nice to do it anyway :)
-        mov [0xB8000], word 0x4F4C
-
         ;; Set up RAX and RBX to pass the multiboot magic number and
         ;; MIS to the kernel
         xor rax, rax
@@ -178,7 +172,6 @@ strings:
         STR_LONG_MODE_AVAILABLE db "[+] Long mode is available", 0
         STR_NO_LONG_MODE db "[-] Long mode is not available", 0
         STR_PAE_ENABLED db "[+] PAE flag set", 0
-        STR_ENTERED_COMPAT db "[+] Entered long mode, running in 32-bit compatibility mode", 0
 
 GDTR:
         GDT_SIZE dw (GDT_END - GDT - 1)

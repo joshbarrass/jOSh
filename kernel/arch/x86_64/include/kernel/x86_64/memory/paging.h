@@ -1,13 +1,15 @@
 #ifndef __X86_64_PAGING_H
 #define __X86_64_PAGING_H
 
+#define ENTRIES_PER_PAGE_TABLE (511)
+
+#ifndef PAGING_CONSTANTS_ONLY
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <kernel/memory/constants.h>
 #include <kernel/memory/types.h>
-
-#define ENTRIES_PER_PAGE_TABLE (511)
 
 typedef unsigned short ptindex_t;
 
@@ -54,5 +56,7 @@ struct ptindices virt_addr_to_ptindices(const virt_addr_t addr);
 bool create_page_table_entry(const virt_addr_t virt_addr, const PageTableEntry entry);
 
 void invlpg(virt_addr_t addr);
+
+#endif
 
 #endif

@@ -18,6 +18,7 @@ typedef struct __attribute__((packed)) {
 
   bs_ptr_t M2IS;
   bs_ptr_t lowest_free_addr;
+  bs_ptr_t fb_virt_addr;
   
 } BootStruct;
 
