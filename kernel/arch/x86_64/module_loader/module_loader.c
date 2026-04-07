@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <multiboot2.h>
-#include <kernel/bootstruct.h>
+#include <kernel/bootstruct/bootstruct.h>
 #include <kernel/tty.h>
 #include <kernel/bootstrap/display.h>
 #include "elf_paged.h"

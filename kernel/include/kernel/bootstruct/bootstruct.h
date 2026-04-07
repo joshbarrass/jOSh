@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <multiboot2.h>
-#include <kernel/bootstruct_flags.h>
+#include <kernel/bootstruct/flags.h>
 #include <kernel/memory/types.h>
 
 #define BOOTSTRUCT_MAGIC (0x1B002ED1)

@@ -19,7 +19,7 @@
 #include <kernel/tty.h>
 #include <kernel/bootstrap/display.h>
 #include <kernel/vga.h>
-#include <kernel/bootstruct.h>
+#include <kernel/bootstruct/bootstruct.h>
 #include <multiboot2.h>
 #include <kernel/panic.h>
 #include <archdef.h>

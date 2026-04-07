@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include <kernel/bootstruct.h>
+#include <kernel/bootstruct/bootstruct.h>
 #include <multiboot2.h>
 
 void bs_init(BootStruct *bs) {
