@@ -26,6 +26,9 @@ typedef struct __attribute__((packed)) {
 
 void pmm_init(const phys_addr_t first_free_page, const m2is_mmap *memory_map);
 void pmm_free_pages(const phys_addr_t addr, const size_t count);
+void pmm_free_region(const phys_region_t region);
+void pmm_resv_pages(const phys_addr_t addr, const size_t count);
+void pmm_resv_region(const phys_region_t region);
 const phys_addr_t pmm_alloc_pages(const size_t count);
 
 #endif
