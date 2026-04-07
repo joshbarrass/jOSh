@@ -56,7 +56,7 @@ void term_println(char *s) {
 }
 
 void module_loader_main() {
-  init_default_term(bootstrap_console_driver(mis));
+  init_default_term(bootstrap_console_driver_m2is(mis));
   term_clear();
   // print the palette test lines
   term_set_fg(10);

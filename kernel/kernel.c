@@ -69,7 +69,7 @@ inline static void term_error_color() {
 
 void kernel_main() {
   VGA_set_blink(false);
-  init_default_term(bootstrap_console_driver(mis));
+  init_default_term(bootstrap_console_driver_bootstruct(bootstruct));
   term_info_color();
   term_clear();
   print_welcome_message();
@@ -165,10 +165,17 @@ void kernel_main() {
   vmm_init();
 
   // print framebuffer info
+  printf("Multiboot Framebuffer Info\n");
   printf("Framebuffer type: %d\n", mis_framebuffer->type);
   printf("Framebuffer dims: %dx%d\n", mis_framebuffer->width, mis_framebuffer->height);
   printf("Framebuffer pitch: %d\n", mis_framebuffer->pitch);
   printf("Framebuffer addr: %#lx\n", mis_framebuffer->addr);
+  printf("\nBootstruct Framebuffer Info\n");
+  printf("Framebuffer type: %d\n", bootstruct->fbinfo.type);
+  printf("Framebuffer dims: %dx%d\n", bootstruct->fbinfo.width, bootstruct->fbinfo.height);
+  printf("Framebuffer pitch: %d\n", bootstruct->fbinfo.pitch);
+  printf("Framebuffer phys addr: %#lx\n", bootstruct->fbinfo.phys_addr);
+  printf("Framebuffer virt addr: %#lx\n", bootstruct->fbinfo.virt_addr);
 
   return;
 }

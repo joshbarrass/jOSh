@@ -20,6 +20,6 @@ typedef struct __attribute__((packed)) {
   uint32_t palette_32bpp[16];
 } BitmapConsole;
 
-void bitmap_console_init(BitmapConsole *, const m2is_framebuffer_info *);
+void bitmap_console_init(BitmapConsole *, const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, const m2is_color_info_direct color_info);
 
 #endif
