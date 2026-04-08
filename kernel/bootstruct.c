@@ -43,10 +43,24 @@ bool bs_convert_fbinfo(BootStruct *bs, const M2IS *m2is) {
   dst->height = src->height;
   dst->pitch = src->pitch;
   dst->bpp = src->bpp;
-  // memcpy the colour info
-  // TODO: something cleaner
-  for (size_t i = 0; i < sizeof(src->color_info); ++i) {
-    ((uint8_t*)&dst->color_info)[i] = ((uint8_t*)&src->color_info)[i];
+  // convert the colour info based on the type
+  switch (dst->type) {
+  case BS_FB_TYPE_TEXT:
+  case BS_FB_TYPE_UNKNOWN:
+    break;
+  case BS_FB_TYPE_DIRECT:
+    dst->color_info.direct.red_bits = src->color_info.direct.red_bits;
+    dst->color_info.direct.red_offset = src->color_info.direct.red_offset;
+    dst->color_info.direct.green_bits = src->color_info.direct.green_bits;
+    dst->color_info.direct.green_offset = src->color_info.direct.green_offset;
+    dst->color_info.direct.blue_bits = src->color_info.direct.blue_bits;
+    dst->color_info.direct.blue_offset = src->color_info.direct.blue_offset;
+    break;
+  case BS_FB_TYPE_INDEXED:
+    dst->color_info.indexed.num_colors = src->color_info.indexed.num_colors;
+    // not super safe, but fine so long as the multiboot struct is
+    // mapped.
+    dst->color_info.indexed.palette = (bs_ptr_t)(uintptr_t)&src->color_info.indexed.palette;
   }
   return true;
 }

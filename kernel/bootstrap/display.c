@@ -50,6 +50,8 @@ ConsoleDriver *bootstrap_console_driver_m2is(const M2IS *m2is) {
                                    fbinfo->width, fbinfo->height, fbinfo->pitch,
                                    fbinfo->bpp, color_info);
   }
+  case M2IS_FB_TYPE_INDEXED:
+    break;
   }
   return get_null_console();
 }
@@ -65,6 +67,9 @@ ConsoleDriver *bootstrap_console_driver_bootstruct(const BootStruct *bootstruct)
                                      fbinfo->width, fbinfo->height,
                                      fbinfo->pitch, fbinfo->bpp,
                                      fbinfo->color_info.direct);
+  case BS_FB_TYPE_INDEXED:
+  case BS_FB_TYPE_UNKNOWN:
+    break;
   }
   return get_null_console();
 }
