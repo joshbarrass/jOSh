@@ -2,6 +2,7 @@
 #define __BOOTSTRUCT_FRAMEBUFFER_H
 
 #include <kernel/bootstruct/types.h>
+#include <kernel/bootstruct/colorinfo.h>
 #include <multiboot2.h>
 
 typedef enum uint8_t {
@@ -20,8 +21,8 @@ typedef struct __attribute__((packed)) {
   uint32_t pitch;
   uint8_t bpp;
   union {
-    m2is_color_info_indexed indexed;
-    m2is_color_info_direct direct;
+    color_info_direct direct;
+    color_info_indexed indexed;
   } color_info;
 } BootStruct_fbinfo;
 

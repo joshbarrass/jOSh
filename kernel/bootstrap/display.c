@@ -26,7 +26,7 @@ static ConsoleDriver *bootstrap_ega_driver(const void* addr, const size_t width,
   return (ConsoleDriver*)drv;
 }
 
-static ConsoleDriver *bootstrap_bitmap_driver(const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, m2is_color_info_direct color_info) {
+static ConsoleDriver *bootstrap_bitmap_driver(const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, color_info_direct color_info) {
   BitmapConsole * const drv = SB_ALLOC_ALIGNED(&bumper, BitmapConsole);
   bitmap_console_init(drv, addr, width, height, pitch, bpp, color_info);
   return (ConsoleDriver*)drv;
@@ -38,8 +38,18 @@ ConsoleDriver *bootstrap_console_driver_m2is(const M2IS *m2is) {
   switch (fbinfo->type) {
   case M2IS_FB_TYPE_TEXT:
     return bootstrap_ega_driver((void*)(uintptr_t)fbinfo->addr, fbinfo->width, fbinfo->height, fbinfo->pitch);
-  case M2IS_FB_TYPE_DIRECT:
-    return bootstrap_bitmap_driver((void*)(uintptr_t)fbinfo->addr, fbinfo->width, fbinfo->height, fbinfo->pitch, fbinfo->bpp, fbinfo->color_info.direct);
+  case M2IS_FB_TYPE_DIRECT: {
+    const color_info_direct color_info = {
+      .red_bits = fbinfo->color_info.direct.red_bits,
+      .red_offset = fbinfo->color_info.direct.red_offset,
+      .green_bits = fbinfo->color_info.direct.green_bits,
+      .green_offset = fbinfo->color_info.direct.green_offset,
+      .blue_bits = fbinfo->color_info.direct.blue_bits,
+      .blue_offset = fbinfo->color_info.direct.blue_offset};
+    return bootstrap_bitmap_driver((void *)(uintptr_t)fbinfo->addr,
+                                   fbinfo->width, fbinfo->height, fbinfo->pitch,
+                                   fbinfo->bpp, color_info);
+  }
   }
   return get_null_console();
 }
@@ -51,7 +61,10 @@ ConsoleDriver *bootstrap_console_driver_bootstruct(const BootStruct *bootstruct)
   case BS_FB_TYPE_TEXT:
     return bootstrap_ega_driver((void*)(uintptr_t)fbinfo->virt_addr, fbinfo->width, fbinfo->height, fbinfo->pitch);
   case BS_FB_TYPE_DIRECT:
-    return bootstrap_bitmap_driver((void*)(uintptr_t)fbinfo->virt_addr, fbinfo->width, fbinfo->height, fbinfo->pitch, fbinfo->bpp, fbinfo->color_info.direct);
+    return bootstrap_bitmap_driver((void *)(uintptr_t)fbinfo->virt_addr,
+                                     fbinfo->width, fbinfo->height,
+                                     fbinfo->pitch, fbinfo->bpp,
+                                     fbinfo->color_info.direct);
   }
   return get_null_console();
 }

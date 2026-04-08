@@ -2,7 +2,7 @@
 #define __DRIVERS_BITMAP_CONSOLE_H
 
 #include <kernel/drivers/console.h>
-#include <multiboot2.h>
+#include <kernel/bootstruct/colorinfo.h>
 
 typedef struct __attribute__((packed)) {
   ConsoleDriver drv;
@@ -12,7 +12,7 @@ typedef struct __attribute__((packed)) {
   size_t height_px;
   uint8_t bpp;
   uint8_t phys_bpp;
-  m2is_color_info_direct color_info;
+  color_info_direct color_info;
 
   // for direct colour, 32-bit indexing is most common. Since we're
   // using a fixed palette, we can pre-generate and store the colour
@@ -20,6 +20,6 @@ typedef struct __attribute__((packed)) {
   uint32_t palette_32bpp[16];
 } BitmapConsole;
 
-void bitmap_console_init(BitmapConsole *, const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, const m2is_color_info_direct color_info);
+void bitmap_console_init(BitmapConsole *, const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, const color_info_direct color_info);
 
 #endif

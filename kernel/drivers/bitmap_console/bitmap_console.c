@@ -138,7 +138,7 @@ static void clear_generic(ConsoleDriver *console, const CharColor color) {
   _clear_body(set_pixel_generic);
 }
 
-void bitmap_console_init(BitmapConsole *drv, const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, const m2is_color_info_direct color_info) {
+void bitmap_console_init(BitmapConsole *drv, const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, const color_info_direct color_info) {
   drv->addr = (uint8_t*)addr;
   drv->pitch = pitch;
   drv->width_px = width;
