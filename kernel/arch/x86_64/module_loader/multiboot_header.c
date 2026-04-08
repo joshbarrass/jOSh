@@ -89,6 +89,6 @@ const struct multiboot_header header = {
                       M2IS_TYPE_MEMMAP},
         },
     .flags = {TAG(struct multiboot_flags, MB2_TYPE_FLAGS, 0),
-              .console_flags = MULTIBOOT_FLAG_REQUIRE_CONSOLE | MULTIBOOT_FLAG_EGA,
+              .console_flags = MULTIBOOT_FLAG_EGA,
     },
 };
