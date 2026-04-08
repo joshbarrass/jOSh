@@ -9,13 +9,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <multiboot2.h>
-#include <kernel/bootstruct.h>
+#include <kernel/bootstruct/bootstruct.h>
 #include <kernel/tty.h>
 #include <kernel/bootstrap/display.h>
 #include "elf_paged.h"
 #include "addr_checker.h"
 #include "bump_alloc.h"
 #include "paging.h"
+#include "kmap.h"
 
 extern const char __loader_end;
 const void *loader_end = &__loader_end;
@@ -55,7 +56,7 @@ void term_println(char *s) {
 }
 
 void module_loader_main() {
-  init_default_term(bootstrap_console_driver(mis));
+  init_default_term(bootstrap_console_driver_m2is(mis));
   term_clear();
   // print the palette test lines
   term_set_fg(10);
@@ -166,7 +167,21 @@ void module_loader_main() {
     bootstruct.flags |= BS_FLAG_MIS;
     bootstruct.lowest_free_addr = (bs_ptr_t)((uintptr_t)bump_malloc(0));
     bootstruct.flags |= BS_FLAG_FREEADDR;
+
+    // if it returns true, then we successfully found the framebuffer
+    // info in the MIS, and the bootstruct has been populated
+    if (bs_convert_fbinfo(&bootstruct, mis)) {
+      BootStruct_fbinfo *fbinfo = &bootstruct.fbinfo;
+      // map the framebuffer into kspace
+      const size_t fb_size = fbinfo->height * fbinfo->pitch;
+      fbinfo->virt_addr = kmap(page_level_4_tab, fbinfo->phys_addr, fb_size);
+      printf("[+] Framebuffer mapped to: %#llx\n", fbinfo->virt_addr);
+      printf("    Size: %zu B\n", fb_size);
+      // enable the bootstruct framebuffer tag
+      bootstruct.flags |= BS_FLAG_FRAMEBUFFER;
+    }
     bs_set_checksum(&bootstruct);
+    printf("[+] Bootstruct built!\n");
     printf("      Flags: %#x\n"
            "      MIS: %#llx\n"
            "      Checksum: %#x\n", bootstruct.flags, bootstruct.M2IS, bootstruct.checksum);

@@ -19,12 +19,13 @@
 #include <kernel/tty.h>
 #include <kernel/bootstrap/display.h>
 #include <kernel/vga.h>
-#include <kernel/bootstruct.h>
+#include <kernel/bootstruct/bootstruct.h>
 #include <multiboot2.h>
 #include <kernel/panic.h>
 #include <archdef.h>
 #include <kernel/mmap.h>
 #include <kernel/interrupts.h>
+#include <kernel/memory/constants.h>
 #include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
@@ -35,7 +36,6 @@ const BootStruct *bootstruct = NULL;
 const M2IS *mis = NULL;
 static const m2is_meminfo *mis_meminfo = NULL;
 static const m2is_mmap *mis_mmap = NULL;
-static const m2is_framebuffer_info *mis_framebuffer = NULL;
 #define M2IS_CHECK(var)                                                        \
   if (var == NULL) {                                                           \
     term_error_color();                                                        \
@@ -69,7 +69,7 @@ inline static void term_error_color() {
 
 void kernel_main() {
   VGA_set_blink(false);
-  init_default_term(bootstrap_console_driver(mis));
+  init_default_term(bootstrap_console_driver_bootstruct(bootstruct));
   term_info_color();
   term_clear();
   print_welcome_message();
@@ -106,9 +106,6 @@ void kernel_main() {
       case M2IS_TYPE_MEMMAP:
         mis_mmap = (const m2is_mmap *)tag;
         break;
-      case M2IS_TYPE_FRAMEBUFFER:
-        mis_framebuffer = (const m2is_framebuffer_info *)tag;
-        break;
       default:
       }
 
@@ -118,7 +115,6 @@ void kernel_main() {
   // check that we found everything
   M2IS_CHECK(mis_meminfo);
   M2IS_CHECK(mis_mmap);
-  M2IS_CHECK(mis_framebuffer);
 
   // print total available memory
   const size_t total_memory = mis_meminfo->mem_lower + mis_meminfo->mem_upper; // KiB
@@ -162,12 +158,22 @@ void kernel_main() {
   }
 
   pmm_init(lowest_free_page, mis_mmap);
+  // now that the PMM is live, reserve the region used by the
+  // framebuffer
+  phys_region_t fbmem;
+  fbmem.offset = bootstruct->fbinfo.phys_addr;
+  fbmem.n_pages = (bootstruct->fbinfo.pitch * bootstruct->fbinfo.height) / PAGE_SIZE;
+  if ((bootstruct->fbinfo.pitch * bootstruct->fbinfo.height) % PAGE_SIZE > 0) ++fbmem.n_pages;
+  pmm_resv_region(fbmem);
+
   vmm_init();
 
   // print framebuffer info
-  printf("Framebuffer type: %d\n", mis_framebuffer->type);
-  printf("Framebuffer dims: %dx%d\n", mis_framebuffer->width, mis_framebuffer->height);
-  printf("Framebuffer pitch: %d\n", mis_framebuffer->pitch);
+  printf("Framebuffer type: %d\n", bootstruct->fbinfo.type);
+  printf("Framebuffer dims: %dx%d\n", bootstruct->fbinfo.width, bootstruct->fbinfo.height);
+  printf("Framebuffer pitch: %d\n", bootstruct->fbinfo.pitch);
+  printf("Framebuffer phys addr: %#lx\n", bootstruct->fbinfo.phys_addr);
+  printf("Framebuffer virt addr: %#lx\n", bootstruct->fbinfo.virt_addr);
 
   return;
 }

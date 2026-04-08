@@ -203,6 +203,10 @@ void pmm_free_pages(const phys_addr_t addr, const size_t count) {
   return __pmm_free_pages(id, count);
 }
 
+void pmm_free_region(const phys_region_t region) {
+  return pmm_free_pages(region.offset, region.n_pages);
+}
+
 // this is intended as a fast algorithm that isn't picky about the
 // page it allocates, intended for quickly getting a single page
 // without contraints
@@ -381,11 +385,24 @@ static inline const page_number_t find_free_pages(const size_t count) {
   return find_one_free_page();
 }
 
-const phys_addr_t pmm_alloc_pages(const size_t count) {
-  const page_number_t id = find_free_pages(count);
-  const phys_addr_t addr = ID_to_page_addr(id);
+static inline void __pmm_resv_pages(const page_number_t id, const size_t count) {
   for (size_t i = 0; i < count; ++i) {
     pmm_set_page_state(id + i, PAGE_USED);
   }
+}
+
+void pmm_resv_pages(const phys_addr_t addr, const size_t count) {
+  const page_number_t id = page_addr_to_ID(addr);
+  return __pmm_resv_pages(id, count);
+}
+
+void pmm_resv_region(const phys_region_t region) {
+  return pmm_resv_pages(region.offset, region.n_pages);
+}
+
+const phys_addr_t pmm_alloc_pages(const size_t count) {
+  const page_number_t id = find_free_pages(count);
+  const phys_addr_t addr = ID_to_page_addr(id);
+  __pmm_resv_pages(id, count);
   return addr;
 }

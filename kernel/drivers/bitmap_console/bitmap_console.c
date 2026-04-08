@@ -138,14 +138,14 @@ static void clear_generic(ConsoleDriver *console, const CharColor color) {
   _clear_body(set_pixel_generic);
 }
 
-void bitmap_console_init(BitmapConsole *drv, const m2is_framebuffer_info *fbinfo) {
-  drv->addr = (uint8_t*)(uintptr_t)fbinfo->addr;
-  drv->pitch = fbinfo->pitch;
-  drv->width_px = fbinfo->width;
-  drv->drv.width = fbinfo->width / 8; // PSF1 has fixed width of 8 pixels
-  drv->height_px = fbinfo->height;
-  drv->drv.height = fbinfo->height / default_font->characterSize;
-  drv->bpp = fbinfo->bpp;
+void bitmap_console_init(BitmapConsole *drv, const void* addr, const size_t width, const size_t height, const size_t pitch, const uint8_t bpp, const color_info_direct color_info) {
+  drv->addr = (uint8_t*)addr;
+  drv->pitch = pitch;
+  drv->width_px = width;
+  drv->drv.width = width / 8; // PSF1 has fixed width of 8 pixels
+  drv->height_px = height;
+  drv->drv.height = height / default_font->characterSize;
+  drv->bpp = bpp;
   // The number of used bits per pixel doesn't need to be a multiple
   // of 8 (e.g. 15bpp modes), but (other than 4bpp palette modes that
   // store two pixels per byte) the hardware prefers the start of each
@@ -154,7 +154,7 @@ void bitmap_console_init(BitmapConsole *drv, const m2is_framebuffer_info *fbinfo
   // the stride to the next pixel instead of the number of pixels
   // actually used for image data.
   drv->phys_bpp = (drv->bpp + 7) & ~7;
-  drv->color_info = fbinfo->color_info.direct;
+  drv->color_info = color_info;
 
   // if we're 32bpp, pre-generate the palette and use the functions
   // optimised for 32bpp

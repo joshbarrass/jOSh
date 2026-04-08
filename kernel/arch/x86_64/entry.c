@@ -1,5 +1,5 @@
 #include <multiboot2.h>
-#include <kernel/bootstruct.h>
+#include <kernel/bootstruct/bootstruct.h>
 
 extern const BootStruct *bootstruct;
 extern const M2IS *mis;
