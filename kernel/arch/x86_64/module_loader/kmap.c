@@ -1,5 +1,5 @@
-#include <kernel/memory/constants.h>
 #define PAGING_CONSTANTS_ONLY
+#include <kernel/memory/constants.h>
 #include <kernel/x86_64/memory/paging.h>
 #include "kmap.h"
 #include "paging.h"
