@@ -1,14 +1,16 @@
 # jOSh
 
-jOSh is a monolithic hobby kernel predominantly written in C. At present, it targets legacy boot x86-64, though it is hoped that support may be extended to UEFI, and later to other architectures. Its main purpose is to help me learn how an operating system works by re-implementing one from scratch. It is currently in a _very_ early stage of development, and does not yet provide essential features needed for running programs. However, it is in a continual state of development, and I hope it will eventually be a fully capable OS.
+jOSh is a monolithic hobby kernel predominantly written in C. At present, it targets x86-64, though it is hoped that support may later be extended to other architectures. Its main purpose is to help me learn how an operating system works by re-implementing one from scratch. It is currently in a _very_ early stage of development, and does not yet provide essential features needed for running programs. However, it is in a continual state of development, and I hope it will eventually be a fully capable OS.
 
 ## Features
 
- - Multiboot 2 support via a custom long mode loader application.
+ - Multiboot 2 support via a custom long mode loader program
+ - Boots on legacy BIOS and UEFI
  - Higher half kernel
  - Paging
  - Interrupt handlers
  - 80×25 text mode output
+ - Text mode emulation in bitmap modes (via PSF fonts)
  
 The issues page is a good place to see what features are currently in the works.
 
