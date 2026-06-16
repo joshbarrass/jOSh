@@ -1,4 +1,7 @@
-OBJS=\
+ARCH_LOADER_DIR?=.
+KERNEL_DIR?=../../..
+LIBC_DIR?=../../../../libc
+_ARCH_LOADER_OBJS=\
 bootstrap.o \
 module_loader.o \
 multiboot_header.o \
@@ -26,62 +29,61 @@ null_console_driver.o \
 bootstrap_display.o \
 bootstrap_static_bump.o \
 kmap.o
+ARCH_LOADER_OBJS=$(addprefix $(ARCH_LOADER_DIR)/, $(_ARCH_LOADER_OBJS))
 
-loader.elf: module_loader.ld $(OBJS)
-	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(CFLAGS) $(filter-out $<,$^) -lgcc
+ARCH_LOADER_CFLAGS?=$(CFLAGS) -isystem=/usr/include -msoft-float -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-mmx
+
+$(ARCH_LOADER_DIR)/loader.elf: $(ARCH_LOADER_DIR)/module_loader.ld $(ARCH_LOADER_OBJS)
+	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(ARCH_LOADER_CFLAGS) $(filter-out $<,$^) -lgcc
 	$(STRIP) --strip-unneeded '$@'
 	grub-file --is-x86-multiboot2 '$@'
 
-tty.o: ../../../tty.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/tty.o: $(KERNEL_DIR)/tty.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-bootstruct.o: ../../../bootstruct.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/bootstruct.o: $(KERNEL_DIR)/bootstruct.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-%.o: ../../../../libc/stdio/%.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+$(ARCH_LOADER_DIR)/%.o: $(LIBC_DIR)/stdio/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(ARCH_LOADER_CFLAGS)
 
-%.o: ../../../../libc/stdlib/%.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+$(ARCH_LOADER_DIR)/%.o: $(LIBC_DIR)/stdlib/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(ARCH_LOADER_CFLAGS)
 
-%.o: ../../../../libc/ctype/%.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+$(ARCH_LOADER_DIR)/%.o: $(LIBC_DIR)/ctype/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(ARCH_LOADER_CFLAGS)
 
-%.o: ../../../../libc/string/%.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+$(ARCH_LOADER_DIR)/%.o: $(LIBC_DIR)/string/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(ARCH_LOADER_CFLAGS)
 
-errno.o: ../../../../libc/errno/errno.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(CFLAGS)
+$(ARCH_LOADER_DIR)/errno.o: $(LIBC_DIR)/errno/errno.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding -D__is_libk $(ARCH_LOADER_CFLAGS)
 
-ega_driver.o: ../../../drivers/ega/ega.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/ega_driver.o: $(KERNEL_DIR)/drivers/ega/ega.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-bitmap_console_driver.o: ../../../drivers/bitmap_console/bitmap_console.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/bitmap_console_driver.o: $(KERNEL_DIR)/drivers/bitmap_console/bitmap_console.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-bitmap_console_font.o: ../../../drivers/bitmap_console/default_font.psf
+$(ARCH_LOADER_DIR)/bitmap_console_font.o: $(KERNEL_DIR)/drivers/bitmap_console/default_font.psf
 	cd '$(dir $(abspath $<))' && $(OBJCOPY) -O elf32-i386 -I binary '$(notdir $<)' '$(abspath $@)'
 
-null_console_driver.o: ../../../drivers/null_console/null.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/null_console_driver.o: $(KERNEL_DIR)/drivers/null_console/null.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-bootstrap_%.o: ../../../bootstrap/%.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/bootstrap_%.o: $(KERNEL_DIR)/bootstrap/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-%.o: %.c
-	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(CFLAGS)
+$(ARCH_LOADER_DIR)/%.o: $(ARCH_LOADER_DIR)/%.c
+	$(CC) -MD -m32 -c '$<' -o '$@' -ffreestanding $(ARCH_LOADER_CFLAGS)
 
-%.o: %.nasm
+$(ARCH_LOADER_DIR)/%.o: $(ARCH_LOADER_DIR)/%.nasm
 	nasm -MD '$*.d' -f elf32 -o '$@' '$<'
 
-FORCE: ;
-jBoot/%: FORCE
-	$(MAKE) -C $(@D) "$(notdir $@)" BOOT_FN=$(BOOT_FN) BOOT_EXT=$(BOOT_EXT)
-
-.PHONY: clean
-clean:
-	rm -f $(OBJS)
-	rm -f $(OBJS:.o=.d)
+.PHONY: arch_loader_clean
+arch_loader_clean:
+	rm -f $(ARCH_LOADER_OBJS)
+	rm -f $(ARCH_LOADER_OBJS:.o=.d)
 	rm -f ./loader.elf
 
--include $(OBJS:.o=.d)
+-include $(ARCH_LOADER_OBJS:.o=.d)

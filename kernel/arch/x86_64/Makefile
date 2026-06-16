@@ -14,23 +14,21 @@ $(KERNEL_ARCH_DIR)/control_registers.o \
 $(KERNEL_ARCH_DIR)/memory/recursive_pt.o \
 $(KERNEL_ARCH_DIR)/memory/paging.o
 
+ARCH_LOADER_DIR=$(KERNEL_ARCH_DIR)/module_loader
+include $(ARCH_LOADER_DIR)/Makefile
+
 $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
 
 $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.nasm
 	nasm -MD '$(KERNEL_ARCH_DIR)/$*.d' -f elf64 -o '$@' '$<'
 
-grubiso/boot/jOShload.elf: $(KERNEL_ARCH_DIR)/module_loader/loader.elf
+grubiso/boot/jOShload.elf: $(ARCH_LOADER_DIR)/loader.elf
 	mkdir -p grubiso/boot/
 	cp '$(KERNEL_ARCH_DIR)/module_loader/loader.elf' grubiso/boot/jOShload.elf
 
-FORCE: ;
-$(KERNEL_ARCH_DIR)/module_loader/loader.elf: FORCE
-	$(MAKE) -C $(@D) "$(notdir $@)" CC="$(abspath $(CC))" CXX="$(abspath $(CXX))" STRIP="$(abspath $(STRIP))" OBJCOPY="$(OBJCOPY)" TARGET_ARCH="$(TARGET_ARCH)" CFLAGS="$(CFLAGS) -isystem=/usr/include -msoft-float -mno-sse -mno-sse2 -mno-sse3 -mno-sse4 -mno-mmx"
-
 .PHONY: kernel_arch_clean
-kernel_arch_clean:
-	$(MAKE) -C '$(KERNEL_ARCH_DIR)/module_loader' clean
+kernel_arch_clean: arch_loader_clean
 	rm -f $(KERNEL_ARCH_OBJS)
 	rm -f $(KERNEL_ARCH_OBJS:.o=.d)
 

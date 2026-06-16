@@ -1,7 +1,7 @@
 KERNEL_DIR?=.
 KERNEL_ARCH_DIR=$(KERNEL_DIR)/arch/$(TARGET_ARCH)
 
-include $(KERNEL_ARCH_DIR)/make.config
+include $(KERNEL_ARCH_DIR)/Makefile
 
 KERNEL_PREFIX?=$(SYSROOT)/usr
 KERNEL_INCLUDEDIR?=$(KERNEL_PREFIX)/include
