@@ -14,8 +14,8 @@ $(KERNEL_ARCH_DIR)/control_registers.o \
 $(KERNEL_ARCH_DIR)/memory/recursive_pt.o \
 $(KERNEL_ARCH_DIR)/memory/paging.o
 
-LOADER_DIR=$(KERNEL_ARCH_DIR)/module_loader
-include $(LOADER_DIR)/Makefile
+ARCH_LOADER_DIR=$(KERNEL_ARCH_DIR)/module_loader
+include $(ARCH_LOADER_DIR)/Makefile
 
 $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.c
 	$(CC) -MD -c '$<' -o '$@' -ffreestanding $(CFLAGS) $(KERNEL_CFLAGS)
@@ -23,7 +23,7 @@ $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.c
 $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.nasm
 	nasm -MD '$(KERNEL_ARCH_DIR)/$*.d' -f elf64 -o '$@' '$<'
 
-grubiso/boot/jOShload.elf: $(LOADER_DIR)/loader.elf
+grubiso/boot/jOShload.elf: $(ARCH_LOADER_DIR)/loader.elf
 	mkdir -p grubiso/boot/
 	cp '$(KERNEL_ARCH_DIR)/module_loader/loader.elf' grubiso/boot/jOShload.elf
 
