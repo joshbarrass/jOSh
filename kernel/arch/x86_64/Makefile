@@ -1,5 +1,4 @@
-KERNEL_ARCH_ISO_DEPENDS=\
-grubiso/boot/jOShload.elf
+KERNEL_ARCH_ISO_DEPENDS=
 
 KERNEL_ARCH_OBJS=\
 $(KERNEL_ARCH_DIR)/entry.o \
@@ -23,9 +22,9 @@ $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.c
 $(KERNEL_ARCH_DIR)/%.o: $(KERNEL_ARCH_DIR)/%.nasm
 	nasm -MD '$(KERNEL_ARCH_DIR)/$*.d' -f elf64 -o '$@' '$<'
 
-grubiso/boot/jOShload.elf: $(ARCH_LOADER_DIR)/loader.elf
+grubiso/boot/jOSh.elf: $(ARCH_LOADER_DIR)/loader.elf
 	mkdir -p grubiso/boot/
-	cp '$(KERNEL_ARCH_DIR)/module_loader/loader.elf' grubiso/boot/jOShload.elf
+	cp '$<' '$@'
 
 .PHONY: kernel_arch_clean
 kernel_arch_clean: arch_loader_clean
