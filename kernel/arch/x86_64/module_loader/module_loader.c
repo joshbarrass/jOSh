@@ -88,10 +88,10 @@ void module_loader_main() {
   // verify that the module is an ELF file
   if (!is_ELF(kernel_elf_start)) {
     term_set_fg(4);
-    printf("      Unknown format\n");
+    printf("[!] Embedded ELF has unknown format!\n");
     return;
   }
-  printf("      Valid ELF!\n");
+  printf("[+] Embedded ELF found!\n");
 
   // print the ELF info
   printf("      ELF %s-bit %s\n",
