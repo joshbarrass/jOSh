@@ -38,7 +38,7 @@ ARCH_LOADER_CFLAGS?=$(CFLAGS) -isystem=/usr/include -msoft-float -mno-sse -mno-s
 
 $(ARCH_LOADER_DIR)/loader.elf: $(ARCH_LOADER_DIR)/module_loader.ld $(ARCH_LOADER_OBJS)
 	$(CC) -m32 -Wl,-m,elf_i386 -T '$<' -o '$@' -ffreestanding -nostdlib $(ARCH_LOADER_CFLAGS) $(filter-out $<,$^) -lgcc
-	$(STRIP) --strip-unneeded '$@'
+	$(STRIP) --strip-unneeded -K '$(ARCH_LOADER_OBJCOPY_SYM_NAME)_start' -K '$(ARCH_LOADER_OBJCOPY_SYM_NAME)_size' -K '$(ARCH_LOADER_OBJCOPY_SYM_NAME)_end' '$@'
 	grub-file --is-x86-multiboot2 '$@'
 
 $(ARCH_LOADER_DIR)/tty.o: $(KERNEL_DIR)/tty.c
