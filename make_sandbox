@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 bwrap \
   --ro-bind /usr /usr \
   --ro-bind /bin /bin \
@@ -9,7 +11,7 @@ bwrap \
   --ro-bind /usr/share/ovmf /usr/share/ovmf \
   --tmpfs /tmp \
   --tmpfs ~/.cache/fontconfig \
-  --bind "$(pwd)" /sandbox \
+  --bind "${SCRIPT_DIR}" /sandbox \
   --dev-bind /dev/null /dev/null \
   --proc /proc \
   --chdir /sandbox \
