@@ -85,7 +85,7 @@ void module_loader_main() {
     return;
   }
 
-  // verify that the module is an ELF file
+  // verify that the embedded ELF is actually an ELF file
   if (!is_ELF(kernel_elf_start)) {
     term_set_fg(4);
     printf("[!] Embedded ELF has unknown format!\n");
@@ -110,7 +110,7 @@ void module_loader_main() {
   bump_init(highest_addr + 1);
   printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0));
 
-  // load the module
+  // map the ELF into memory
   if (get_ELF_class(kernel_elf_start) == EI_CLASS_32BIT) {
     term_set_fg(4);
     printf("[E] Module loader does not support 32-bit ELFs\n");
