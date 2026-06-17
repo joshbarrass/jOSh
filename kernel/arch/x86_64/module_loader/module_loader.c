@@ -21,6 +21,11 @@
 extern const char __loader_end;
 const void *loader_end = &__loader_end;
 
+extern const char OBJCOPY_KERNEL_ELF_START;
+const char *kernel_elf_start = &(OBJCOPY_KERNEL_ELF_START);
+extern const char OBJCOPY_KERNEL_ELF_END;
+const char *kernel_elf_end = &(OBJCOPY_KERNEL_ELF_END);
+
 #define PREV_LINE term_get_pos_y()-1
 
 /* We'll define the page tables needed to identity map the first 8MB
@@ -80,40 +85,20 @@ void module_loader_main() {
     return;
   }
 
-  // scan through the M2IS for a module called KERNEL.ELF
-  m2is_tag_iterator iter = new_m2is_iterator(mis);
-  const m2is_tag *tag = m2is_iterator_next(&iter);
-  const char *mod = NULL;
-  while (tag != NULL) {
-    if (tag->type == M2IS_TYPE_MODULE) {
-      const m2is_module *modtag = (const m2is_module *)tag;
-      if (strcmp("KERNEL.ELF", modtag->string) == 0) {
-        printf("[+] Found KERNEL.ELF!\n");
-        mod = (char*)(uintptr_t)(modtag->mod_start);
-        break;
-      }
-    }
-    tag = m2is_iterator_next(&iter);
-  }
-
-  if (mod == NULL) {
+  // verify that the embedded ELF is actually an ELF file
+  if (!is_ELF(kernel_elf_start)) {
     term_set_fg(4);
-    printf("KERNEL.ELF not found!\n");
+    printf("[!] Embedded ELF has unknown format!\n");
     return;
   }
+  printf("[+] Embedded ELF found!\n");
 
-  // verify that the module is an ELF file
-  if (!is_ELF(mod)) {
-    term_set_fg(4);
-    printf("      Unknown format\n");
-    return;
-  }
   // print the ELF info
   printf("      ELF %s-bit %s\n",
-         (get_ELF_class(mod) == EI_CLASS_32BIT) ? "32" : (get_ELF_class(mod) == EI_CLASS_64BIT ? "64" : "?""?"),
-         (get_ELF_endianness(mod) == EI_ENDIANNESS_LITTLE) ? "LE" : (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG ? "BE" : "?""?")
+         (get_ELF_class(kernel_elf_start) == EI_CLASS_32BIT) ? "32" : (get_ELF_class(kernel_elf_start) == EI_CLASS_64BIT ? "64" : "?""?"),
+         (get_ELF_endianness(kernel_elf_start) == EI_ENDIANNESS_LITTLE) ? "LE" : (get_ELF_endianness(kernel_elf_start) == EI_ENDIANNESS_BIG ? "BE" : "?""?")
   );
-  if (get_ELF_endianness(mod) == EI_ENDIANNESS_BIG) {
+  if (get_ELF_endianness(kernel_elf_start) == EI_ENDIANNESS_BIG) {
     term_set_fg(4);
     /* term_print_string_at("BE", 17, PREV_LINE); */
     return;
@@ -125,8 +110,8 @@ void module_loader_main() {
   bump_init(highest_addr + 1);
   printf("[+] Bump allocator set up at 0x%08zx\n", (size_t)bump_malloc(0));
 
-  // load the module
-  if (get_ELF_class(mod) == EI_CLASS_32BIT) {
+  // map the ELF into memory
+  if (get_ELF_class(kernel_elf_start) == EI_CLASS_32BIT) {
     term_set_fg(4);
     printf("[E] Module loader does not support 32-bit ELFs\n");
     return;
@@ -135,7 +120,7 @@ void module_loader_main() {
     setup_page_tables();
     printf("Done!\n");
     printf("[+] Mapping ELF... ");
-    int map_err = elf64_map_program_image(mod, page_level_4_tab);
+    int map_err = elf64_map_program_image(kernel_elf_start, page_level_4_tab);
     if (map_err == 0) {
       printf("Done!\n");
     } else {
@@ -195,7 +180,7 @@ void module_loader_main() {
 
     printf("[+] Jumping to long loader...\n");
     
-    entry.entry64 = get_elf64_entrypoint(mod);
+    entry.entry64 = get_elf64_entrypoint(kernel_elf_start);
 
     asm ("call switch_to_long" : : : );
   }

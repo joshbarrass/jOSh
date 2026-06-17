@@ -17,12 +17,9 @@ all: jOSh.iso
 include $(KERNEL_DIR)/Makefile
 include $(LIBC_DIR)/Makefile
 
+# grubiso/boot/jOSh.elf recipe should be defined by the arch
 jOSh.iso: grubiso/boot/jOSh.elf grubiso/boot/grub/grub.cfg $(KERNEL_ARCH_ISO_DEPENDS)
 	grub-mkrescue -o jOSh.iso grubiso
-
-grubiso/boot/jOSh.elf: kernel/kernel.elf
-	mkdir -p grubiso/boot/
-	cp kernel/kernel.elf grubiso/boot/jOSh.elf
 
 grubiso/boot/grub/grub.cfg: $(KERNEL_ARCH_DIR)/grub.cfg
 	mkdir -p grubiso/boot/grub/
