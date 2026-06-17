@@ -36,9 +36,9 @@ SECTIONS
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
 		*(.rodata)
-                /* Copy in the kernel elf data */
-                . = ALIGN(4K);
-                *(.kernelelf)
+		/* Copy in the kernel elf data */
+		. = ALIGN(4K);
+		*(.kernelelf)
 	}
 
 	/* Read-write data (initialized) */
