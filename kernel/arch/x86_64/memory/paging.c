@@ -52,8 +52,11 @@ static void clear_pagetable(PageTableEntry *table) {
 void invlpg(const virt_addr_t addr) {
   __asm__ volatile (
                     "invlpg (%0)"
-                    : : "r" (addr)
+                    : : "r" (addr) : "memory"
                     );
+  // memory is marked clobbered to avoid optimiser reordering, which
+  // can cause issues
+  // https://wiki.osdev.org/Inline_Assembly/Examples#INVLPG
   #ifdef VERBOSE_PAGING
   printf("Invalidated %#18zx\n", (uintptr_t)addr);
   #endif
