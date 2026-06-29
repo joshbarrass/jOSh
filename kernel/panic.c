@@ -29,7 +29,8 @@ void kpanic(const char* fmt, ...){
   term_set_fg(VGA_COLOR_WHITE);
   term_set_bg(VGA_COLOR_RED);
   term_clear();
-  term_draw_bitmap(skull, VGA_WIDTH-SKULL_WIDTH, 0, SKULL_WIDTH, SKULL_HEIGHT);
+  const ConsoleDriver *drv = get_default_term()->drv;
+  term_draw_bitmap(skull, drv->width-SKULL_WIDTH, 0, SKULL_WIDTH, SKULL_HEIGHT);
   printf("KERNEL PANIC\n\n");
 
   va_list args;
