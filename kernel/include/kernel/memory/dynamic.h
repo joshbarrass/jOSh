@@ -17,7 +17,7 @@ typedef struct __attribute__((aligned(__BIGGEST_ALIGNMENT__))) {
   malloc_type_t type;
 } malloc_header_t;
 
-void *
-kmalloc(const size_t size, const malloc_flags_t flags);
+void *kmalloc(const size_t size, const malloc_flags_t flags);
+void *kcalloc(const size_t size, const malloc_flags_t flags);
 
 #endif

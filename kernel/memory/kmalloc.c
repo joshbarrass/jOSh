@@ -35,9 +35,23 @@ static void *kmalloc_on_pages(const size_t size, const malloc_flags_t flags) {
   return ((void*)allocated)+sizeof(malloc_header_t);
 }
 
-void *kmalloc(const size_t size, const malloc_flags_t flags) {
+// use a static inline version of kmalloc as a shared backend for the
+// exported kmalloc and kcalloc functions
+static inline __attribute__((always_inline)) void *__kmalloc(const size_t size, const malloc_flags_t flags) {
   // TODO: currently, all allocations use full pages. This is fine for
   // now and a decent way to get started, but eventually we should
   // have the kernel manage its own heap.
   return kmalloc_on_pages(size, flags);
+}
+
+void *kmalloc(const size_t size, const malloc_flags_t flags) {
+  return __kmalloc(size, flags);
+}
+
+void *kcalloc(const size_t size, const malloc_flags_t flags) {
+  uint8_t * const allocated = __kmalloc(size, flags);
+  for (size_t i = 0; i < size; ++i) {
+    allocated[i] = 0;
+  }
+  return allocated;
 }
