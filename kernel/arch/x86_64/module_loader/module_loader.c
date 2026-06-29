@@ -167,7 +167,7 @@ void module_loader_main() {
     // record the lowest free address and lock the bump allocator
     bootstruct.lowest_free_addr = (bs_ptr_t)((uintptr_t)bump_malloc(0));
     bootstruct.flags |= BS_FLAG_FREEADDR;
-    bump_finish();
+    bump_lock();
 
     bs_set_checksum(&bootstruct);
     printf("[+] Bootstruct built!\n");

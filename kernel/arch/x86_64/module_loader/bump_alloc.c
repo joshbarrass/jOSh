@@ -7,7 +7,7 @@
 typedef struct {
   size_t addr;
   bool init;
-  bool finished;
+  bool locked;
 } BumpAllocator;
 
 static BumpAllocator alloc = {0, false};
@@ -29,7 +29,7 @@ static void bump_panic(const char *fmt, ...) {
 void bump_init(const size_t addr) {
   alloc.addr = addr;
   alloc.init = true;
-  alloc.finished = false;
+  alloc.locked = false;
 }
 
 void bump_align(const size_t boundary) {
@@ -41,12 +41,12 @@ void bump_align(const size_t boundary) {
 
 void *bump_malloc(const size_t size) {
   if (!alloc.init) bump_panic("[!] Bump allocator used but not yet initialised!\n");
-  if (alloc.finished && size != 0) bump_panic("[!] Bump allocator used after finish!\n");
+  if (alloc.locked && size != 0) bump_panic("[!] Bump allocator used after locking!\n");
   void* p = (void*)alloc.addr;
   alloc.addr += size;
   return p;
 }
 
-void bump_finish() {
-  alloc.finished = true;
+void bump_lock() {
+  alloc.locked = true;
 }
