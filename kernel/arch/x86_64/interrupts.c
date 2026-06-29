@@ -109,7 +109,11 @@ void general_int_handler(InterruptStackFrame *fr) {
   if (fr->int_number < (sizeof(INTERRUPT_NAMES) / sizeof(INTERRUPT_NAMES[0]))) {
     int_name = INTERRUPT_NAMES[fr->int_number];
   }
-  kpanic("%s!\n"
+  uint64_t cr2;
+  __asm__ volatile ("mov %%cr2, %0" : "=r" (cr2));
+  uint64_t cr3;
+  __asm__ volatile ("mov %%cr3, %0" : "=r" (cr3));
+  kpanic("%s! (%#llx)\n"
          "Error code: %#llx\n"
          "Fault occured executing: %#018llx\n\n"
          "Registers:\n"
@@ -121,16 +125,17 @@ void general_int_handler(InterruptStackFrame *fr) {
          "r10: %#018llx  r11: %#018llx\n"
          "r12: %#018llx  r13: %#018llx\n"
          "r14: %#018llx  r15: %#018llx\n"
-         " cs: %#018llx   ss: %#018llx\n\n"
+         " cs: %#018llx   ss: %#018llx\n"
+         "cr2: %#018llx  cr3: %#018llx\n\n"
          "CPU Flags: %#018llx\n",
-         int_name, fr->err_code,
+         int_name, fr->int_number, fr->err_code,
          fr->ret_ip, fr->rax, fr->rbx,
          fr->rcx, fr->rdx, fr->rsi,
          fr->rdi, fr->ret_sp, fr->rbp,
          fr->r8, fr->r9, fr->r10,
          fr->r11, fr->r12, fr->r13,
          fr->r14, fr->r15, fr->ret_cs,
-         fr->ret_ss, fr->ret_flags);
+         fr->ret_ss, cr2, cr3, fr->ret_flags);
   return;
 }
 
