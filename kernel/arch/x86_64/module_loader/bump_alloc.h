@@ -6,5 +6,6 @@
 void bump_init(const size_t addr);
 void* bump_malloc(const size_t size);
 void bump_align(const size_t boundary);
+void bump_finish();
 
 #endif
