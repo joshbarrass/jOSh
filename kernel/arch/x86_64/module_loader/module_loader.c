@@ -150,8 +150,11 @@ void module_loader_main() {
     bs_init(&bootstruct);
     bootstruct.M2IS = (bs_ptr_t)((uintptr_t)mis);
     bootstruct.flags |= BS_FLAG_MIS;
+
+    // record the lowest free address and lock the bump allocator
     bootstruct.lowest_free_addr = (bs_ptr_t)((uintptr_t)bump_malloc(0));
     bootstruct.flags |= BS_FLAG_FREEADDR;
+    bump_finish();
 
     // if it returns true, then we successfully found the framebuffer
     // info in the MIS, and the bootstruct has been populated
