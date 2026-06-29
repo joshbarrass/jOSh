@@ -41,7 +41,7 @@ void bump_align(const size_t boundary) {
 
 void *bump_malloc(const size_t size) {
   if (!alloc.init) bump_panic("[!] Bump allocator used but not yet initialised!\n");
-  if (alloc.finished) bump_panic("[!] Bump allocator used after finish!\n");
+  if (alloc.finished && size != 0) bump_panic("[!] Bump allocator used after finish!\n");
   void* p = (void*)alloc.addr;
   alloc.addr += size;
   return p;
