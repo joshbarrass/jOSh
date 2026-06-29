@@ -17,7 +17,8 @@ $(KERNEL_DIR)/drivers/null_console/null.o \
 $(KERNEL_DIR)/bootstrap/static_bump.o \
 $(KERNEL_DIR)/bootstrap/display.o \
 $(KERNEL_DIR)/drivers/bitmap_console/default_font.o \
-$(KERNEL_DIR)/drivers/bitmap_console/bitmap_console.o
+$(KERNEL_DIR)/drivers/bitmap_console/bitmap_console.o \
+$(KERNEL_DIR)/memory/kmalloc.o
 
 KERNEL_INCLUDES=$(wildcard $(KERNEL_DIR)/include/**/*.h) $(wildcard $(KERNEL_DIR)/include/*.h)
 

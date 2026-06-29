@@ -23,7 +23,12 @@ static void *kmalloc_on_pages(const size_t size, const malloc_flags_t flags) {
   const virt_addr_t allocated = vmm_kmap(pages, malloc_size, NULL, 0);
 
   // TODO: create the header
-  malloc_header_t *header = allocated;
+  volatile malloc_header_t *header = allocated;
+  // wipe the existing memory
+  for (size_t i = 0; i < sizeof(malloc_header_t); ++i) {
+    *((char*)header + i) = 0;
+  }
+  header->type = MALLOC_TYPE_FULLPAGE;
 
   // we must return the offset to the data, not the malloc header, so
   // the receiver doesn't overwrite the malloc header
