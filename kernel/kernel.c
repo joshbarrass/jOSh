@@ -29,6 +29,7 @@
 #include <kernel/memory/types.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
+#include <kernel/memory/dynamic.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
 
@@ -174,6 +175,32 @@ void kernel_main() {
   printf("Framebuffer pitch: %d\n", bootstruct->fbinfo.pitch);
   printf("Framebuffer phys addr: %#lx\n", bootstruct->fbinfo.phys_addr);
   printf("Framebuffer virt addr: %#lx\n", bootstruct->fbinfo.virt_addr);
+  printf("Framebuffer virt end:  %#lx\n", bootstruct->fbinfo.virt_addr + bootstruct->fbinfo.height*bootstruct->fbinfo.pitch);
+  if ((phys_addr_t)bootstruct->fbinfo.phys_addr ==
+      vmm_get_phys((virt_addr_t)bootstruct->fbinfo.virt_addr)) {
+    printf("Framebuffer mapping validated!\n");
+  } else {
+    printf("Framebuffer mapping invalid!!!\n");
+    return;
+  }
+
+  // test kmalloc
+  volatile size_t *test = kmalloc(sizeof(size_t), FLAG_NONE);
+  printf("\nGot first kmalloc\n");
+  volatile size_t *test2 = kmalloc(sizeof(size_t), FLAG_NONE);
+  printf("Got second kmalloc\n");
+  printf("Value: %zu\n", *test);
+  *test = 123;
+  printf("Set!\n");
+  printf("Value: %zu\n", *test);
+  extern char __kernel_end;
+  printf("Kernel end: %#zx\n", (uintptr_t)&__kernel_end);
+  printf("malloc address: %#016lx\nHeader size: %zu bytes\n", (uintptr_t)test, (size_t)sizeof(malloc_header_t));
+  printf("Header: ");
+  for (size_t i = sizeof(malloc_header_t); i > 0; --i) {
+    printf("%02x ", *(((uint8_t*)test) - i));
+  }
+  printf("\n");
 
   return;
 }
