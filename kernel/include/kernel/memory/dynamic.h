@@ -15,6 +15,7 @@ typedef enum {
 
 typedef struct __attribute__((aligned(__BIGGEST_ALIGNMENT__))) {
   malloc_type_t type;
+  size_t size; // size of the allocated region/size to free, not the requested malloc size
 } malloc_header_t;
 
 void *kmalloc(const size_t size, const malloc_flags_t flags);

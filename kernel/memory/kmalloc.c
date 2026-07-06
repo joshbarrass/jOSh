@@ -29,6 +29,9 @@ static void *kmalloc_on_pages(const size_t size, const malloc_flags_t flags) {
     *((char*)header + i) = 0;
   }
   header->type = MALLOC_TYPE_FULLPAGE;
+  // the size should be the size allocated/the size we actually need
+  // to free later, rather than the size requested by the user
+  header->size = pages_required * PAGE_SIZE;
 
   // we must return the offset to the data, not the malloc header, so
   // the receiver doesn't overwrite the malloc header
