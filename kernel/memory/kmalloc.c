@@ -50,11 +50,3 @@ static inline __attribute__((always_inline)) void *__kmalloc(const size_t size, 
 void *kmalloc(const size_t size, const malloc_flags_t flags) {
   return __kmalloc(size, flags);
 }
-
-void *kcalloc(const size_t size, const malloc_flags_t flags) {
-  uint8_t * const allocated = __kmalloc(size, flags);
-  for (size_t i = 0; i < size; ++i) {
-    allocated[i] = 0;
-  }
-  return allocated;
-}
