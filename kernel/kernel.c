@@ -202,6 +202,11 @@ void kernel_main() {
     printf("%02x ", *((uint8_t*)header + i));
   }
   printf("\n");
+  kfree(test);
+  printf("First kmalloc freed.\n");
+  // if we access it again, the kernel will panic
+  kfree(test2);
+  printf("Second kmalloc freed.\n");
 
   return;
 }
