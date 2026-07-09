@@ -197,8 +197,9 @@ void kernel_main() {
   printf("Kernel end: %#zx\n", (uintptr_t)&__kernel_end);
   printf("malloc address: %#016lx\nHeader size: %zu bytes\n", (uintptr_t)test, (size_t)sizeof(malloc_header_t));
   printf("Header: ");
-  for (size_t i = sizeof(malloc_header_t); i > 0; --i) {
-    printf("%02x ", *(((uint8_t*)test) - i));
+  const malloc_header_t *header = (malloc_header_t*)(((uint8_t*)test) - sizeof(malloc_header_t));
+  for (size_t i = 0; i < sizeof(malloc_header_t); ++i) {
+    printf("%02x ", *((uint8_t*)header + i));
   }
   printf("\n");
 

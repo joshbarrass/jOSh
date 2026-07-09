@@ -22,8 +22,8 @@ static void *kmalloc_on_pages(const size_t size, const malloc_flags_t flags) {
   // use the VMM to map the pages into kernel memory
   const virt_addr_t allocated = vmm_kmap(pages, malloc_size, NULL, 0);
 
-  // TODO: create the header
-  volatile malloc_header_t *header = allocated;
+  // create the header
+  malloc_header_t *header = allocated;
   // wipe the existing memory
   for (size_t i = 0; i < sizeof(malloc_header_t); ++i) {
     *((char*)header + i) = 0;
