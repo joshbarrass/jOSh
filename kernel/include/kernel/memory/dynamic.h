@@ -5,8 +5,9 @@
 #include <stddef.h>
 
 typedef enum {
-  FLAG_NONE = 0,
-  FLAG_ZERO = 1 << 0
+  FLAG_NONE =     0,
+  FLAG_ZERO =     1 << 0,
+  FLAG_FULLPAGE = 1 << 1,
 } malloc_flags_t;
 
 typedef enum {
