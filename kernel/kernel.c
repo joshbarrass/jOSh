@@ -185,7 +185,7 @@ void kernel_main() {
   }
 
   // test kmalloc
-  volatile size_t *test = kmalloc(sizeof(size_t), FLAG_NONE);
+  volatile size_t *test = kmalloc(sizeof(size_t), FLAG_ZERO);
   printf("\nGot first kmalloc\n");
   volatile size_t *test2 = kmalloc(sizeof(size_t), FLAG_NONE);
   printf("Got second kmalloc\n");
