@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <kernel/memory/dynamic.h>
 #include <kernel/memory/constants.h>
 #include <kernel/memory/types.h>
@@ -9,6 +10,7 @@
 // enough free pages from the memory manager, maps them into memory,
 // and returns the address.
 static void *kmalloc_on_pages(const size_t size, const malloc_flags_t flags) {
+  const bool flag_zero = (flags & FLAG_ZERO) != 0;
   const size_t malloc_size = size + sizeof(malloc_header_t);
   const size_t pages_required = (malloc_size + (PAGE_SIZE - 1)) / PAGE_SIZE;
 
@@ -24,9 +26,15 @@ static void *kmalloc_on_pages(const size_t size, const malloc_flags_t flags) {
 
   // create the header
   malloc_header_t *header = allocated;
-  // wipe the existing memory
+  // wipe the existing space for the header
   for (size_t i = 0; i < sizeof(malloc_header_t); ++i) {
     *((char*)header + i) = 0;
+  }
+  // ...and wipe the memory if necessary
+  if (flag_zero) {
+    for (size_t i = 0; i < pages_required * PAGE_SIZE; ++i) {
+      *((uint8_t*)allocated + i) = 0;
+    }
   }
   header->type = MALLOC_TYPE_FULLPAGE;
   // the size should be the size allocated/the size we actually need
