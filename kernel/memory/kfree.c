@@ -10,6 +10,12 @@ static void _kfree_fullpage(const malloc_header_t *header) {
   // unmapped.
   const phys_addr_t phys_page = vmm_get_phys((virt_addr_t)header);
   const size_t malloc_size = header->size;
+  // memory clobber fence to guard the above variables against
+  // optimisation -- compiler cannot assume that *header->size still
+  // holds the same value, so cannot optimise out the read of
+  // malloc_size
+  __asm__ volatile("" ::: "memory");
+
   // TODO: should we zero the page before unmapping it?
   vmm_kunmap((virt_addr_t)header, malloc_size);
   pmm_free_pages(phys_page, malloc_size / PAGE_SIZE);
