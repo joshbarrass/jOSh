@@ -11,7 +11,8 @@ $(KERNEL_ARCH_DIR)/memory/pmm.o \
 $(KERNEL_ARCH_DIR)/memory/vmm.o \
 $(KERNEL_ARCH_DIR)/control_registers.o \
 $(KERNEL_ARCH_DIR)/memory/recursive_pt.o \
-$(KERNEL_ARCH_DIR)/memory/paging.o
+$(KERNEL_ARCH_DIR)/memory/paging.o \
+$(KERNEL_ARCH_DIR)/pic/pic8259.o
 
 ARCH_LOADER_DIR=$(KERNEL_ARCH_DIR)/module_loader
 include $(ARCH_LOADER_DIR)/Makefile
