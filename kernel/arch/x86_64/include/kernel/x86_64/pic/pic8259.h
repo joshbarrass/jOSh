@@ -36,5 +36,7 @@
 
 void PIC_remap(const uint8_t offset1, const uint8_t offset2);
 void PIC_disable();
-
+void PIC_enable();
+void PIC_disable_line(uint8_t line);
+void PIC_enable_line(uint8_t line);
 #endif

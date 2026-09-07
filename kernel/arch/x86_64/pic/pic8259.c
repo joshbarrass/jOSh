@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "kernel/x86_64/pic/pic8259.h"
 #include "kernel/x86_64/ioports.h"
 
@@ -58,4 +59,29 @@ void PIC_remap(const uint8_t offset1, const uint8_t offset2) {
 void PIC_disable() {
   pic1_data(0xff);
   pic2_data(0xff);
+}
+
+void PIC_enable() {
+  pic1_data(0);
+  pic2_data(0);
+}
+
+void PIC_disable_line(uint8_t line) {
+  line -= 1;
+  const io_port_num port = line >= 8 ? PIC_SLAVE_IO_PORT_DATA : PIC_MASTER_IO_PORT_DATA;
+  uint8_t mask = inb(port);
+  mask |= 1 << line;
+  outb(port, mask);
+  io_wait();
+  return;
+}
+
+void PIC_enable_line(uint8_t line) {
+  line -= 1;
+  const io_port_num port = line >= 8 ? PIC_SLAVE_IO_PORT_DATA : PIC_MASTER_IO_PORT_DATA;
+  uint8_t mask = inb(port);
+  mask &= ~(1 << line);
+  outb(port, mask);
+  io_wait();
+  return;
 }
