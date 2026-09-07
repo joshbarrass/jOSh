@@ -67,7 +67,6 @@ void PIC_enable() {
 }
 
 void PIC_disable_line(uint8_t line) {
-  line -= 1;
   const io_port_num port = line >= 8 ? PIC_SLAVE_IO_PORT_DATA : PIC_MASTER_IO_PORT_DATA;
   uint8_t mask = inb(port);
   mask |= 1 << line;
@@ -77,11 +76,15 @@ void PIC_disable_line(uint8_t line) {
 }
 
 void PIC_enable_line(uint8_t line) {
-  line -= 1;
   const io_port_num port = line >= 8 ? PIC_SLAVE_IO_PORT_DATA : PIC_MASTER_IO_PORT_DATA;
   uint8_t mask = inb(port);
   mask &= ~(1 << line);
   outb(port, mask);
   io_wait();
   return;
+}
+
+void PIC_sendEOI(uint8_t line) {
+  if (line >= 8) pic2_cmd(PIC_EOI_CMD);
+  pic1_cmd(PIC_EOI_CMD);
 }

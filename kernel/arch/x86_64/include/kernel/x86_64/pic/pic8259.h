@@ -34,9 +34,12 @@
 #define ICW4_BUFFERED_BOTH (0xC)
 #define ICW4_SFNM (1 << 4) // special fully nested mode
 
+#define PIC_EOI_CMD (0x20)
+
 void PIC_remap(const uint8_t offset1, const uint8_t offset2);
 void PIC_disable();
 void PIC_enable();
 void PIC_disable_line(uint8_t line);
 void PIC_enable_line(uint8_t line);
+void PIC_sendEOI(uint8_t line);
 #endif
