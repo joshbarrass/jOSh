@@ -87,4 +87,4 @@ build_noerrcode_handlers 0, 1, 2, 3, 4, 5, 6, 7, 9, 15, 16, 18, 19, 20
 ;;; panic. We don't know what they will be and realistically don't
 ;;; need to care, because we will always handle them by crashing the
 ;;; system.
-build_noerrcode_handlers 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+build_noerrcode_handlers 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33

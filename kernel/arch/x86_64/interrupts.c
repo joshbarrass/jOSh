@@ -81,6 +81,60 @@ static const char* const INTERRUPT_SHORTCODES[32] = {"#DE", "#DB", "NMI", "#BP",
                                                "",    "",    "",    "",
                                                "",    "",    "",    ""};
 
+const unsigned char kbdus[128] =
+{
+    0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	/* 9 */
+  '9', '0', '-', '=', '\b',	/* Backspace */
+  '\t',			/* Tab */
+  'q', 'w', 'e', 'r',	/* 19 */
+  't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',	/* Enter key */
+    0,			/* 29   - Control */
+  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	/* 39 */
+ '\'', '`',   0,		/* Left shift */
+ '\\', 'z', 'x', 'c', 'v', 'b', 'n',			/* 49 */
+  'm', ',', '.', '/',   0,				/* Right shift */
+  '*',
+    0,	/* Alt */
+  ' ',	/* Space bar */
+    0,	/* Caps lock */
+    0,	/* 59 - F1 key ... > */
+    0,   0,   0,   0,   0,   0,   0,   0,
+    0,	/* < ... F10 */
+    0,	/* 69 - Num lock*/
+    0,	/* Scroll Lock */
+    0,	/* Home key */
+    0,	/* Up Arrow */
+    0,	/* Page Up */
+  '-',
+    0,	/* Left Arrow */
+    0,
+    0,	/* Right Arrow */
+  '+',
+    0,	/* 79 - End key*/
+    0,	/* Down Arrow */
+    0,	/* Page Down */
+    0,	/* Insert Key */
+    0,	/* Delete Key */
+    0,   0,   0,
+    0,	/* F11 Key */
+    0,	/* F12 Key */
+    0,	/* All other keys are undefined */
+};
+
+static bool held_keys[128] = {false};
+
+static void
+handle_kbd() {
+  const uint8_t scancode = inb(0x60);
+  const bool release = (scancode & 0x80) != 0;
+  held_keys[scancode & ~0x80] = !release;
+  char key = kbdus[scancode & ~0x80];
+  if (key == 0) return;
+  if ((key >= 'a' && key <= 'z') && (held_keys[54] || held_keys[42])) key -= 32;
+  if (!release) printf("%c", key);
+  return;
+}
+
 static void
 build_gate_descriptor_64(GateDescriptor64 * gd, void *interrupt,
                          uint16_t segment, char ist, char gate_type, char dpl,
@@ -105,6 +159,12 @@ build_gate_descriptor_64(GateDescriptor64 * gd, void *interrupt,
 
 __attribute__ ((sysv_abi))
 void general_int_handler(InterruptStackFrame *fr) {
+  switch (fr->int_number) {
+  case 33:
+    handle_kbd();
+    PIC_sendEOI(fr->int_number - 0x20);
+    return;
+  }
   const char *int_name = "Unknown Interrupt";
   if (fr->int_number < (sizeof(INTERRUPT_NAMES) / sizeof(INTERRUPT_NAMES[0]))) {
     int_name = INTERRUPT_NAMES[fr->int_number];
@@ -171,6 +231,7 @@ extern void handle_int28();
 extern void handle_int29();
 extern void handle_int30();
 extern void handle_int31();
+extern void handle_int33();
 
 void setup_interrupts() {
   build_gate_descriptor_64(&IDT[0], (void *)&handle_int0, 8, 0, 0xF, 0, true);
@@ -205,6 +266,7 @@ void setup_interrupts() {
   build_gate_descriptor_64(&IDT[29], (void *)&handle_int29, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[30], (void *)&handle_int30, 8, 0, 0xF, 0, true);
   build_gate_descriptor_64(&IDT[31], (void *)&handle_int31, 8, 0, 0xF, 0, true);
+  build_gate_descriptor_64(&IDT[33], (void *)&handle_int33, 8, 0, 0xF, 0, true);
 
   IDTD.offset = (uintptr_t)IDT;
   IDTD.size = sizeof(GateDescriptor64) * 256 - 1;

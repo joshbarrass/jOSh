@@ -30,6 +30,7 @@
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
 #include <kernel/memory/dynamic.h>
+#include <kernel/x86_64/pic/pic8259.h>
 
 #define BS_IS_PRESENT (bootstruct != NULL)
 
@@ -207,6 +208,14 @@ void kernel_main() {
   // if we access it again, the kernel will panic
   kfree(test2);
   printf("Second kmalloc freed.\n");
+
+  PIC_remap(0x20, 0x20+8);
+  PIC_disable();
+  PIC_enable_line(1);
+  while (true) {
+    __asm__ volatile("sti\n\r"
+                     "hlt\n\r");
+  }
 
   return;
 }
